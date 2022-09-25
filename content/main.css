@@ -1,4 +1,128 @@
-.normal-text {
+*
+{
+    padding: 0;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.header
+{
+    border-width: 0px 0px 1px 0px;
+    border-color: grey;
+    border-style: solid;
+    width: 100%;
+    height: fit-content;
+    padding-bottom: 1rem;
+}
+
+.main-title
+{
     font-size: 50px;
-    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+}
+
+.select-main
+{
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    row-gap: 5rem;
+    justify-content: space-around;
+    align-items: center;
+    padding-top: 5rem;
+    height: fit-content;
+    padding-bottom: 5rem;
+}
+
+.game-container
+{
+    border-style: solid;
+    border-radius: 4rem;
+    border-width: 2px;
+    height: 20rem;
+    width: 20rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition-property:  transform, width, height;
+    transition-duration: 0.3s;
+}
+
+.game-container:hover
+{
+    transform: scale(1.09);
+}
+
+.game-title
+{
+    text-align: center;
+    font-size: 100px;
+}
+
+.description-container
+{
+    width: 100%;
+    height: 17rem;
+    background-color: rgb(219, 219, 219);
+    position: absolute;
+    top: 17rem;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    overflow: hidden;
+    transition: top 0.3s;
+}
+
+.description-container:hover
+{
+    top: 3rem;
+}
+
+
+.description-title
+{
+    font-weight: bold;
+    font-size: 20px;
+    padding-top: 0.6rem;
+}
+
+.description
+{
+    width: 90%;
+    margin-top: 1rem;
+}
+
+.description-container:hover > .description
+{
+    margin-top: 0rem;
+}
+
+@media screen and (max-width: 700px)
+{
+    .game-container
+    {
+        height: 15rem;
+        width: 15rem;
+    }
+
+    .game-title
+    {
+        font-size: 70px;
+    }
+
+    .description-container
+    {
+        top: 12rem;
+        height: 12rem;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .select-main
+    {
+        grid-template-columns: repeat(1, auto);
+    }
+    
 }
