@@ -29,16 +29,11 @@ let folderContent = {
 	"/index.html" : contentTypes.html,
 	"/main.css" : contentTypes.css,
 	"/index.js" : contentTypes.js,
-	"/favicon.ico" : contentTypes.icon
+	"/favicon.ico" : contentTypes.icon,
+	"/lobby.html" : contentTypes.html,
+	"/lobby.js" : contentTypes.js
 };
 
-let games = {
-	"T8" : {
-		minPlayers : 2,
-		maxPlayers : 5,
-		lobby : []
-	}
-};
 
 for (const number of "A23456789JQK") {
 	for (const color of "SCDH") {
@@ -47,7 +42,7 @@ for (const number of "A23456789JQK") {
 }
 
 const findFile = (url) => {
-
+	url = url.split("?")[0];
 	if (url == '/') {
 		return {status : 200, url : "/index.html", contentType : "text/html", plain : true};
 	}
@@ -139,6 +134,13 @@ const handlePost = (req, res) => {
 	}
 };
 
+const isValidMsg = (msg, requiredKeys) => {
+	for (const key of requiredKeys) {
+		if (msg[key] == undefined) return false;
+	}
+	return true;
+};
+
 const server = http.createServer((req, res) => {
 	console.log(req.url);
 	if (req.method == "GET") {
@@ -157,8 +159,62 @@ server.listen(port, () => {
 
 let socketServer = new ws.WebSocketServer({server : server});
 
+let games = {
+	"T8" : {
+		minPlayers : 2,
+		maxPlayers : 5,
+		players : []
+	}
+};
+
+
+const UNIDENTIFIED = 0, IN_LOBBY = 1, IN_GAME = 2;
+
 socketServer.on("connection", (socket) => {
+	socket.game = {status : UNIDENTIFIED};
 	socket.on("message", (msg) => {
+		
+		const data = JSON.parse(msg);
+		console.log(data);
+		switch (socket.game.status) {
+			case UNIDENTIFIED:
+				if (!isValidMsg(data, ["gameId", "name"])) {
+					socket.close(1000, "Invalid message");
+					return;
+				}
+				let lobby = undefined;
+				for (let gameName in games) {
+					if (gameName == data.gameId) {
+						lobby = games[gameName];
+						break;
+					}
+				}
+				if (lobby == undefined) {
+					socket.close(1000, "Invalid game");
+					return;
+				}
+				if (lobby.players.length == lobby.maxPlayers) {
+					socket.close(1000, "Lobby is full");
+					return;
+				}
+				lobby.players.push(socket);
+				socket.game.id = lobby.players.length;
+				socket.game.name = data.name;
+				socket.game.status = IN_LOBBY;
+				socket.game.lobby = lobby;
+
+				let players = "[";
+				for (let i = 0; i < lobby.players.length - 1; i++) {
+					lobby.players[i].send(`"event" : "join", "name" : "${socket.game.name}", "id" : ${socket.game.id}}`);
+					players += `"${lobby.players[i].game.name}"`;
+					if (i != lobby.players.length - 2) players += ",";
+				}
+				socket.send(`"{event" : "joined", "players" : "${players}]"}`)
+				break;
+			case IN_LOBBY:
+				
+				break;
+		}
 
 	});
 	socket.on("close", (code, reason) => {
