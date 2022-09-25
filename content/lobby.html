@@ -7,21 +7,28 @@
         <link rel="stylesheet" href="main.css">
     </head>
 
-    <body>
+    <body class="box">
         <header class="header">
             <h1 class="main-title" id="main-title"></h1>
         </header>
-        <main class = "lobby-main">
+        <div class = "content">
             <aside class="playlist-container">
                 <ul class="playlist" id="playlist">
-    
+                    <li>
+                        <input placeholder ="Enter name" class = "join-input" id = "join-input" type = "text">
+                    </li>
+                    <li class ="join-button" id = "join-button">
+                        Join
+                    </li>
                 </ul>
             </aside>
-            <span id="min-players"></span>
-            <button class="start-button" id="start-button">
-                Start
-            </button>
-        </main>
+            <main class = "lobby-main">
+                <span id="min-players"></span>
+                <button class="start-button" id="start-button">
+                    Start
+                </button>
+            </main>
+        </div>
         <script src="lobby.js"></script>
     </body>
 
