@@ -15,6 +15,7 @@ const init = () =>
             wsckt.addEventListener('message', (e) =>
             {
                 const msg = e.data;
+                console.log(msg);
             });
 
 
