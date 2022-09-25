@@ -138,7 +138,7 @@ body
 {
     width: 20%;
     height: 100%;
-    background-color: rgb(248, 198, 198);
+    background-color: rgb(198, 228, 248);
 }
 
 .playlist
@@ -168,10 +168,15 @@ body
     text-align: center;
 }
 
+.join-input:focus-visible
+{
+    outline: 1px solid black;
+}
+
 .join-button:hover
 {
     cursor: pointer;
-    background-color: rgb(250, 191, 191);
+    background-color: rgb(172, 212, 248);
 }
 
 .playlist .new
