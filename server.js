@@ -16,7 +16,8 @@ const errors = {
 let folderContent = {
 	"/index.html" : "text/html",
 	"/main.css" : "text/css",
-	"/index.js" : "text/javascript"
+	"/index.js" : "text/javascript",
+	"/favicon.ico" : "image/x-icon"
 };
 
 for (const number of "A23456789JQK") {
@@ -79,6 +80,6 @@ const server = http.createServer((req, res) => {
 });
 
 
-server.listen(port, hostname, () => {
+server.listen(port, () => {
 	console.log(`Server running at http://${hostname}:${port}/`);
 });
