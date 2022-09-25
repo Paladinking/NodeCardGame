@@ -1,6 +1,7 @@
 "use strict";
 
 const http = require("http");
+const ws = require("ws");
 
 const fs = require("fs");
 
@@ -8,7 +9,9 @@ const hostname = "127.0.0.1";
 const port = 3000;
 
 const errors = {
+	400 : "Bad Request",
 	404 : "File Not Found",
+	405 : "Method Not Allowed",
 	500 : "Internal Server Error",
 	501 : "Not Implemented"
 };
@@ -27,6 +30,14 @@ let folderContent = {
 	"/main.css" : contentTypes.css,
 	"/index.js" : contentTypes.js,
 	"/favicon.ico" : contentTypes.icon
+};
+
+let games = {
+	"T8" : {
+		minPlayers : 2,
+		maxPlayers : 5,
+		lobby : []
+	}
 };
 
 for (const number of "A23456789JQK") {
@@ -83,10 +94,57 @@ const handleGet = (req, res) => {
 	}
 };
 
+const handlePost = (req, res) => {
+	const parts = req.url.split("/");
+	if (parts.length < 2) {
+		sendError(res, 405);
+		return;
+	} 
+	switch (parts[1]) {
+		case "play":
+			if (parts.length != 3) {
+				sendError(res, 405);
+				return;
+			}
+			for (const gameName in games) {
+				if (gameName == parts[2]) {
+					let game = games[gameName];
+					if (game.lobby.length == game.maxPlayers) {
+						sendError(res, 405, "Lobby Is Full");
+						return;
+					}
+					
+					const id = gameName + game.lobby.length;
+					game.lobby.push(id);
+					res.writeHead(200, {'Content-Type' : "text/plain"});
+					res.write(id);
+					res.end();
+					return;
+				}
+			}
+			sendError(res, 405);
+			return;
+		case "start":
+			console.log(req.headers);
+			console.log(req.rawHeaders);
+			const id = req.headers["GameId"];
+			if (id == undefined) {
+				sendError(res, 400);
+				return;
+			}
+			
+			console.log(id);
+			res.writeHead(200);
+			res.end();
+	}
+};
+
 const server = http.createServer((req, res) => {
 	console.log(req.url);
 	if (req.method == "GET") {
 		handleGet(req, res);
+	} else if(req.method == "POST") {
+		handlePost(req, res);
 	} else {
 		sendError(res, 501);
 	}
@@ -95,4 +153,15 @@ const server = http.createServer((req, res) => {
 
 server.listen(port, () => {
 	console.log(`Server running at http://${hostname}:${port}/`);
+});
+
+let socketServer = new ws.WebSocketServer({server : server});
+
+socketServer.on("connection", (socket) => {
+	socket.on("message", (msg) => {
+
+	});
+	socket.on("close", (code, reason) => {
+
+	});
 });
