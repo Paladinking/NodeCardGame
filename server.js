@@ -205,11 +205,11 @@ socketServer.on("connection", (socket) => {
 
 				let players = "[";
 				for (let i = 0; i < lobby.players.length - 1; i++) {
-					lobby.players[i].send(`"event" : "join", "name" : "${socket.game.name}", "id" : ${socket.game.id}}`);
+					lobby.players[i].send(`{"event" : "join", "name" : "${socket.game.name}", "id" : ${socket.game.id}}`);
 					players += `"${lobby.players[i].game.name}"`;
 					if (i != lobby.players.length - 2) players += ",";
 				}
-				socket.send(`"{event" : "joined", "players" : "${players}]"}`)
+				socket.send(`{"event" : "joined", "players" : ${players}]}`)
 				break;
 			case IN_LOBBY:
 				
