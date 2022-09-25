@@ -13,30 +13,39 @@ const errors = {
 	501 : "Not Implemented"
 };
 
+const contentTypes = {
+	html : {contentType : "text/html", plain : true},
+	css :{contentType : "text/css", plain : true},
+	js : {contentType : "text/javascript", plain : true},
+	icon : {contentType : "image/x-icon", plain : false},
+	svg : {contentType : "image/svg+xml", plain : true}
+}
+
+
 let folderContent = {
-	"/index.html" : "text/html",
-	"/main.css" : "text/css",
-	"/index.js" : "text/javascript",
-	"/favicon.ico" : "image/x-icon"
+	"/index.html" : contentTypes.html,
+	"/main.css" : contentTypes.css,
+	"/index.js" : contentTypes.js,
+	"/favicon.ico" : contentTypes.icon
 };
 
 for (const number of "A23456789JQK") {
 	for (const color of "SCDH") {
-		folderContent[`/2color/${number}${color}.svg`] = "image/svg+xml";
+		folderContent[`/2color/${number}${color}.svg`] = contentTypes.svg;
 	}
 }
 
 const findFile = (url) => {
 
 	if (url == '/') {
-		return {status : 200, url : "/index.html", contentType : "text/html"};
+		return {status : 200, url : "/index.html", contentType : "text/html", plain : true};
 	}
 	if (url.endsWith('/')) {
 		return {status : 301, url : url.slice(0, -1)};
 	}
 	for (const key in folderContent) {
 		if (key == url) {
-			return {status : 200, url : key, contentType : folderContent[key]};
+			return {status : 200, url : key, ...folderContent[key]};
 		}
 	}
 	return {status : 404};
@@ -51,15 +60,19 @@ const sendError = (res, code, msg = errors[code]) => {
 const handleGet = (req, res) => {
 	const obj = findFile(req.url);
 	if (obj.status == 200) {
-		fs.readFile("./content" + obj.url, "utf8", (err, data) => {
-			if (err) {
-				sendError(res, 500);
-			} else {
-				res.writeHead(200, {'Content-Type' : obj.contentType});
-				res.write(data);
-				res.end();
-			}
-		});
+		if (obj.plain) {
+			fs.readFile("./content" + obj.url, "utf8", (err, data) => {
+				if (err) {
+					sendError(res, 500);
+				} else {
+					res.writeHead(200, {'Content-Type' : obj.contentType});
+					res.write(data);
+					res.end();
+				}
+			});
+		} else {
+			fs.createReadStream("./content" + obj.url).pipe(res);
+		}
 	} else if (obj.status == 301) {
 		res.writeHead(301, {location : obj.url});
 		res.end();
