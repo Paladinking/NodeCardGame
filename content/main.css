@@ -48,6 +48,8 @@
     overflow: hidden;
     transition-property:  transform, width, height;
     transition-duration: 0.3s;
+    color: black;
+    text-decoration: none;
 }
 
 .game-container:hover
