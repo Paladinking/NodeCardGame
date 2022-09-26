@@ -33,7 +33,7 @@ const handleT8Message = (data, socket) => {
 	switch (data.action) {
 		case "Start" :
 			break; // If several players start at the same time this event could get here.
-		case "Place" :
+		case "Place" : {
 			if (socket.gameData.chooseColor) {
 				socket.close(1000, "You should choose a color");
 				return;
@@ -50,7 +50,7 @@ const handleT8Message = (data, socket) => {
 			const cardNr = data.cards[0][0];
 			for(let j = 0; j < data.cards.length; j++) {
 				if (!data.cards[i] in socket.gameData.hand) {
-					socket.close(1000 "Played card not in hand");
+					socket.close(1000, "Played card not in hand");
 					return;
 				}
 				if (data.cards[i][0] != cardNr) {
@@ -120,7 +120,8 @@ const handleT8Message = (data, socket) => {
 				socket.send(`{"event" : "Place", "Cards" : ${playedCardsStr}, "NewCards" : [${newCards}]}`);
 			});
 			break;
-		case "ChooseColor":
+		}
+		case "ChooseColor": {
 			if (!socket.gameData.chooseColor) {
 				socket.close(1000, "Not a valid message");
 				return;
@@ -136,6 +137,7 @@ const handleT8Message = (data, socket) => {
 				socket.send(`{"event" : "ChooseColor", "${data.color}"}`);
 			});
 			break;
+		}
 		case "Draw" :
 			if (socket.gameData.id != turn) {
 				socket.close(1000, "Not your turn");
@@ -171,7 +173,8 @@ let handleT8Init = (game) => {
 	while (game.deck[index][0] == 'A' || game.deck[index][0] == '8') {
 		index++;
 	}
-	game.pile = deck.splice(index, 1);
+	shuffleDeck(game.deck);
+	game.pile = game.deck.splice(index, 1);
 	game.color = game.pile[0][1];
 	game.players.forEach((player) => {
 		player.gameData.hand = [];
@@ -185,7 +188,16 @@ let handleT8Init = (game) => {
 };
 
 const handleT8Close = (socket) => {
-	
+	const topCard = socket.game.pile.pop();
+	socket.game.pile.push(...socket.gameData.hand, topCard);
+	socket.game.players.splice(socket.gameData.id, 1);
+	for (let i = 0; i < socket.game.players.length; i++) {
+		socket.game.players[i].send(`{"event" : "leave", "id" : ${socket.gameData.id}}`);
+		if (socket.game.players[i].gameData.id != i) {
+			socket.game.players[i].gameData.id = i;
+		}
+	}
+	socket.game.turn = socket.game.turn % socket.game.players.length;
 };
 
 
