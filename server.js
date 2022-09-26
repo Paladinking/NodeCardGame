@@ -228,7 +228,7 @@ socketServer.on("connection", (socket) => {
 					socket.gameData.lobby.players[i].gameData.id = i;
 				}
 			}
-		} else if (socket.gameData.status == In_GAME) {
+		} else if (socket.gameData.status == IN_GAME) {
 			socket.game.handleClose(socket);
 		}
 		console.log(socket.gameData.name + " left");
