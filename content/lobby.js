@@ -56,6 +56,8 @@ const init = (name) =>
                     {
                         ul.querySelectorAll('li')[msg.id].remove();
                         players.splice(msg.id, 1);
+                        playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
+                        break;
                     }
                 case 'start':
                     {
@@ -73,7 +75,7 @@ const init = (name) =>
         document.querySelector('#start-button').setAttribute('available', "true");
         document.querySelector('#start-button').addEventListener('click', () =>
         {
-            if (playerCount >= GAME_TYPES[gameId].minPlayers)
+            if (players.length >= GAME_TYPES[gameId].minPlayers)
             {
                 let response = { action: "Start" };
                 wsckt.send(JSON.stringify(response));
