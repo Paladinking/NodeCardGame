@@ -38,7 +38,7 @@ let handleT8Init = (game) => {
 		for (let j =0 ; j < 7; j++) {
 			player.gameData.hand.push(game.deck.pop());
 		}
-		player.send(`{"event" : "start", "hand" : [${player.gameData.hand}]}`);
+		player.send(`{"event" : "start", "hand" : [${player.gameData.hand.map(c => '"'+ c + '"')}]}`);
 	});
 };
 
