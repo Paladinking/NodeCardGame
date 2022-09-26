@@ -176,7 +176,7 @@ socketServer.on("connection", (socket) => {
 				socket.game.status = IN_LOBBY;
 				socket.game.lobby = lobby;
 
-				const names = lobby.players.map(s => s.game.name);
+				const names = lobby.players.map(s => `"${s.game.name}"`);
 				for (let i = 0; i < lobby.players.length; i++) {
 					lobby.players[i].send(`{"event" : "join", "name" : "${socket.game.name}", "id" : ${socket.game.id}}`);
 				}
@@ -195,7 +195,7 @@ socketServer.on("connection", (socket) => {
 				if (data.action == "Start") {
 					if (socket.game.lobby.players.length >= socket.game.lobby.minPlayers) {
 						for (let sock of socket.game.lobby) {
-							sock.send(`{"event" : "start}"`);
+							sock.send(`{"event" : "start"}`);
 						}
 					} else {
 						socket.close(1000, "Not enough players");
