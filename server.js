@@ -194,7 +194,7 @@ socketServer.on("connection", (socket) => {
 				}
 				if (data.action == "Start") {
 					if (socket.game.lobby.players.length >= socket.game.lobby.minPlayers) {
-						for (let sock of socket.game.lobby) {
+						for (let sock of socket.game.lobby.players) {
 							sock.send(`{"event" : "start"}`);
 						}
 					} else {
