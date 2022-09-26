@@ -32,7 +32,8 @@ let folderContent = {
 	"/index.js" : contentTypes.js,
 	"/favicon.ico" : contentTypes.icon,
 	"/lobby.html" : contentTypes.html,
-	"/lobby.js" : contentTypes.js
+	"/lobby.js" : contentTypes.js,
+	"/game.mjs" : contentTypes.js
 };
 
 
@@ -200,9 +201,6 @@ socketServer.on("connection", (socket) => {
 				if (data.action == "Start") {
 					if (socket.gameData.lobby.players.length >= socket.gameData.lobby.minPlayers) {
 						gameModule.createGame(socket.gameData.lobby);
-						for (let sock of socket.game.players) {
-							sock.send(`{"event" : "start"}`);
-						}
 					} else {
 						socket.close(1000, "Not enough players");
 					}
