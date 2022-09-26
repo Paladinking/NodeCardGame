@@ -21,14 +21,16 @@ const shuffleDeck = (deck) => {
 
 const handleT8Message = (data, socket) => {
 	switch (data.action) {
-		case "Start":
+		case "Start" :
 			break; // If several players start at the same time this event could get here.
-		
+		case "Place" :
+			break;
+			
 	}
 
 };
 
-const handleT8Init = (game) => {
+let handleT8Init = (game) => {
 	game.deck = createDeck();
 	game.turn = 0;
 	game.players.forEach((player) => {
@@ -55,7 +57,7 @@ const game = {
 	createGame : (lobby) => {
 		let game = {players : lobby.players};
 		lobby.players = [];
-		switch (lobby.name) {
+		switch (lobby.gameName) {
 			case "T8":
 				game.handleMessage = handleT8Message;
 				game.handleClose = handleT8Close;
