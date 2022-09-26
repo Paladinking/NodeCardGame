@@ -223,18 +223,23 @@ body
 .start-button
 {
     background-color: #92acff;
-    border: solid 1px #a4a4ff;
+    border: none;
     border-radius: 2rem;
     width: 13rem;
     height: 5rem;
     position: relative;
     font-size: 40px;
+}
+
+.start-button[available = "true"]:hover
+{
+    background-color: #7092ff;
     cursor: pointer;
 }
 
-.start-button:hover
+.start-button[available = "false"]
 {
-    background-color: #7092ff;
+    background-color: #929292;
 }
 
 .back-button

@@ -56,12 +56,21 @@ const init = (name) =>
                     }
             }
         });
+        wsckt.addEventListener('close', () =>
+        {
+            window.location.href = "/";
+        });
+        document.querySelector('#start-button').setAttribute('available', "true");
         document.querySelector('#start-button').addEventListener('click', () =>
         {
             if (playerCount >= GAME_TYPES[gameId].minPlayers)
             {
                 let response = { action: "Start" };
                 wsckt.send(JSON.stringify(response));
+            }
+            else
+            {
+                document.querySelector('#start-button').animate([{ left: "0px" }, { left: "3px" }, { left: "0px" }, { left: "-3px" }, { left: "0px" }], 150);
             }
         });
         window.addEventListener('beforeunload', (e) =>
@@ -81,7 +90,7 @@ if (GAME_TYPES[gameId] != undefined)
     document.querySelector('#join-button').addEventListener('click', () =>
     {
         const name = document.querySelector('#join-input').value;
-        if (name)
+        if (name && name.length < 21)
         {
             init(name);
         }
@@ -104,7 +113,7 @@ let startBackgroundCards = () =>
         const color = CARD_COLORS[Math.floor(Math.random() * CARD_COLORS.length)];
         const card = document.createElement('div');
         card.classList.add('background-card-wrapper');
-        card.innerHTML = `<img src = "./2color/${number}${color}.svg" draggable = "false" width = 140>`;
+        card.innerHTML = `<img src = "/2color/${number}${color}.svg" draggable = "false" width = 140>`;
         main.prepend(card);
         const animate = () =>
         {
