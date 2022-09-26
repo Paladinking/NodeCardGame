@@ -19,6 +19,7 @@ body
     width: 100%;
     height: fit-content;
     padding-bottom: 1rem;
+    position: relative;
 }
 
 .main-title
@@ -73,7 +74,7 @@ body
 {
     width: 100%;
     height: 17rem;
-    background-color: rgb(219, 219, 219);
+    background-color: #dbdbdb;
     position: absolute;
     top: 17rem;
     display: flex;
@@ -130,15 +131,37 @@ body
     width: 100%;
     height: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: space-around;
     align-items: center;
+    position: relative;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: #eaf8ff;
+}
+
+.big-text
+{
+    font-size: 40px;
+    position: relative;
+    background-color: #a8cefa;
+    border-radius: 1rem;
+    width: 18rem;
+    text-align: center;
+}
+
+.background-card-wrapper
+{
+    position: absolute;
+    height: fit-content;
+    top: -200rem;
 }
 
 .playlist-container
 {
-    width: 20%;
+    width: 20rem;
+    min-width: 20rem;
     height: 100%;
-    background-color: rgb(198, 228, 248);
+    background-color: #c6e4f8;
 }
 
 .playlist
@@ -176,7 +199,7 @@ body
 .join-button:hover
 {
     cursor: pointer;
-    background-color: rgb(172, 212, 248);
+    background-color: #acd4f8;
 }
 
 .playlist .new
@@ -190,6 +213,7 @@ body
     {
         margin-left: -20rem;
     }
+
     to
     {
         margin-left: 0rem;
@@ -198,10 +222,33 @@ body
 
 .start-button
 {
-    background-color: white;
-    border: solid;
+    background-color: #92acff;
+    border: solid 1px #a4a4ff;
+    border-radius: 2rem;
     width: 13rem;
     height: 5rem;
+    position: relative;
+    font-size: 40px;
+    cursor: pointer;
+}
+
+.start-button:hover
+{
+    background-color: #7092ff;
+}
+
+.back-button
+{
+    position: absolute;
+    left: 2rem;
+    top: 0;
+    height: 100%;
+}
+
+.back-image
+{
+    height: 100%;
+    transform: rotate(-90deg);
 }
 
 @media screen and (max-width: 700px)
