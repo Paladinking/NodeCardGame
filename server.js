@@ -156,6 +156,9 @@ socketServer.on("connection", (socket) => {
 					socket.close(1000, "Invalid message");
 					return;
 				}
+				if (data.gameId.length != 2 || data.gameId.name.length > 20) {
+					socket.close(1000, "TMI");
+				}
 				let lobby = undefined;
 				for (let gameName in games) {
 					if (gameName == data.gameId) {
@@ -205,6 +208,12 @@ socketServer.on("connection", (socket) => {
 					return;
 				}
 				socket.close(1000, "Invalid message");
+				break;
+			case IN_GAME:
+				if (!isValidMsg(data, ["action"])) {
+					socket.close(1000, "Invalid message");
+				}
+				socket.game.handleMessage(data, socket);
 				break;
 		}
 
