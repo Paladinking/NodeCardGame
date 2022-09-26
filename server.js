@@ -157,7 +157,7 @@ socketServer.on("connection", (socket) => {
 					socket.close(1000, "Invalid message");
 					return;
 				}
-				if (data.gameId.length != 2 || data.gameId.name.length > 20) {
+				if (data.gameId.length != 2 || data.gameId.length > 20) {
 					socket.close(1000, "TMI");
 				}
 				let lobby = undefined;
