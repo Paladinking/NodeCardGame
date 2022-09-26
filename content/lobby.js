@@ -1,12 +1,13 @@
-import { startGame } from "/game.mjs";
-
 const GAME_TYPES = { "T8": { name: "Vändåtta", minPlayers: 2, maxPlayers: 5 }, "CN": { name: "Caravan", minPlayers: 2, maxPlayers: 2 } };
 const CARD_NUMBERS = "A23456789JQK";
 const CARD_COLORS = "SCDH";
+const LOBBY = 0, IN_GAME = 1;
 const gameId = new URLSearchParams(window.location.search).get('game');
 const playersSpan = document.querySelector('#players');
 let started = false;
 let kicked = false;
+import { game } from "/game.mjs";
+
 
 
 const init = (name) =>
@@ -18,58 +19,67 @@ const init = (name) =>
     let wsckt = new WebSocket("ws://" + window.location.href.split('//')[1].split('?')[0]);
     wsckt.addEventListener('open', () =>
     {
+        let gameState = LOBBY;
         wsckt.send(JSON.stringify({ "gameId": gameId, "name": name }));
-        wsckt.addEventListener('message', function onMessage(e)
+        wsckt.addEventListener('message', (e) =>
         {
             console.log(e.data);
             const msg = JSON.parse(e.data);
             console.log(msg);
-            switch (msg.event)
+            if (gameState == LOBBY)
             {
-                case 'joined':
-                    {
-                        for (const player of msg.players)
+                switch (msg.event)
+                {
+                    case 'joined':
+                        {
+                            for (const player of msg.players)
+                            {
+                                const li = document.createElement('li');
+                                li.innerText = player;
+                                ul.append(li);
+                                players.push({ name: player });
+                            }
+                            const li = document.createElement('li');
+                            li.classList.add('new');
+                            li.innerText = name;
+                            ul.append(li);
+                            players.push({ name: name, isPlayer: true });
+
+                            playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
+                            break;
+                        }
+                    case 'join':
                         {
                             const li = document.createElement('li');
-                            li.innerText = player;
+                            li.classList.add('new');
+                            li.innerText = msg.name;
                             ul.append(li);
-                            players.push({ name: player });
+                            players.push({ name: msg.name });
+                            playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
+                            break;
                         }
-                        const li = document.createElement('li');
-                        li.classList.add('new');
-                        li.innerText = name;
-                        ul.append(li);
-                        players.push({ name: name, isPlayer: true });
-
-                        playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
-                        break;
-                    }
-                case 'join':
-                    {
-                        const li = document.createElement('li');
-                        li.classList.add('new');
-                        li.innerText = msg.name;
-                        ul.append(li);
-                        players.push({ name: msg.name });
-                        playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
-                        break;
-                    }
-                case 'leave':
-                    {
-                        ul.querySelectorAll('li')[msg.id].remove();
-                        players.splice(msg.id, 1);
-                        playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
-                        break;
-                    }
-                case 'start':
-                    {
-                        started = true;
-                        document.querySelector('#content').innerHTML = `<main class = "lobby-main"></main>`;
-                        wsckt.removeEventListener('message', onMessage)
-                        startGame(wsckt, msg.hand, players);
-                        break;
-                    }
+                    case 'leave':
+                        {
+                            ul.querySelectorAll('li')[msg.id].remove();
+                            players.splice(msg.id, 1);
+                            playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
+                            break;
+                        }
+                    case 'start':
+                        {
+                            started = true;
+                            document.querySelector('#content').innerHTML = `<main class = "lobby-main" id = "main"><div id = "center-div" style = "position:relative;"></div></main>`;
+                            game.startGame(wsckt, msg.hand, players, gameId);
+                            gameState = IN_GAME;
+                            break;
+                        }
+                }
             }
+            else if (gameState = IN_GAME)
+            {
+                game.handleMessage(msg);
+            }
+
         });
         wsckt.addEventListener('close', () =>
         {
@@ -130,7 +140,7 @@ let startBackgroundCards = () =>
         const number = CARD_NUMBERS[Math.floor(Math.random() * CARD_NUMBERS.length)];
         const color = CARD_COLORS[Math.floor(Math.random() * CARD_COLORS.length)];
         const card = document.createElement('div');
-        card.classList.add('background-card-wrapper');
+        card.classList.add('card-wrapper');
         card.innerHTML = `<img src = "/2color/${number}${color}.svg" draggable = "false" width = 140>`;
         main.prepend(card);
         const animate = () =>

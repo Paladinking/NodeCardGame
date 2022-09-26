@@ -149,11 +149,22 @@ body
     text-align: center;
 }
 
-.background-card-wrapper
+.card-wrapper
 {
     position: absolute;
     height: fit-content;
     top: -200rem;
+}
+
+.hoverable-card
+{
+    transition: all 0.3s;
+}
+
+.hoverable-card:hover
+{
+    transform: scale(1.1) !important;
+    z-index: 10;
 }
 
 .playlist-container
@@ -231,13 +242,13 @@ body
     font-size: 40px;
 }
 
-.start-button[available = "true"]:hover
+.start-button[available="true"]:hover
 {
     background-color: #7092ff;
     cursor: pointer;
 }
 
-.start-button[available = "false"]
+.start-button[available="false"]
 {
     background-color: #929292;
 }
