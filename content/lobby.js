@@ -44,6 +44,8 @@ const init = (name) =>
                         li.classList.add('new');
                         li.innerText = msg.name;
                         ul.append(li);
+                        playerCount++;
+                        playersSpan.innerText = `${playerCount}/${GAME_TYPES[gameId].minPlayers}`;
                         break;
                     }
                 case 'start':
