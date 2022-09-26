@@ -1,3 +1,5 @@
+import { startGame } from "/game.mjs";
+
 const GAME_TYPES = { "T8": { name: "Vändåtta", minPlayers: 2, maxPlayers: 5 }, "CN": { name: "Caravan", minPlayers: 2, maxPlayers: 2 } };
 const CARD_NUMBERS = "A23456789JQK";
 const CARD_COLORS = "SCDH";
@@ -17,7 +19,7 @@ const init = (name) =>
     wsckt.addEventListener('open', () =>
     {
         wsckt.send(JSON.stringify({ "gameId": gameId, "name": name }));
-        wsckt.addEventListener('message', (e) =>
+        wsckt.addEventListener('message', function onMessage(e)
         {
             console.log(e.data);
             const msg = JSON.parse(e.data);
@@ -63,6 +65,8 @@ const init = (name) =>
                     {
                         started = true;
                         document.querySelector('#content').innerHTML = `<main class = "lobby-main"></main>`;
+                        wsckt.removeEventListener('message', onMessage)
+                        startGame(wsckt, msg.hand, players);
                         break;
                     }
             }
