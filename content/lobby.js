@@ -17,6 +17,7 @@ const init = (name) =>
         wsckt.send(JSON.stringify({ "gameId": gameId, "name": name }));
         wsckt.addEventListener('message', (e) =>
         {
+            console.log(e.data);
             const msg = JSON.parse(e.data);
             console.log(msg);
             switch (msg.event)
