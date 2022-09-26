@@ -4,6 +4,7 @@ const CARD_COLORS = "SCDH";
 const gameId = new URLSearchParams(window.location.search).get('game');
 const playersSpan = document.querySelector('#players');
 let started = false;
+let kicked = false;
 
 
 const init = (name) =>
@@ -59,6 +60,7 @@ const init = (name) =>
         });
         wsckt.addEventListener('close', () =>
         {
+            kicked = true;
             window.location.href = "/";
         });
         document.querySelector('#start-button').setAttribute('available', "true");
@@ -76,9 +78,11 @@ const init = (name) =>
         });
         window.addEventListener('beforeunload', (e) =>
         {
-            e.preventDefault();
-            return e.returnValue = "Are you sure you want to exit?";
-
+            if (!kicked)
+            {
+                e.preventDefault();
+                return e.returnValue = "Are you sure you want to exit?";
+            }
         });
     });
 
