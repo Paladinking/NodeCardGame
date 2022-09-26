@@ -4,6 +4,7 @@ const http = require("http");
 const ws = require("ws");
 
 const fs = require("fs");
+const gameModule = require("./game.js");
 
 const hostname = "127.0.0.1";
 const port = 3000;
@@ -122,7 +123,7 @@ const server = http.createServer((req, res) => {
 	//game object -- many per game (in theory)
 	{
 		players : list of sockets,
-		handle_message : function(socket.game, data), 
+		handleMessage : function(socket.game, data), 
 		..game data unique to each game
 	}
  }
@@ -154,6 +155,9 @@ socketServer.on("connection", (socket) => {
 				if (!isValidMsg(data, ["gameId", "name"])) {
 					socket.close(1000, "Invalid message");
 					return;
+				}
+				if (data.gameId.length != 2 || data.gameId.name.length > 20) {
+					socket.close(1000, "TMI");
 				}
 				let lobby = undefined;
 				for (let gameName in games) {
@@ -194,14 +198,22 @@ socketServer.on("connection", (socket) => {
 				}
 				if (data.action == "Start") {
 					if (socket.game.lobby.players.length >= socket.game.lobby.minPlayers) {
-						for (let sock of socket.game.lobby.players) {
+						gameModule.createGame(socket.game.lobby);
+						for (let sock of socket.game.game.players) {
 							sock.send(`{"event" : "start"}`);
 						}
 					} else {
 						socket.close(1000, "Not enough players");
 					}
+					return;
 				}
 				socket.close(1000, "Invalid message");
+				break;
+			case IN_GAME:
+				if (!isValidMsg(data, ["action"])) {
+					socket.close(1000, "Invalid message");
+				}
+				socket.game.handleMessage(data, socket);
 				break;
 		}
 
