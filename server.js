@@ -141,6 +141,17 @@ const isValidMsg = (msg, requiredKeys) => {
 	return true;
 };
 
+const kickLobbyPlayer = (socket, reason) => {
+	socket.close(1000, reason);
+	socket.game.lobby.players.splice(socket.game.id, 1);
+	for (let i = 0; i < socket.game.lobby.players.length; i++) {
+		socket.game.lobby.players[i].send(`{"event" : "leave", "id" : ${socket.game.id}}`);
+		if (socket.game.lobby.players[i].game.id != i) {
+			socket.game.lobby.players[i].game.id = i;
+		}
+	}
+};
+
 const server = http.createServer((req, res) => {
 	console.log(req.url);
 	if (req.method == "GET") {
@@ -152,8 +163,23 @@ const server = http.createServer((req, res) => {
 	}
 });
 
+/*
 
-server.listen(port, () => {
+	//lobby object
+	game[game] = {
+		minPlayers : minimum number of players
+		maxPlayers : maximum number of players
+		players : list of sockets
+	}
+
+    socket.game = {
+		status : UNIDENTIFIED or IN_LOBBY or IN_GAME
+		id : index in lobby.players
+		name : name string,
+		lobby : lobby object for relevant game
+ }
+ */
+server.listen(port, hostname, () => {
 	console.log(`Server running at http://${hostname}:${port}/`);
 });
 
@@ -167,13 +193,11 @@ let games = {
 	}
 };
 
-
 const UNIDENTIFIED = 0, IN_LOBBY = 1, IN_GAME = 2;
 
 socketServer.on("connection", (socket) => {
 	socket.game = {status : UNIDENTIFIED};
 	socket.on("message", (msg) => {
-		
 		const data = JSON.parse(msg);
 		console.log(data);
 		switch (socket.game.status) {
@@ -212,7 +236,9 @@ socketServer.on("connection", (socket) => {
 				socket.send(`{"event" : "joined", "players" : ${players}]}`)
 				break;
 			case IN_LOBBY:
-				
+				if (!isValidMsg(data, ["action"])) {
+					socket.close(1000, "Invalid message");
+				}
 				break;
 		}
 
