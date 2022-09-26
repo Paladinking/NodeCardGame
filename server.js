@@ -89,51 +89,6 @@ const handleGet = (req, res) => {
 	}
 };
 
-const handlePost = (req, res) => {
-	const parts = req.url.split("/");
-	if (parts.length < 2) {
-		sendError(res, 405);
-		return;
-	} 
-	switch (parts[1]) {
-		case "play":
-			if (parts.length != 3) {
-				sendError(res, 405);
-				return;
-			}
-			for (const gameName in games) {
-				if (gameName == parts[2]) {
-					let game = games[gameName];
-					if (game.lobby.length == game.maxPlayers) {
-						sendError(res, 405, "Lobby Is Full");
-						return;
-					}
-					
-					const id = gameName + game.lobby.length;
-					game.lobby.push(id);
-					res.writeHead(200, {'Content-Type' : "text/plain"});
-					res.write(id);
-					res.end();
-					return;
-				}
-			}
-			sendError(res, 405);
-			return;
-		case "start":
-			console.log(req.headers);
-			console.log(req.rawHeaders);
-			const id = req.headers["GameId"];
-			if (id == undefined) {
-				sendError(res, 400);
-				return;
-			}
-			
-			console.log(id);
-			res.writeHead(200);
-			res.end();
-	}
-};
-
 const isValidMsg = (msg, requiredKeys) => {
 	for (const key of requiredKeys) {
 		if (msg[key] == undefined) return false;
@@ -156,8 +111,6 @@ const server = http.createServer((req, res) => {
 	console.log(req.url);
 	if (req.method == "GET") {
 		handleGet(req, res);
-	} else if(req.method == "POST") {
-		handlePost(req, res);
 	} else {
 		sendError(res, 501);
 	}
@@ -183,9 +136,9 @@ server.listen(port, hostname, () => {
 	console.log(`Server running at http://${hostname}:${port}/`);
 });
 
-let socketServer = new ws.WebSocketServer({server : server});
+const socketServer = new ws.WebSocketServer({server : server});
 
-let games = {
+const games = {
 	"T8" : {
 		minPlayers : 2,
 		maxPlayers : 5,
@@ -221,24 +174,28 @@ socketServer.on("connection", (socket) => {
 					socket.close(1000, "Lobby is full");
 					return;
 				}
-				lobby.players.push(socket);
+
 				socket.game.id = lobby.players.length;
 				socket.game.name = data.name;
 				socket.game.status = IN_LOBBY;
 				socket.game.lobby = lobby;
 
-				let players = "[";
-				for (let i = 0; i < lobby.players.length - 1; i++) {
+				for (let i = 0; i < lobby.players.length; i++) {
 					lobby.players[i].send(`{"event" : "join", "name" : "${socket.game.name}", "id" : ${socket.game.id}}`);
-					players += `"${lobby.players[i].game.name}"`;
-					if (i != lobby.players.length - 2) players += ",";
 				}
-				socket.send(`{"event" : "joined", "players" : ${players}]}`)
+				socket.send(`{"event" : "joined", "players" : [${lobby.players}], "minPlayers" : ${lobby.minPlayers}, "maxPlayers" : ${lobby.maxPlayers}}`);
+				lobby.players.push(socket);
 				break;
 			case IN_LOBBY:
 				if (!isValidMsg(data, ["action"])) {
-					socket.close(1000, "Invalid message");
+					kickLobbyPlayer(socket, "Invalid message");
+					return;
 				}
+				if (data.action == "Leave") {
+					kickLobbyPlayer(socket, "Left game");
+					return;
+				}
+
 				break;
 		}
 
