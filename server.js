@@ -118,12 +118,13 @@ const server = http.createServer((req, res) => {
 		status : UNIDENTIFIED or IN_LOBBY or IN_GAME
 		id : index in lobby.players
 		name : name string,
-		lobby : lobby object for relevant game
+		lobby : lobby object for relevant game, undefined while IN_GAME
 		
 	//game object -- many per game (in theory)
 	{
 		players : list of sockets,
-		handleMessage : function(socket.game, data), 
+		handleMessage : function(data, socket), 
+		handleClose : function(socket),
 		..game data unique to each game
 	}
  }
@@ -146,11 +147,11 @@ const games = {
 const UNIDENTIFIED = 0, IN_LOBBY = 1, IN_GAME = 2;
 
 socketServer.on("connection", (socket) => {
-	socket.game = {status : UNIDENTIFIED};
+	socket.gameData = {status : UNIDENTIFIED};
 	socket.on("message", (msg) => {
 		const data = JSON.parse(msg);
 		console.log(data);
-		switch (socket.game.status) {
+		switch (socket.gameData.status) {
 			case UNIDENTIFIED:
 				if (!isValidMsg(data, ["gameId", "name"])) {
 					socket.close(1000, "Invalid message");
@@ -175,14 +176,14 @@ socketServer.on("connection", (socket) => {
 					return;
 				}
 
-				socket.game.id = lobby.players.length;
-				socket.game.name = data.name;
-				socket.game.status = IN_LOBBY;
-				socket.game.lobby = lobby;
+				socket.gameData.id = lobby.players.length;
+				socket.gameData.name = data.name;
+				socket.gameData.status = IN_LOBBY;
+				socket.gameData.lobby = lobby;
 
-				const names = lobby.players.map(s => `"${s.game.name}"`);
+				const names = lobby.players.map(s => `"${s.gameData.name}"`);
 				for (let i = 0; i < lobby.players.length; i++) {
-					lobby.players[i].send(`{"event" : "join", "name" : "${socket.game.name}", "id" : ${socket.game.id}}`);
+					lobby.players[i].send(`{"event" : "join", "name" : "${socket.gameData.name}", "id" : ${socket.gameData.id}}`);
 				}
 				socket.send(`{"event" : "joined", "players" : [${names}]}`);
 				lobby.players.push(socket);
@@ -197,9 +198,9 @@ socketServer.on("connection", (socket) => {
 					return;
 				}
 				if (data.action == "Start") {
-					if (socket.game.lobby.players.length >= socket.game.lobby.minPlayers) {
-						gameModule.createGame(socket.game.lobby);
-						for (let sock of socket.game.game.players) {
+					if (socket.gameData.lobby.players.length >= socket.gameData.lobby.minPlayers) {
+						gameModule.createGame(socket.gameData.lobby);
+						for (let sock of socket.game.players) {
 							sock.send(`{"event" : "start"}`);
 						}
 					} else {
@@ -219,15 +220,17 @@ socketServer.on("connection", (socket) => {
 
 	});
 	socket.on("close", (code, reason) => {
-		if (socket.game.status == IN_LOBBY) {
-			socket.game.lobby.players.splice(socket.game.id, 1);
-			for (let i = 0; i < socket.game.lobby.players.length; i++) {
-				socket.game.lobby.players[i].send(`{"event" : "leave", "id" : ${socket.game.id}}`);
-				if (socket.game.lobby.players[i].game.id != i) {
-					socket.game.lobby.players[i].game.id = i;
+		if (socket.gameData.status == IN_LOBBY) {
+			socket.gameData.lobby.players.splice(socket.gameData.id, 1);
+			for (let i = 0; i < socket.gameData.lobby.players.length; i++) {
+				socket.gameData.lobby.players[i].send(`{"event" : "leave", "id" : ${socket.gameData.id}}`);
+				if (socket.gameData.lobby.players[i].gameData.id != i) {
+					socket.gameData.lobby.players[i].gameData.id = i;
 				}
 			}
+		} else if (socket.gameData.status == In_GAME) {
+			socket.game.handleClose(socket);
 		}
-		console.log(socket.game.name + " left");
+		console.log(socket.gameData.name + " left");
 	});
 });
