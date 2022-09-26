@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
 
     <head>
         <meta charset="UTF-8">
@@ -9,21 +9,24 @@
 
     <body class="box">
         <header class="header">
+            <a class = "back-button" href = "/">
+                <img class = "back-image" src = "2color/QS.svg" alt = "Tillbaka till huvudmenyn" title = "Tillbaka till huvudmenyn">
+            </a>
             <h1 class="main-title" id="main-title"></h1>
         </header>
         <div class = "content">
             <aside class="playlist-container">
                 <ul class="playlist" id="playlist">
                     <li>
-                        <input placeholder ="Enter name" class = "join-input" id = "join-input" type = "text">
+                        <input placeholder ="Skriv namn" class = "join-input" id = "join-input" type = "text">
                     </li>
                     <li class ="join-button" id = "join-button">
-                        Join
+                        Anslut
                     </li>
                 </ul>
             </aside>
-            <main class = "lobby-main">
-                <span id="min-players"></span>
+            <main class = "lobby-main" id = "background-wrapper">
+                <span class = "big-text"><span id = "players">0/0</span> spelare för att starta</span>
                 <button class="start-button" id="start-button">
                     Start
                 </button>
