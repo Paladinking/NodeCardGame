@@ -9,8 +9,9 @@ let kicked = false;
 
 const init = (name) =>
 {
+    const players = [];
+
     const ul = document.querySelector('#playlist');
-    let playerCount = 0;
     ul.innerHTML = "";
     let wsckt = new WebSocket("ws://" + window.location.href.split('//')[1].split('?')[0]);
     wsckt.addEventListener('open', () =>
@@ -30,14 +31,15 @@ const init = (name) =>
                             const li = document.createElement('li');
                             li.innerText = player;
                             ul.append(li);
-                            playerCount++;
+                            players.push({ name: player });
                         }
                         const li = document.createElement('li');
                         li.classList.add('new');
                         li.innerText = name;
                         ul.append(li);
-                        playerCount++;
-                        playersSpan.innerText = `${playerCount}/${GAME_TYPES[gameId].minPlayers}`;
+                        players.push({ name: name, isPlayer: true });
+
+                        playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
                         break;
                     }
                 case 'join':
@@ -46,8 +48,15 @@ const init = (name) =>
                         li.classList.add('new');
                         li.innerText = msg.name;
                         ul.append(li);
-                        playerCount++;
-                        playersSpan.innerText = `${playerCount}/${GAME_TYPES[gameId].minPlayers}`;
+                        players.push({ name: msg.name });
+                        playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
+                        break;
+                    }
+                case 'leave':
+                    {
+                        ul.querySelectorAll('li')[msg.id].remove();
+                        players.splice(msg.id, 1);
+                        playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
                         break;
                     }
                 case 'start':
@@ -66,7 +75,7 @@ const init = (name) =>
         document.querySelector('#start-button').setAttribute('available', "true");
         document.querySelector('#start-button').addEventListener('click', () =>
         {
-            if (playerCount >= GAME_TYPES[gameId].minPlayers)
+            if (players.length >= GAME_TYPES[gameId].minPlayers)
             {
                 let response = { action: "Start" };
                 wsckt.send(JSON.stringify(response));
