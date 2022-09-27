@@ -1,5 +1,18 @@
 "use strict";
 
+const testing = true;
+
+const testingDeck = [
+  'AS', '2D', '8D', '2C', 'JH', 'KH',
+  '3S', '9H', '3C', '6C', '8H', '9D',
+  'JC', 'QC', '7S', '5H', 'AD', 'QD',
+  '7C', '5C', '3D', '7H', '8S', '2H',
+  '7D', 'QS', '9C', 'QH', 'KS', '8C',
+  'AC', '6H', '5S', 'JS', '6S', '4H',
+  '6D', 'JD', '2S', '4D', '9S', 'AH',
+  'KC', '4S', 'KD', '4C', '5D', '3H'
+];
+
 const createDeck = () => {
 	let deck = [];
 	for (const number of "A23456789JQK") {
@@ -17,7 +30,9 @@ const shuffleDeck = (deck) => {
         deck[i] = deck[j];
         deck[j] = temp;
     }
+	console.log("Shuffle");
 }
+
 
 const drawCard = (game) => {
 	const c = game.deck.pop();
@@ -120,7 +135,7 @@ const handleT8Message = (data, socket) => {
 						newCards.push(`"${card}"`);
 					}
 				}
-				player.send(`{"event" : "Place", "Cards" : ${playedCardsStr}, "NewCards" : [${newCards}]}`);
+				player.send(`{"event" : "place", "cards" : ${playedCardsStr}, "newCards" : [${newCards}]}`);
 			});
 			break;
 		}
@@ -171,13 +186,13 @@ const handleT8Message = (data, socket) => {
 };
 
 let handleT8Init = (game) => {
-	game.deck = createDeck();
+	game.deck = testing ? testingDeck.slice() : createDeck();
 	game.turn = 0;
 	let index = 0;
 	while (game.deck[index][0] == 'A' || game.deck[index][0] == '8') {
 		index++;
 	}
-	shuffleDeck(game.deck);
+	if (!testing) shuffleDeck(game.deck);
 	game.pile = game.deck.splice(index, 1);
 	game.color = game.pile[0][1];
 	game.players.forEach((player) => {
