@@ -51,11 +51,11 @@ const handleT8Message = (data, socket) => {
 
 			const cardNr = data.cards[0][0];
 			for(let j = 0; j < data.cards.length; j++) {
-				if (!data.cards[i] in socket.gameData.hand) {
+				if (!data.cards[j] in socket.gameData.hand) {
 					socket.close(1000, "Played card not in hand");
 					return;
 				}
-				if (data.cards[i][0] != cardNr) {
+				if (data.cards[j][0] != cardNr) {
 					socket.close(1000, "Missmatching cards played");
 				}
 			}
