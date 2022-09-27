@@ -161,12 +161,6 @@ body
     transition: all 0.3s;
 }
 
-.hoverable-card:hover
-{
-    transform: scale(1.1) !important;
-    z-index: 10;
-}
-
 .playlist-container
 {
     width: 20rem;
@@ -265,6 +259,28 @@ body
 {
     height: 100%;
     transform: rotate(-90deg);
+}
+
+.confirm-button
+{
+    width: 4rem;
+    height: 4rem;
+    background-color: #80ee80;
+    color: white;
+    font-size: 30px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4rem;
+    position: absolute;
+    left: 17rem;
+}
+
+.confirm-button:hover
+{
+    background-color: #6fce6f;
+    cursor: pointer;
 }
 
 @media screen and (max-width: 700px)

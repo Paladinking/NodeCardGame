@@ -26,6 +26,10 @@ const init = (name) =>
             console.log(e.data);
             const msg = JSON.parse(e.data);
             console.log(msg);
+            /*
+            msg.event = "start";
+            msg.hand = ["4S", "6D", "KC", "7C", "7D", "7C", "QH","4S", "6D", "KC", "7C", "7D", "7C", "QH"];
+            */
             if (gameState == LOBBY)
             {
                 switch (msg.event)
@@ -69,7 +73,7 @@ const init = (name) =>
                         {
                             started = true;
                             document.querySelector('#content').innerHTML = `<main class = "lobby-main" id = "main"><div id = "center-div" style = "position:relative;"></div></main>`;
-                            game.startGame(wsckt, msg.hand, players, gameId);
+                            game.startGame(wsckt, msg.hand, players, msg.topCard);
                             gameState = IN_GAME;
                             break;
                         }
@@ -81,10 +85,11 @@ const init = (name) =>
             }
 
         });
-        wsckt.addEventListener('close', () =>
+        wsckt.addEventListener('close', (event) =>
         {
-            kicked = true;
-            window.location.href = "/";
+            //kicked = true;
+            //window.location.href = "/";
+            console.error(`Socket closed, ${event.code}, ${event.reason}`)
         });
         document.querySelector('#start-button').setAttribute('available', "true");
         document.querySelector('#start-button').addEventListener('click', () =>
