@@ -40,7 +40,7 @@ const handleT8Message = (data, socket) => {
 				socket.close(1000, "You should choose a color");
 				return;
 			}
-			if (socket.gameData.id != turn) {
+			if (socket.gameData.id != socket.game.turn) {
 				socket.close(1000, "Not your turn!");
 				return;
 			}
