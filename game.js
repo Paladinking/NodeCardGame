@@ -1,3 +1,5 @@
+"use strict";
+
 const createDeck = () => {
 	let deck = [];
 	for (const number of "A23456789JQK") {
@@ -42,7 +44,7 @@ const handleT8Message = (data, socket) => {
 				socket.close(1000, "Not your turn!");
 				return;
 			}
-			if (!Arrays.isArray(data.cards)) {
+			if (!Array.isArray(data.cards)) {
 				socket.close(1000, "Bad message");
 			}
 			
@@ -138,7 +140,7 @@ const handleT8Message = (data, socket) => {
 			});
 			break;
 		}
-		case "Draw" :
+		case "Draw" : {
 			if (socket.gameData.id != turn) {
 				socket.close(1000, "Not your turn");
 				return;
@@ -162,6 +164,7 @@ const handleT8Message = (data, socket) => {
 			}
 			socket.send(`{"event" : "DrawSelf", "Card" : "${newCard}"}`);
 			break;
+		}
 	}
 
 };
@@ -183,7 +186,7 @@ let handleT8Init = (game) => {
 		for (let j =0 ; j < 7; j++) {
 			player.gameData.hand.push(game.deck.pop());
 		}
-		player.send(`{"event" : "start", "hand" : [${player.gameData.hand.map(c => '"'+ c + '"')}]}`);
+		player.send(`{"event" : "start", "topCard" : "${game.pile[0]}", "hand" : [${player.gameData.hand.map(c => '"'+ c + '"')}]}`);
 	});
 };
 
