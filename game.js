@@ -56,7 +56,7 @@ const handleT8Message = (data, socket) => {
 					return;
 				}
 				if (data.cards[j][0] != cardNr) {
-					socket.close(1000, "Missmatching cards played");
+					socket.close(1000, "Mismatching cards played");
 				}
 			}
 			const hand = []; // Get remaining hand
@@ -66,10 +66,10 @@ const handleT8Message = (data, socket) => {
 				}
 			}
 			let topCard = socket.game.pile[socket.game.pile.length - 1];
-			let color = game.color;		
+			let color = socket.game.color;		
 			if (cardNr == '8') {
 				if (data.cards.length > 1) {
-					socket.close(1000, "Multiple 8:ths played");
+					socket.close(1000, "Multiple 8:s played");
 					return;
 				}
 				if (hand.length == 0) {
@@ -86,6 +86,7 @@ const handleT8Message = (data, socket) => {
 			} else {
 				for (let i = 0; i < data.cards.length; i++) {
 					if (cardNr != topCard[0] && data.cards[i][1] != color) {
+						console.log(cardNr, topCard, data.cards[i], color);
 						socket.close(1000, "Not a valid move");
 						return;
 					} 
@@ -119,7 +120,7 @@ const handleT8Message = (data, socket) => {
 						newCards.push(`"${card}"`);
 					}
 				}
-				socket.send(`{"event" : "Place", "Cards" : ${playedCardsStr}, "NewCards" : [${newCards}]}`);
+				player.send(`{"event" : "Place", "Cards" : ${playedCardsStr}, "NewCards" : [${newCards}]}`);
 			});
 			break;
 		}
@@ -136,7 +137,7 @@ const handleT8Message = (data, socket) => {
 			socket.game.color = data.color;
 			socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
 			socket.game.players.forEach((player) => {
-				socket.send(`{"event" : "ChooseColor", "${data.color}"}`);
+				player.send(`{"event" : "ChooseColor", "${data.color}"}`);
 			});
 			break;
 		}
