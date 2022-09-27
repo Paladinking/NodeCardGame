@@ -147,8 +147,11 @@ const games = {
 
 const UNIDENTIFIED = 0, IN_LOBBY = 1, IN_GAME = 2;
 
-socketServer.on("connection", (socket) => {
+let connectedCount = 0;
+
+socketServer.on("connection", (socket, req) => {
 	socket.gameData = {status : UNIDENTIFIED};
+	connectedCount++;
 	socket.on("message", (msg) => {
 		const data = JSON.parse(msg);
 		console.log(data);
@@ -158,8 +161,9 @@ socketServer.on("connection", (socket) => {
 					socket.close(1000, "Invalid message");
 					return;
 				}
-				if (data.gameId.length != 2 || data.gameId.length > 20) {
+				if (data.gameId.length != 2 || data.name > 20) {
 					socket.close(1000, "TMI");
+					return;
 				}
 				let lobby = undefined;
 				for (let gameName in games) {
@@ -201,8 +205,6 @@ socketServer.on("connection", (socket) => {
 				if (data.action == "Start") {
 					if (socket.gameData.lobby.players.length >= socket.gameData.lobby.minPlayers) {
 						gameModule.createGame(socket.gameData.lobby);
-					} else {
-						socket.close(1000, "Not enough players");
 					}
 					return;
 				}
@@ -218,6 +220,7 @@ socketServer.on("connection", (socket) => {
 
 	});
 	socket.on("close", (code, reason) => {
+		connectedCount--;
 		if (socket.gameData.status == IN_LOBBY) {
 			socket.gameData.lobby.players.splice(socket.gameData.id, 1);
 			for (let i = 0; i < socket.gameData.lobby.players.length; i++) {
@@ -229,6 +232,6 @@ socketServer.on("connection", (socket) => {
 		} else if (socket.gameData.status == IN_GAME) {
 			socket.game.handleClose(socket);
 		}
-		console.log(socket.gameData.name + " left");
+		console.log(`${socket.gameData.name ? socket.gameData.name : "Someone"} left, ${connectedCount} remaining`);
 	});
 });
