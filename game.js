@@ -61,7 +61,7 @@ const handleT8Message = (data, socket) => {
 			}
 			const hand = []; // Get remaining hand
 			for (let i = 0; i < socket.gameData.hand.length; i++) {
-				if (!socket.gameData.hand[i] in data.cards) {
+				if (!data.cards.includes(socket.gameData.hand[i])) {
 					hand.push(socket.gameData.hand[i]);
 				}
 			}
