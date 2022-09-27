@@ -66,7 +66,8 @@ const handleT8Message = (data, socket) => {
 
 			const cardNr = data.cards[0][0];
 			for(let j = 0; j < data.cards.length; j++) {
-				if (!data.cards[j] in socket.gameData.hand) {
+				if (!socket.gameData.hand.includes(data.cards[j])) {
+					console.log(socket.gameData.hand, data.cards)
 					socket.close(1000, "Played card not in hand");
 					return;
 				}
@@ -100,13 +101,14 @@ const handleT8Message = (data, socket) => {
 				socket.gameData.chooseColor = true;
 			} else {
 				for (let i = 0; i < data.cards.length; i++) {
+					console.log("color is : '" + color + "'");
 					if (cardNr != topCard[0] && data.cards[i][1] != color) {
-						console.log(cardNr, topCard, data.cards[i], color);
 						socket.close(1000, "Not a valid move");
 						return;
 					} 
 					topCard = data.cards[i];
 					color = topCard[1];
+					console.log(topCard);
 				}
 			}
 			if (hand.length == 0 && cardNr == 'A') {
@@ -130,7 +132,7 @@ const handleT8Message = (data, socket) => {
 				let newCards = [];
 				if (cardNr == 'A' && index != socket.game.turn) {
 					for(let i = 0; i < data.cards.length; i++) {
-						const card = drawCard(game);
+						const card = drawCard(socket.game);
 						player.gameData.hand.push(card);
 						newCards.push(`"${card}"`);
 					}
@@ -157,7 +159,7 @@ const handleT8Message = (data, socket) => {
 			break;
 		}
 		case "Draw" : {
-			if (socket.gameData.id != turn) {
+			if (socket.gameData.id != socket.game.turn) {
 				socket.close(1000, "Not your turn");
 				return;
 			}
@@ -171,14 +173,15 @@ const handleT8Message = (data, socket) => {
 			}
 			const newCard = drawCard(socket.game);
 			socket.gameData.draws++;
+			
 			if (socket.gameData.draws == 3 && newCard[0] != topCard[0] && newCard[1] != socket.game.color) {
 				socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
 			}
 			for (let i = 0; i < socket.game.players.length; i++) {
 				if (i == socket.gameData.id) continue;
-				socket.game.players[i].send(`{"event" : "DrawOther"}`);
+				socket.game.players[i].send(`{"event" : "drawOther"}`);
 			}
-			socket.send(`{"event" : "DrawSelf", "Card" : "${newCard}"}`);
+			socket.send(`{"event" : "drawSelf", "card" : "${newCard}"}`);
 			break;
 		}
 	}

@@ -28,6 +28,17 @@ const closeSocket = async (socket) => {
 	});
 };
 
+const getMessage = async (socket) => {
+	return new Promise(async (resolve, reject) => {
+		const onMessage = (msg) => {
+			socket.off("message", onMessage);
+			resolve(msg);
+		};
+		socket.on("message", onMessage);
+		setTimeout(reject, 1000);
+	});
+};
+
 const objEq = (a, b) => {
 	return JSON.stringify(a) === JSON.stringify(b);
 };
@@ -38,6 +49,7 @@ const objEq = (a, b) => {
 const wsTest = async (socketData, actions) => {
 	return new Promise(async (resolve, reject) => {
 		let returning = false;
+		let currentStep = 0;
 		const doReject = (msg, reject) => {
 			returning = true;
 			for (const data of socketData) {
@@ -45,9 +57,8 @@ const wsTest = async (socketData, actions) => {
 					data.socket.close();
 				}
 			}
-			reject(msg);
+			reject(msg + ` at action ${currentStep}`);
 		}
-		let currentStep = 0;
 		for (let i = 0; i < socketData.length; i++) {
 			const data = socketData[i];
 			data.socket = await openSocket("ws://localhost:3000");
@@ -71,10 +82,11 @@ const wsTest = async (socketData, actions) => {
 				data.msgNr++;
 			}
 			data.socket.on("message", msgFunction);
-			data.socket.on("close", () => {
+			data.socket.on("close", (a, b) => {
 				if (returning) return;
 				data.isClosed = true;
 				if (data.closeStep != currentStep) {
+					console.log(b);
 					doReject(`Socket ${i} closed unexpectedly`, reject);
 					return;
 				};
@@ -251,7 +263,119 @@ const inLobbyInvalid = async () => {
 		]
 		
 	);
+	completedTests += await runWsTest(
+		[
+			{toReceive : [{event : "joined", players : []}], closeStep : 2}
+		],
+		[
+			{id : 0 , toSend : {gameId : "T8", name : "Me"}},
+			{id : 0 , toSend : {action : "Start"}},
+			undefined
+		],
+		"Start test"
+	);
 	return completedTests;
+};
+/*
+  'AS', '2D', '8D', '2C', 'JH', 'KH',
+  '3S', '9H', '3C', '6C', '8H', '9D',
+  'JC', 'QC', '7S', '5H', 'AD', 'QD',
+  '7C', '5C', '3D', '7H', '8S', '2H',
+  '7D', 'QS', '9C', 'QH', 'KS', '8C',
+  'AC', '6H', '5S', 'JS', '6S', '4H',
+  '6D', 'JD', '2S', '4D', '9S', 'AH',
+  'KC', '4S', 'KD', '4C', '5D', '3H'*/
+const playT8 = async () => {
+	return await runWsTest(
+		[{
+			toReceive : [
+				{event : "joined", players : []}, {event : "join", name : "Beta", id : 1},
+				{event : "start", topCard : "2D", hand : ["3H", "5D", "4C", "KD", "4S", "KC", "AH"]},
+				{event : "place", cards : ["KD", "KC"], newCards : []},
+				{event : "drawOther"},{event : "drawOther"}, {event : "drawOther"},
+				{event : "place", cards : ["4C"], newCards : []},
+				{event : "place", cards : ["4D", "4H"], newCards : []},
+				{event : "place", cards : ["AH"], newCards : []},
+				{event : "place", cards : ["3H"], newCards : []}
+			], closeStep : 20},
+		{
+			toReceive : [
+				{event : "joined", players : ["Alpha"]},
+				{event : "start", topCard : "2D", hand : ["9S", "4D", "2S", "JD", "6D", "4H", "6S"]},
+				{event : "place", cards : ["KD", "KC"], newCards : []},
+				{event : "drawSelf", card : "JS"}, {event : "drawSelf", card : "5S"}, {event : "drawSelf", card : "6H"},
+				{event : "place", cards : ["4C"], newCards : []},
+				{event : "place", cards : ["4D", "4H"], newCards : []},
+				{event : "place", cards : ["AH"], newCards : ["AC"]},
+				{event : "place", cards : ["3H"], newCards : []}
+			], closeStep : 20}
+		],
+		[
+			{id : 0, toSend : {gameId : "T8", name : "Alpha"}},
+			{id : 1, toSend : {gameId : "T8", name : "Beta"}},
+			{id : 0, toSend : {action : "Start"}},
+			{id : 0, toSend : {action : "Place", cards : ["KD", "KC"]}},
+			{id : 1, toSend : {action : "Draw"}}, {id : 1, toSend : {action : "Draw"}}, {id : 1, toSend : {action : "Draw"}},
+			{id : 0, toSend : {action : "Place", cards : ["4C"]}},
+			{id : 1, toSend : {action : "Place", cards : ["4D", "4H"]}},
+			{id : 0, toSend : {action : "Place", cards : ["AH"]}},
+			{id : 0, toSend : {action : "Place", cards : ["3H"]}}
+		],
+		"PlayT8 test"
+	)
+	
+	
+	
+	
+	
+	
+	
+	/*
+	let socket1 = await openSocket("ws://localhost:3000");
+	let socket2 = await openSocket("ws://localhost:3000");
+	
+	const isCard = (val) => {
+		return ["A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"].includes(val[0]) 
+			&& ["D", "H", "S", "C"].includes(val[1]); 
+	}
+	let passedTests = 0;
+	socket1.send(JSON.stringify({gameId : "T8", name : "Alpha"}));
+	socket2.send(JSON.stringify({gameId : "T8", name : "Beta"}));
+	await getMessage(socket1);
+	await getMessage(socket1);
+	await getMessage(socket2);
+	socket1.send(JSON.stringify({action : "Start"}));
+
+	const startData = [JSON.parse(await getMessage(socket1)), JSON.parse(await getMessage(socket2))];
+	for (const data of startData) {
+		if (data.event != "start") {
+			console.log("Wrong start event, expected start, got " + data.event);
+			return passedTests;
+		}
+		passedTests = 1;
+		if (data.hand.length != 7) {
+			console.log("Bad starting hand", data.hand);
+			return passedTests;
+		}
+
+		for (const card of data.hand) {
+			if (!isCard(card)) {
+				console.log("Bad starting hand", data.hand);
+				return passedTests;
+			}
+		}
+		passedTests = 2;
+		if (!isCard(data.topCard) || data.topCard[0] == "A" || data.topCard[0] == 8) {
+			console.log("Bad topcard", data.topCard);
+			return passedTests;
+		}
+		passedTests = 3;
+	}
+	
+	
+	await closeSocket(socket1);
+	await closeSocket(socket2);
+	return passedTests;*/
 };
 
 
@@ -261,8 +385,8 @@ const tests = {
 		completedTests += await lobbyValid();
 		completedTests += await joinLobbyInvalid();
 		completedTests += await inLobbyInvalid();
-		
-		console.log(`Passed ${completedTests} tests out of 6`);
+		completedTests += await playT8();
+		console.log(`Passed ${completedTests} tests out of 8`);
 	},
 	
 	T8 : () => {
