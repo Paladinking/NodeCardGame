@@ -153,7 +153,13 @@ socketServer.on("connection", (socket, req) => {
 	socket.gameData = {status : UNIDENTIFIED};
 	connectedCount++;
 	socket.on("message", (msg) => {
-		const data = JSON.parse(msg);
+		let data;
+		try {
+			data = JSON.parse(msg);
+		} catch (err) {
+			socket.close(1000, "Bad message");
+			return;
+		}
 		console.log(data);
 		switch (socket.gameData.status) {
 			case UNIDENTIFIED:
