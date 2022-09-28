@@ -285,18 +285,27 @@ const inLobbyInvalid = async () => {
   'AC', '6H', '5S', 'JS', '6S', '4H',
   '6D', 'JD', '2S', '4D', '9S', 'AH',
   'KC', '4S', 'KD', '4C', '5D', '3H'*/
-const playT8 = async () => {
+const playStandardT8 = async () => {
 	return await runWsTest(
 		[{
 			toReceive : [
 				{event : "joined", players : []}, {event : "join", name : "Beta", id : 1},
 				{event : "start", topCard : "2D", hand : ["3H", "5D", "4C", "KD", "4S", "KC", "AH"]},
 				{event : "place", cards : ["KD", "KC"], newCards : []},
-				{event : "drawOther"},{event : "drawOther"}, {event : "drawOther"},
+				{event : "drawOther"}, {event : "drawOther"}, {event : "drawOther"},
 				{event : "place", cards : ["4C"], newCards : []},
 				{event : "place", cards : ["4D", "4H"], newCards : []},
 				{event : "place", cards : ["AH"], newCards : []},
-				{event : "place", cards : ["3H"], newCards : []}
+				{event : "place", cards : ["3H"], newCards : []},
+				{event : "place", cards : ["6H", "6D", "6S"], newCards : []},
+				{event : "place", cards : ["4S"], newCards : []},
+				{event : "place", cards : ["9S"], newCards : []},
+				{event : "drawSelf", card : "8C"},
+				{event : "place", cards : ["8C"], newCards : []},
+				{event : "chooseColor", color : "S"},
+				{event : "place", cards : ["5S"], newCards : []},
+				{event : "place", cards : ["5D"], newCards : []},
+
 			], closeStep : 20},
 		{
 			toReceive : [
@@ -307,7 +316,15 @@ const playT8 = async () => {
 				{event : "place", cards : ["4C"], newCards : []},
 				{event : "place", cards : ["4D", "4H"], newCards : []},
 				{event : "place", cards : ["AH"], newCards : ["AC"]},
-				{event : "place", cards : ["3H"], newCards : []}
+				{event : "place", cards : ["3H"], newCards : []},
+				{event : "place", cards : ["6H", "6D", "6S"], newCards : []},
+				{event : "place", cards : ["4S"], newCards : []},
+				{event : "place", cards : ["9S"], newCards : []},
+				{event : "drawOther"},
+				{event : "place", cards : ["8C"], newCards : []},
+				{event : "chooseColor", color : "S"},
+				{event : "place", cards : ["5S"], newCards : []},
+				{event : "place", cards : ["5D"], newCards : []}
 			], closeStep : 20}
 		],
 		[
@@ -319,63 +336,19 @@ const playT8 = async () => {
 			{id : 0, toSend : {action : "Place", cards : ["4C"]}},
 			{id : 1, toSend : {action : "Place", cards : ["4D", "4H"]}},
 			{id : 0, toSend : {action : "Place", cards : ["AH"]}},
-			{id : 0, toSend : {action : "Place", cards : ["3H"]}}
+			{id : 0, toSend : {action : "Place", cards : ["3H"]}},
+			{id : 1, toSend : {action : "Place", cards : ["6H", "6D", "6S"]}},
+			{id : 0, toSend : {action : "Place", cards : ["4S"]}},
+			{id : 1, toSend : {action : "Place", cards : ["9S"]}},
+			{id : 0, toSend : {action : "Draw"}},
+			{id : 0, toSend : {action : "Place", cards : ["8C"]}},
+			{id : 0, toSend : {action : "ChooseColor", color : "S"}},
+			{id : 1, toSend : {action : "Place", cards : ["5S"]}},
+			{id : 0, toSend : {action : "Place", cards : ["5D"]}},
+			undefined
 		],
 		"PlayT8 test"
 	)
-	
-	
-	
-	
-	
-	
-	
-	/*
-	let socket1 = await openSocket("ws://localhost:3000");
-	let socket2 = await openSocket("ws://localhost:3000");
-	
-	const isCard = (val) => {
-		return ["A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"].includes(val[0]) 
-			&& ["D", "H", "S", "C"].includes(val[1]); 
-	}
-	let passedTests = 0;
-	socket1.send(JSON.stringify({gameId : "T8", name : "Alpha"}));
-	socket2.send(JSON.stringify({gameId : "T8", name : "Beta"}));
-	await getMessage(socket1);
-	await getMessage(socket1);
-	await getMessage(socket2);
-	socket1.send(JSON.stringify({action : "Start"}));
-
-	const startData = [JSON.parse(await getMessage(socket1)), JSON.parse(await getMessage(socket2))];
-	for (const data of startData) {
-		if (data.event != "start") {
-			console.log("Wrong start event, expected start, got " + data.event);
-			return passedTests;
-		}
-		passedTests = 1;
-		if (data.hand.length != 7) {
-			console.log("Bad starting hand", data.hand);
-			return passedTests;
-		}
-
-		for (const card of data.hand) {
-			if (!isCard(card)) {
-				console.log("Bad starting hand", data.hand);
-				return passedTests;
-			}
-		}
-		passedTests = 2;
-		if (!isCard(data.topCard) || data.topCard[0] == "A" || data.topCard[0] == 8) {
-			console.log("Bad topcard", data.topCard);
-			return passedTests;
-		}
-		passedTests = 3;
-	}
-	
-	
-	await closeSocket(socket1);
-	await closeSocket(socket2);
-	return passedTests;*/
 };
 
 
@@ -385,7 +358,7 @@ const tests = {
 		completedTests += await lobbyValid();
 		completedTests += await joinLobbyInvalid();
 		completedTests += await inLobbyInvalid();
-		completedTests += await playT8();
+		completedTests += await playStandardT8();
 		console.log(`Passed ${completedTests} tests out of 8`);
 	},
 	

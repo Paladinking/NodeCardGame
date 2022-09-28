@@ -101,14 +101,12 @@ const handleT8Message = (data, socket) => {
 				socket.gameData.chooseColor = true;
 			} else {
 				for (let i = 0; i < data.cards.length; i++) {
-					console.log("color is : '" + color + "'");
 					if (cardNr != topCard[0] && data.cards[i][1] != color) {
 						socket.close(1000, "Not a valid move");
 						return;
 					} 
 					topCard = data.cards[i];
 					color = topCard[1];
-					console.log(topCard);
 				}
 			}
 			if (hand.length == 0 && cardNr == 'A') {
@@ -154,7 +152,7 @@ const handleT8Message = (data, socket) => {
 			socket.game.color = data.color;
 			socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
 			socket.game.players.forEach((player) => {
-				player.send(`{"event" : "ChooseColor", "${data.color}"}`);
+				player.send(`{"event" : "chooseColor", "color" : "${data.color}"}`);
 			});
 			break;
 		}
@@ -167,16 +165,21 @@ const handleT8Message = (data, socket) => {
 			for (let i = 0; i < socket.gameData.hand.length; i++) {
 				const card = socket.gameData.hand[i];
 				if (card[0] == '8' || card[0] == topCard[0] || card[1] == socket.game.color) {
+					console.log(topCard, socket.gameData.hand);
 					socket.close(1000, "Only draw when no legal move exists");
 					return;
 				}
 			}
 			const newCard = drawCard(socket.game);
 			socket.gameData.draws++;
-			
-			if (socket.gameData.draws == 3 && newCard[0] != topCard[0] && newCard[1] != socket.game.color) {
-				socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
+			socket.gameData.hand.push(newCard);
+			if (socket.gameData.draws == 3) {
+				if (newCard[0] != topCard[0] && newCard[1] != socket.game.color) {
+					socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
+				}
+				socket.gameData.draws = 0;
 			}
+
 			for (let i = 0; i < socket.game.players.length; i++) {
 				if (i == socket.gameData.id) continue;
 				socket.game.players[i].send(`{"event" : "drawOther"}`);
