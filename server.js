@@ -161,7 +161,7 @@ socketServer.on("connection", (socket, req) => {
 					socket.close(1000, "Invalid message");
 					return;
 				}
-				if (data.gameId.length != 2 || data.name > 20) {
+				if (data.gameId.length != 2 || data.name.length > 20) {
 					socket.close(1000, "TMI");
 					return;
 				}
