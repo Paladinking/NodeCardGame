@@ -165,7 +165,7 @@ const handleT8Message = (data, socket) => {
 			const topCard = socket.game.pile[socket.game.pile.length - 1];
 			for (let i = 0; i < socket.gameData.hand.length; i++) {
 				const card = socket.gameData.hand[i];
-				if ((card[0] == '8' && socket.gameData.hand.length > 1) || ((card[0] == topCard[0] || card[1] == socket.game.color) && card[0] != 'A')) {
+				if (card[0] == '8' || card[0] == topCard[0] || card[1] == socket.game.color) {
 					console.log(topCard, socket.gameData.hand);
 					socket.close(1000, "Only draw when no legal move exists");
 					return;
