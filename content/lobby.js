@@ -41,13 +41,13 @@ const init = (name) =>
                                 const li = document.createElement('li');
                                 li.innerText = player;
                                 ul.append(li);
-                                players.push({ name: player });
+                                players.push({ name: player, cards: 7 });
                             }
                             const li = document.createElement('li');
                             li.classList.add('new');
                             li.innerText = name;
                             ul.append(li);
-                            players.push({ name: name, isPlayer: true });
+                            players.push({ name: name, isPlayer: true, cards: 7 });
 
                             playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
                             break;
@@ -58,7 +58,7 @@ const init = (name) =>
                             li.classList.add('new');
                             li.innerText = msg.name;
                             ul.append(li);
-                            players.push({ name: msg.name });
+                            players.push({ name: msg.name, cards: 7 });
                             playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
                             break;
                         }
@@ -72,7 +72,7 @@ const init = (name) =>
                     case 'start':
                         {
                             started = true;
-                            document.querySelector('#content').innerHTML = `<main class = "lobby-main" id = "main"><div id = "center-div" style = "position:relative;"></div></main>`;
+                            document.querySelector('#content').innerHTML = `<main class = "lobby-main" id = "main"><div id = "center-div" class = "center"></div><div id = "sidebar" class = "player-sidebar"></div></main>`;
                             game.startGame(wsckt, msg.hand, players, msg.topCard);
                             gameState = IN_GAME;
                             break;
@@ -89,7 +89,7 @@ const init = (name) =>
         {
             //kicked = true;
             //window.location.href = "/";
-            console.error(`Socket closed, ${event.code}, ${event.reason}`)
+            console.error(`Socket closed, ${event.code}, ${event.reason}`);
         });
         document.querySelector('#start-button').setAttribute('available', "true");
         document.querySelector('#start-button').addEventListener('click', () =>

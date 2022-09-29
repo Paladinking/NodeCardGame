@@ -22,7 +22,8 @@ const contentTypes = {
 	css :{contentType : "text/css", plain : true},
 	js : {contentType : "text/javascript", plain : true},
 	icon : {contentType : "image/x-icon", plain : false},
-	svg : {contentType : "image/svg+xml", plain : true}
+	svg : {contentType : "image/svg+xml", plain : true},
+	png: {contentType : "image/png", plain : false}
 }
 
 
@@ -33,7 +34,11 @@ let folderContent = {
 	"/favicon.ico" : contentTypes.icon,
 	"/lobby.html" : contentTypes.html,
 	"/lobby.js" : contentTypes.js,
-	"/game.mjs" : contentTypes.js
+	"/game.mjs" : contentTypes.js,
+	"/suits/S.png" : contentTypes.png,
+	"/suits/D.png" : contentTypes.png,
+	"/suits/C.png" : contentTypes.png,
+	"/suits/H.png" : contentTypes.png
 };
 
 

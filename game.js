@@ -1,6 +1,6 @@
 "use strict";
 
-const testing = true;
+const testing = false;
 
 const testingDeck = [
   'AS', '2D', '8D', '2C', 'JH', 'KH',
@@ -96,6 +96,7 @@ const handleT8Message = (data, socket) => {
 					if (hand[i][0] == '8') continue;
 					if (cardNr == topCard[0] || hand[i][1] == socket.game.color) {
 						socket.close(1000, "Not a valid 8 play");
+						return;
 					}
 				}
 				socket.gameData.chooseColor = true;
@@ -173,16 +174,18 @@ const handleT8Message = (data, socket) => {
 			const newCard = drawCard(socket.game);
 			socket.gameData.draws++;
 			socket.gameData.hand.push(newCard);
-			if (socket.gameData.draws == 3) {
-				if (newCard[0] != topCard[0] && newCard[1] != socket.game.color) {
-					socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
-				}
+			
+			if (newCard[0] == topCard[0] || newCard[1] == socket.game.color || newCard[0] == "8") {
 				socket.gameData.draws = 0;
-			}
+			} 
 
 			for (let i = 0; i < socket.game.players.length; i++) {
 				if (i == socket.gameData.id) continue;
-				socket.game.players[i].send(`{"event" : "drawOther"}`);
+				socket.game.players[i].send(`{"event" : "drawOther", "passed" : ${socket.gameData.draws == 3}}`);
+			}
+			if (socket.gameData.draws == 3) {
+				socket.gameData.draws = 0;
+				socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
 			}
 			socket.send(`{"event" : "drawSelf", "card" : "${newCard}"}`);
 			break;
