@@ -37,7 +37,7 @@ const shuffleDeck = (deck) => {
 const drawCard = (game) => {
 	const c = game.deck.pop();
 	if (game.deck.length == 0) {
-		const topCard = pile.pop();
+		const topCard = game.pile.pop();
 		game.deck = game.pile;
 		game.pile = [topCard];
 		shuffleDeck(game.deck);
