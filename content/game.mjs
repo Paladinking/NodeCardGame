@@ -9,7 +9,7 @@ const sortHand = (hand) =>
         {
             if (CARD_NUMBERS.indexOf(hand[i].name[0]) > CARD_NUMBERS.indexOf(hand[j].name[0]))
             {
-                let card = hand[i];
+                const card = hand[i];
                 hand[i] = hand[j];
                 hand[j] = card;
             }
@@ -32,7 +32,7 @@ const createCardElement = (cardName) =>
 
 const cloneHand = (round, hand) =>
 {
-    for (let card of hand)
+    for (const card of hand)
     {
         const element = card.element.cloneNode(true);
         card.element.remove();
@@ -121,7 +121,7 @@ const getValidMoves = (round, placedCards) =>
 {
     const moves = [];
     const topCard = round.tableCards[round.tableCards.length - 1].name;
-    for (let card of round.hand)
+    for (const card of round.hand)
     {
         if (card.name[0] != 8)
         {
@@ -137,7 +137,7 @@ const getValidMoves = (round, placedCards) =>
 
     if (moves.length == 0 /*this is against the rules but the server needs to cooperate*/ && placedCards.length == 0 && round.hand.length != 1)
     {
-        for (let card of round.hand)
+        for (const card of round.hand)
         {
             if (card.name[0] == 8)
             {
@@ -172,7 +172,7 @@ const makeTurn = async (round) =>
             const validMoves = getValidMoves(round, placedCards);
             if (validMoves.length > 0)
             {
-                for (let movedCard of validMoves)
+                for (const movedCard of validMoves)
                 {
                     if (isClicked(e.target, movedCard.element))
                     {
@@ -212,7 +212,7 @@ const makeTurn = async (round) =>
                 if (isClicked(e.target, round.confirmButton))
                 {
                     const cardNames = [];
-                    for (let card of placedCards)
+                    for (const card of placedCards)
                     {
                         const newElement = card.element.cloneNode(true);
                         card.element.remove();
@@ -251,7 +251,7 @@ const initGraphics = (round) =>
     round.centerElement.append(round.colorIndicator);
 
     const sidebar = document.querySelector('#sidebar');
-    for (let player of round.players)
+    for (const player of round.players)
     {
         const playerDiv = document.createElement('div');
         playerDiv.classList.add('player-div');
@@ -378,15 +378,15 @@ const handleMessage = async (msg, round) =>
                 changePlayerCards(currentTurnPlayer, -msg.cards.length);
                 if (!currentTurnPlayer.isPlayer)
                 {
-                    for (let cardName of msg.cards)
+                    for (const cardName of msg.cards)
                     {
                         const card = createCardElement(cardName);
+                        card.style.top = `${smallScreen ? -400 : -600}px`;
                         round.centerElement.append(card);
                         //const playerDivTop = currentTurnPlayer.playerDiv.offsetTop;
                         //card.style.top = `${playerDivTop - round.centerElement.parentElement.offsetHeight / 2}px`;
                         //console.log(playerDivTop, round.centerElement.parentElement.offsetHeight / 2, card.offsetHeight / 2);
                         //card.style.left = `${round.centerElement.offsetLeft * 2}px`;
-                        card.style.top = `${smallScreen ? -400 : -600}px`;
                         await wait(0);
                         await imageLoad(card.firstElementChild); //so that image is loaded while card is being animated
                         makeTableCard(card);
@@ -410,7 +410,7 @@ const handleMessage = async (msg, round) =>
                     if (cardNr == 'A')
                     {
 
-                        for (let player of round.players)
+                        for (const player of round.players)
                         {
                             if (player != currentTurnPlayer)
                             {
