@@ -85,12 +85,15 @@ const wsTest = async (socketData, actions) => {
 			data.socket.on("close", (a, b) => {
 				if (returning) return;
 				data.isClosed = true;
+				const reason = String.fromCharCode(...b);
 				if (data.closeStep != currentStep) {
-					console.log(b);
-					doReject(`Socket ${i} closed unexpectedly`, reject);
+					doReject(`Socket ${i} closed unexpectedly, reason : '${reason}'`, reject);
 					return;
-				};
-				
+				}
+				if (data.closeReason && data.closeReason != reason) {
+					doReject(`Unexpected close reason to socket ${i}: '${reason}', expected '${data.closeReason}'`, reject);
+					return;
+				}
 			});
 		}
 		for (let i = 0; i < actions.length; i++) {
@@ -189,13 +192,13 @@ const lobbyValid = async () => {
 const joinLobbyInvalid = async () => {
 	let completedTests = 0;
 	completedTests += await runWsTest(
-		[{toReceive : [], closeStep : 0}],
-		[{id : 0, toSend : {gameId : "T8", name : "123456789123456789123"}}],
+		[{toReceive : [], closeStep : 0, closeReason : "TMI"}],
+		[{id : 0, toSend : {gameId : "T8", name : "abcdefghijklmnopqrstuww"}}, undefined],
 		"To long name was not closed"
 	);
 	completedTests += await runWsTest(
 		[{toReceive : [], closeStep : 0}],
-		[{id : 0, toSend : {gameId : "Bad", name : "Hello"}}],
+		[{id : 0, toSend : {gameId : "Bad", name : "Hello"}}, undefined],
 		"Bad gameId was not closed"
 	);
 	completedTests += await runWsTest(
@@ -252,7 +255,8 @@ const inLobbyInvalid = async () => {
 			},
 			{
 				toReceive : [],
-				closeStep : 5
+				closeStep : 5,
+				closeReason : "Lobby is full"
 			}
 		],
 		[	{id : 0, toSend : {gameId : "T8", name : "a"}}, 
@@ -351,6 +355,55 @@ const playStandardT8 = async () => {
 	)
 };
 
+const invalidT8Playes = async () => {
+	let completedTests = 0;
+	completedTests += await runWsTest(
+		[
+			{
+				toReceive : [
+					{event : "joined", players : []}, {event : "join", name : "Beta", id : 1}, {event : "join", name : "Ceta", id : 2},
+					{event : "start", topCard : "2D", hand : ["3H", "5D", "4C", "KD", "4S", "KC", "AH"]},
+					{event : "leave", id : 1},
+					{event : "place", cards : ["5D"], newCards : []},
+					{event : "leave", id : 1}
+				],
+				closeStep : 7
+			},
+			{
+				toReceive : [
+					{event : "joined", players : ["Alpha"]}, {event : "join", name : "Ceta", id : 2},
+					{event : "start", topCard : "2D", hand :  ["9S", "4D", "2S", "JD", "6D", "4H", "6S"]}
+				],
+				closeStep : 4,
+				closeReason : "Not your turn"
+			}, 
+			{
+				toReceive : [
+					{event : "joined", players : ["Alpha", "Beta"]},
+					{event : "start", topCard : "2D", hand : ["JS", "5S", "6H", "AC", "8C", "KS", "QH"]},
+					{event : "leave", id : 1},
+					{event : "place", cards : ["5D"], newCards : []}
+				],
+				closeStep : 6,
+				closeReason : "Played card not in hand"
+			}
+			
+		],
+		[
+			{id : 0, toSend : {gameId : "T8", name : "Alpha"}},
+			{id : 1, toSend : {gameId : "T8", name : "Beta"}},
+			{id : 2, toSend : {gameId : "T8", name : "Ceta"}},
+			{id : 2, toSend : {action : "Start"}},
+			{id : 1, toSend : {action : "Place", cards : ["4D"]}},
+			{id : 0, toSend : {action : "Place", cards : ["5D"]}},
+			{id : 2, toSend : {action : "Place", cards : ["6D"]}},
+			{id : 0, toSend : {action : "Leave"}}
+			
+		],
+		"Play on not your turn + play not in hand"
+	)
+	return completedTests;
+};
 
 const tests = {
 	general : async () => {
@@ -359,7 +412,8 @@ const tests = {
 		completedTests += await joinLobbyInvalid();
 		completedTests += await inLobbyInvalid();
 		completedTests += await playStandardT8();
-		console.log(`Passed ${completedTests} tests out of 8`);
+		completedTests += await invalidT8Playes();
+		console.log(`Passed ${completedTests} tests out of 9`);
 	},
 	
 	T8 : () => {
