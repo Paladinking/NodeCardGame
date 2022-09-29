@@ -1,6 +1,6 @@
 "use strict";
 
-const testing = true;
+const testing = false;
 
 const testingDeck = [
   'AS', '2D', '8D', '2C', 'JH', 'KH',
@@ -165,7 +165,7 @@ const handleT8Message = (data, socket) => {
 			const topCard = socket.game.pile[socket.game.pile.length - 1];
 			for (let i = 0; i < socket.gameData.hand.length; i++) {
 				const card = socket.gameData.hand[i];
-				if (card[0] == '8' || card[0] == topCard[0] || card[1] == socket.game.color) {
+				if ((card[0] == '8' && socket.gameData.hand.length > 1) || ((card[0] == topCard[0] || card[1] == socket.game.color) && card[0] != 'A')) {
 					console.log(topCard, socket.gameData.hand);
 					socket.close(1000, "Only draw when no legal move exists");
 					return;
@@ -183,8 +183,8 @@ const handleT8Message = (data, socket) => {
 				if (i == socket.gameData.id) continue;
 				socket.game.players[i].send(`{"event" : "drawOther", "passed" : ${socket.gameData.draws == 3}}`);
 			}
-			if (socket.game.draws == 3) {
-				socket.game.draws = 0;
+			if (socket.gameData.draws == 3) {
+				socket.gameData.draws = 0;
 				socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
 			}
 			socket.send(`{"event" : "drawSelf", "card" : "${newCard}"}`);
