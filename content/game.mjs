@@ -367,6 +367,11 @@ const changePlayerCards = (player, amount) =>
     }
 };
 
+const animateCard = (card, from, to, time) =>
+{
+    card.animate([from, to], { duration: time, easing: 'ease' });
+};
+
 const handleMessage = async (msg, round) =>
 {
     switch (msg.event)
@@ -381,15 +386,10 @@ const handleMessage = async (msg, round) =>
                     for (const cardName of msg.cards)
                     {
                         const card = createCardElement(cardName);
-                        card.style.top = `${smallScreen ? -400 : -600}px`;
                         round.centerElement.append(card);
-                        //const playerDivTop = currentTurnPlayer.playerDiv.offsetTop;
-                        //card.style.top = `${playerDivTop - round.centerElement.parentElement.offsetHeight / 2}px`;
-                        //console.log(playerDivTop, round.centerElement.parentElement.offsetHeight / 2, card.offsetHeight / 2);
-                        //card.style.left = `${round.centerElement.offsetLeft * 2}px`;
-                        await wait(0);
                         await imageLoad(card.firstElementChild); //so that image is loaded while card is being animated
                         makeTableCard(card);
+                        animateCard(card, { top: `${smallScreen ? -400 : -600}px` }, { top: card.style.top }, 300);
                         round.tableCards.push({ element: card, name: cardName });
                         await wait(500);
                     }
