@@ -56,15 +56,15 @@ const handleT8Message = (data, socket) => {
 				return;
 			}
 			if (socket.gameData.id != socket.game.turn) {
-				socket.close(1000, "Not your turn!");
+				socket.close(1000, "Not your turn");
 				return;
 			}
 			if (!Array.isArray(data.cards)) {
 				socket.close(1000, "Bad message");
 			}
-			
 
 			const cardNr = data.cards[0][0];
+			
 			for(let j = 0; j < data.cards.length; j++) {
 				if (!socket.gameData.hand.includes(data.cards[j])) {
 					console.log(socket.gameData.hand, data.cards)
@@ -141,7 +141,7 @@ const handleT8Message = (data, socket) => {
 		}
 		case "ChooseColor": {
 			if (!socket.gameData.chooseColor) {
-				socket.close(1000, "Not a valid message");
+				socket.close(1000, "Not allowed to pick color");
 				return;
 			}
 			if (!(data.color == "S" || data.color == "C" || data.color == "D" || data.color == "H")) {
@@ -185,6 +185,10 @@ const handleT8Message = (data, socket) => {
 				socket.game.players[i].send(`{"event" : "drawOther"}`);
 			}
 			socket.send(`{"event" : "drawSelf", "card" : "${newCard}"}`);
+			break;
+		}
+		default : {
+			socket.close(1000, "Invalid action");
 			break;
 		}
 	}
