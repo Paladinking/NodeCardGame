@@ -94,7 +94,7 @@ const handleT8Message = (data, socket) => {
 				}
 				for (let i = 0; i < hand.length; i++) {
 					if (hand[i][0] == '8') continue;
-					if (cardNr == topCard[0] || hand[i][1] == socket.game.color) {
+					if (hand[i][0] == topCard[0] || hand[i][1] == color) {
 						socket.close(1000, "Not a valid 8 play");
 						return;
 					}
@@ -124,7 +124,9 @@ const handleT8Message = (data, socket) => {
 			}
 
 			if (cardNr != 'A' && cardNr != '8') {
+				
 				socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
+				console.log("New turn: " + socket.game.turn);
 			}
 			const playedCardsStr = `[${data.cards.map(c => '"' + c + '"')}]`;
 			socket.game.players.forEach((player, index) => {
@@ -152,6 +154,7 @@ const handleT8Message = (data, socket) => {
 			socket.gameData.chooseColor = false;
 			socket.game.color = data.color;
 			socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
+			console.log("New turn: " + socket.game.turn);
 			socket.game.players.forEach((player) => {
 				player.send(`{"event" : "chooseColor", "color" : "${data.color}"}`);
 			});
@@ -186,6 +189,7 @@ const handleT8Message = (data, socket) => {
 			if (socket.gameData.draws == 3) {
 				socket.gameData.draws = 0;
 				socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
+				console.log("New turn: " + socket.game.turn);
 			}
 			socket.send(`{"event" : "drawSelf", "card" : "${newCard}"}`);
 			break;
@@ -200,12 +204,13 @@ const handleT8Message = (data, socket) => {
 
 let handleT8Init = (game) => {
 	game.deck = testing ? testingDeck.slice() : createDeck();
+	if (!testing) shuffleDeck(game.deck);
 	game.turn = 0;
 	let index = 0;
 	while (game.deck[index][0] == 'A' || game.deck[index][0] == '8') {
 		index++;
 	}
-	if (!testing) shuffleDeck(game.deck);
+	
 	game.pile = game.deck.splice(index, 1);
 	game.color = game.pile[0][1];
 	game.players.forEach((player) => {
