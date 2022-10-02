@@ -1,3 +1,4 @@
+"use strict";
 const GAME_TYPES = { "T8": { name: "Vändåtta", minPlayers: 2, maxPlayers: 5 }, "CN": { name: "Caravan", minPlayers: 2, maxPlayers: 2 } };
 const CARD_NUMBERS = "A23456789JQK";
 const CARD_COLORS = "SCDH";
@@ -26,10 +27,6 @@ const init = (name) =>
             console.log(e.data);
             const msg = JSON.parse(e.data);
             console.log(msg);
-            /*
-            msg.event = "start";
-            msg.hand = ["4S", "6D", "KC", "7C", "7D", "7C", "QH","4S", "6D", "KC", "7C", "7D", "7C", "QH"];
-            */
             if (gameState == LOBBY)
             {
                 switch (msg.event)
@@ -87,9 +84,8 @@ const init = (name) =>
         });
         wsckt.addEventListener('close', (event) =>
         {
-            //kicked = true;
-            //window.location.href = "/";
-            console.error(`Socket closed, ${event.code}, ${event.reason}`);
+            kicked = true;
+            window.location.href = "/";
         });
         document.querySelector('#start-button').setAttribute('available', "true");
         document.querySelector('#start-button').addEventListener('click', () =>
