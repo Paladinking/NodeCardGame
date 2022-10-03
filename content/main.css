@@ -159,8 +159,8 @@ body
 .card-wrapper
 {
     position: absolute;
-    height: fit-content;
     top: -200rem;
+    cursor: pointer;
 }
 
 .hoverable-card
@@ -363,7 +363,7 @@ body
     width: 15rem;
     position: absolute;
     height: 100%;
-    background: #8ea8ff;
+    background: #ffffff;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
@@ -373,12 +373,31 @@ body
 .player-div
 {
     text-align: center;
-    border-style: solid;
-    border-left: 1px;
-    border-right: 1px;
-    border-color: black;
     width: 100%;
     position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition-property: color, font-size;
+    transition-duration: 0.3s;
+    flex-direction: column;
+}
+
+.current-player
+{
+    color: crimson;
+}
+
+.current-round
+{
+    font-size: 1.4em;
+}
+
+.won
+{
+    font-size: 0.81em;
+    color: gray;
 }
 
 @media screen and (max-width: 700px)
