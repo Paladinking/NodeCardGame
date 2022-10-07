@@ -309,6 +309,7 @@ const playStandardT8 = async () => {
 				{event : "chooseColor", color : "S"},
 				{event : "place", cards : ["5S"], newCards : []},
 				{event : "place", cards : ["5D"], newCards : []},
+				{event : "gameOver"}
 
 			], closeStep : 18, closeReason : "Game is over"},
 		{
@@ -328,7 +329,8 @@ const playStandardT8 = async () => {
 				{event : "place", cards : ["8C"], newCards : []},
 				{event : "chooseColor", color : "S"},
 				{event : "place", cards : ["5S"], newCards : []},
-				{event : "place", cards : ["5D"], newCards : []}
+				{event : "place", cards : ["5D"], newCards : []},
+				{event : "gameOver"}
 			], closeStep : 19, closeReason : "Game is over now"}
 		],
 		[
@@ -365,7 +367,8 @@ const invalidT8Playes = async () => {
 					{event : "start", topCard : "2D", hand : ["3H", "5D", "4C", "KD", "4S", "KC", "AH"]},
 					{event : "leave", id : 1},
 					{event : "place", cards : ["5D"], newCards : []},
-					{event : "leave", id : 1}
+					{event : "leave", id : 1},
+					{event : "gameOver"}
 				],
 				closeStep : 6, closeReason : "Game is over"
 			},
