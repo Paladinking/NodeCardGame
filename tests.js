@@ -310,7 +310,7 @@ const playStandardT8 = async () => {
 				{event : "place", cards : ["5S"], newCards : []},
 				{event : "place", cards : ["5D"], newCards : []},
 
-			], closeStep : 20},
+			], closeStep : 18, closeReason : "Game is over"},
 		{
 			toReceive : [
 				{event : "joined", players : ["Alpha"]},
@@ -329,7 +329,7 @@ const playStandardT8 = async () => {
 				{event : "chooseColor", color : "S"},
 				{event : "place", cards : ["5S"], newCards : []},
 				{event : "place", cards : ["5D"], newCards : []}
-			], closeStep : 20}
+			], closeStep : 19, closeReason : "Game is over now"}
 		],
 		[
 			{id : 0, toSend : {gameId : "T8", name : "Alpha"}},
@@ -367,7 +367,7 @@ const invalidT8Playes = async () => {
 					{event : "place", cards : ["5D"], newCards : []},
 					{event : "leave", id : 1}
 				],
-				closeStep : 7
+				closeStep : 6, closeReason : "Game is over"
 			},
 			{
 				toReceive : [

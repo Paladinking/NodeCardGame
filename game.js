@@ -45,6 +45,17 @@ const drawCard = (game) => {
 	return c;
 };
 
+const passTurn = (game) => {
+	for (let i = 0; i < game.players.length; i++) {
+		game.turn = (game.turn + 1) % game.players.length;
+		if (game.players[i].gameData.playing) {
+			console.log("New turn: " + game.turn);
+			return;
+		}
+	}
+	console.log("Nobody left playing...");
+}
+
 
 const handleT8Message = (data, socket) => {
 	switch (data.action) {
@@ -59,8 +70,10 @@ const handleT8Message = (data, socket) => {
 				socket.close(1000, "Not your turn");
 				return;
 			}
+
 			if (!Array.isArray(data.cards)) {
 				socket.close(1000, "Bad message");
+				return;
 			}
 
 			const cardNr = data.cards[0][0];
@@ -124,9 +137,7 @@ const handleT8Message = (data, socket) => {
 			}
 
 			if (cardNr != 'A' && cardNr != '8') {
-				
-				socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
-				console.log("New turn: " + socket.game.turn);
+				passTurn(socket.game);
 			}
 			const playedCardsStr = `[${data.cards.map(c => '"' + c + '"')}]`;
 			socket.game.players.forEach((player, index) => {
@@ -140,6 +151,15 @@ const handleT8Message = (data, socket) => {
 				}
 				player.send(`{"event" : "place", "cards" : ${playedCardsStr}, "newCards" : [${newCards}]}`);
 			});
+			if (hand.length == 0) {
+				socket.game.remainingPlayers -= 1;
+				if (socket.game.remainingPlayers == 1) {
+					socket.game.players.forEach((player) => {
+						socket.close(1000, "Game is over");			
+					});
+				}
+				socket.gameData.playing = false;
+			}
 			break;
 		}
 		case "ChooseColor": {
@@ -153,8 +173,7 @@ const handleT8Message = (data, socket) => {
 			} 
 			socket.gameData.chooseColor = false;
 			socket.game.color = data.color;
-			socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
-			console.log("New turn: " + socket.game.turn);
+			passTurn(socket.game);
 			socket.game.players.forEach((player) => {
 				player.send(`{"event" : "chooseColor", "color" : "${data.color}"}`);
 			});
@@ -170,7 +189,6 @@ const handleT8Message = (data, socket) => {
 				for (let i = 0; i < socket.gameData.hand.length; i++) {
 					const card = socket.gameData.hand[i];
 					if (card[0] == '8' || card[0] == topCard[0] || card[1] == socket.game.color) {
-						console.log(topCard, socket.gameData.hand);
 						socket.close(1000, "Only draw when no legal move exists");
 						return;
 					}
@@ -191,8 +209,7 @@ const handleT8Message = (data, socket) => {
 			}
 			if (socket.gameData.draws == 3) {
 				socket.gameData.draws = 0;
-				socket.game.turn = (socket.game.turn + 1) % socket.game.players.length;
-				console.log("New turn: " + socket.game.turn);
+				passTurn(socket.game);
 			}
 			socket.send(`{"event" : "drawSelf", "card" : "${newCard}"}`);
 			break;
@@ -214,11 +231,13 @@ let handleT8Init = (game) => {
 		index++;
 	}
 	
+	game.remainingPlayers = game.players.length;
 	game.pile = game.deck.splice(index, 1);
 	game.color = game.pile[0][1];
 	game.players.forEach((player) => {
 		player.gameData.hand = [];
 		player.gameData.chooseColor = false;
+		player.gameData.playing = true;
 		player.gameData.draws = 0;
 		for (let j =0 ; j < 7; j++) {
 			player.gameData.hand.push(game.deck.pop());
@@ -228,16 +247,31 @@ let handleT8Init = (game) => {
 };
 
 const handleT8Close = (socket) => {
+	if (socket.game.remainingPlayers == 1) {
+		return;
+	}
 	const topCard = socket.game.pile.pop();
 	socket.game.pile.push(...socket.gameData.hand, topCard);
 	socket.game.players.splice(socket.gameData.id, 1);
+	socket.game.remainingPlayers -= 1;
 	for (let i = 0; i < socket.game.players.length; i++) {
 		socket.game.players[i].send(`{"event" : "leave", "id" : ${socket.gameData.id}}`);
+		if (socket.game.remainingPlayers == 1) {
+			socket.game.players[i].close(1000, "Game is over");
+		}
 		if (socket.game.players[i].gameData.id != i) {
 			socket.game.players[i].gameData.id = i;
 		}
 	}
+	if (socket.game.remainingPlayers == 1) {
+		return;
+	}
+	
 	socket.game.turn = socket.game.turn % socket.game.players.length;
+	if(!socket.game.players[socket.game.turn].gameData.playing) {
+		passTurn(socket.game);
+	}
+	console.log("Player left, new turn: " + socket.game.turn);
 };
 
 
