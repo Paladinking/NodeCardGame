@@ -69,25 +69,22 @@ const updateHand = async (hand) =>
         const top = Math.abs(percentage * 100 - 50);
         card.style.top = `${top}px`;
         await imageLoad(card.firstElementChild);
-        const height = card.firstElementChild.offsetHeight;
-        card.style.height = `${height}px`;
         const left = percentage * (350) - 175 - card.offsetWidth / 2;
         card.style.left = `${left}px`;
         card.style.zIndex = i;
+        const img = card.firstElementChild;
+        img.style.top = "0px"
 
         card.addEventListener('mouseover', () =>
         {
-            card.style.top = `${(top - Math.cos(rotation * Math.PI / 180) * 90)}px`;
-            card.style.left = `${left + (Math.sin(rotation * Math.PI / 180) * 90)}px`;
-            card.style.height = `${height + 90}px`;
+            img.style.top = `-90px`;
 
         });
         card.addEventListener('mouseout', () =>
         {
-            card.style.top = `${top}px`;
-            card.style.left = `${left}px`;
-            card.style.height = `${height}px`;
+            img.style.top = "0px"
         });
+
     }
 };
 
@@ -200,6 +197,7 @@ const makeTurn = (round) =>
 
                     cloneHand(round, round.hand);
                     await updateHand(round.hand);
+                    movedCard.element.firstElementChild.style.top = "0px" //don't know why this is necessary
                     movedCard.element.addEventListener('click', async () =>
                     {
                         const returnedCard = placedCards.pop();
@@ -268,13 +266,15 @@ const initGraphics = async (round) =>
     {
         const playerDiv = document.createElement('div');
         playerDiv.classList.add('player-div');
-        playerDiv.innerHTML = `<h2>${player.name}</h2><br><h3>7<h3>`;
-        sidebar.append(playerDiv);
-        player.playerDiv = playerDiv;
+        let isPlayerString = "";
         if (player.isPlayer)
         {
             playerDiv.classList.add('current-player');
+            isPlayerString = " (You)";
         }
+        playerDiv.innerHTML = `<h2>${player.name}${isPlayerString}</h2><br><h3>7<h3>`;
+        sidebar.append(playerDiv);
+        player.playerDiv = playerDiv;
     }
     round.players[round.currentTurn].playerDiv.classList.add('current-round');
 };
@@ -419,7 +419,7 @@ const handleMessage = async (msg, round) =>
                         const card = createCardElement(cardName);
                         round.centerElement.append(card);
                         card.style.top = null;
-                        await imageLoad(card.firstElementChild); //so that image is loaded while card is being animated
+                        await imageLoad(card.firstElementChild); //so that image is loaded when card is animated
                         makeTableCard(card);
                         animateCard(card, { top: `${smallScreen ? -400 : -600}px` }, { top: card.style.top }, 300);
                         round.tableCards.push({ element: card, name: cardName });

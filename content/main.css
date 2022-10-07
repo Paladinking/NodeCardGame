@@ -163,6 +163,12 @@ body
     cursor: pointer;
 }
 
+.card-wrapper img
+{
+    position: relative;
+    transition: all 0.3s;
+}
+
 .hoverable-card
 {
     transition: all 0.3s;
@@ -282,6 +288,7 @@ body
     border-radius: 4rem;
     position: absolute;
     left: 17rem;
+    z-index: 1;
 }
 
 .confirm-button:hover
