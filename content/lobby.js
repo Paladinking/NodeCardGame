@@ -5,8 +5,8 @@ const CARD_COLORS = "SCDH";
 const LOBBY = 0, IN_GAME = 1;
 const gameId = new URLSearchParams(window.location.search).get('game');
 const playersSpan = document.querySelector('#players');
-let started = false;
 let kicked = false;
+let gameState;
 import { game } from "/game.mjs";
 
 
@@ -20,7 +20,7 @@ const init = (name) =>
     let wsckt = new WebSocket("ws://" + window.location.href.split('//')[1].split('?')[0]);
     wsckt.addEventListener('open', () =>
     {
-        let gameState = LOBBY;
+        gameState = LOBBY;
         wsckt.send(JSON.stringify({ "gameId": gameId, "name": name }));
         wsckt.addEventListener('message', (e) =>
         {
@@ -68,7 +68,6 @@ const init = (name) =>
                         }
                     case 'start':
                         {
-                            started = true;
                             document.querySelector('#content').innerHTML = `<main class = "lobby-main" id = "main"><div id = "center-div" class = "center"></div><div id = "sidebar" class = "player-sidebar"></div></main>`;
                             game.startGame(wsckt, msg.hand, players, msg.topCard);
                             gameState = IN_GAME;
@@ -84,8 +83,11 @@ const init = (name) =>
         });
         wsckt.addEventListener('close', (event) =>
         {
-            kicked = true;
-            window.location.href = "/";
+            if (event.reason != "Game is over")
+            {
+                kicked = true;
+                window.location.href = "/"; //should probably show a screen or something but whatevs
+            }
         });
         document.querySelector('#start-button').setAttribute('available', "true");
         document.querySelector('#start-button').addEventListener('click', () =>
@@ -146,7 +148,7 @@ let startBackgroundCards = () =>
         main.prepend(card);
         const animate = () =>
         {
-            if (!started)
+            if (gameState != IN_GAME)
             {
                 const timing = 2000 + Math.floor(Math.random() * 10000);
                 const x = Math.floor(Math.random() * main.offsetWidth + 200) - 400;
