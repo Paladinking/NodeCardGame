@@ -35,10 +35,10 @@ let folderContent = {
 	"/lobby.html" : contentTypes.html,
 	"/lobby.js" : contentTypes.js,
 	"/game.mjs" : contentTypes.js,
-	"/suits/S.png" : contentTypes.png,
-	"/suits/D.png" : contentTypes.png,
-	"/suits/C.png" : contentTypes.png,
-	"/suits/H.png" : contentTypes.png
+	"/suits/S.svg" : contentTypes.svg,
+	"/suits/D.svg" : contentTypes.svg,
+	"/suits/C.svg" : contentTypes.svg,
+	"/suits/H.svg" : contentTypes.svg
 };
 
 

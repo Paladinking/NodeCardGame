@@ -331,7 +331,7 @@ const playStandardT8 = async () => {
 				{event : "place", cards : ["5S"], newCards : []},
 				{event : "place", cards : ["5D"], newCards : []},
 				{event : "gameOver"}
-			], closeStep : 19, closeReason : "Game is over now"}
+			], closeStep : 18, closeReason : "Game is over"}
 		],
 		[
 			{id : 0, toSend : {gameId : "T8", name : "Alpha"}},

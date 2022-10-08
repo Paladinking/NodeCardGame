@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="card" face="C" height="100px" preserveAspectRatio="none" viewBox="-120 -120 240 240" width="100px">
+<symbol id="SCA" viewBox="-500 -500 1000 1000" preserveAspectRatio="xMinYMid">
+<path d="M30 150C35 385 85 400 130 500L-130 500C-85 400 -35 385 -30 150A10 10 0 0 0 -50 150A210 210 0 1 1 -124 -51A10 10 0 0 0 -110 -65A230 230 0 1 1 110 -65A10 10 0 0 0 124 -51A210 210 0 1 1 50 150A10 10 0 0 0 30 150Z" fill="black">
+</path>
+</symbol>
+<use xlink:href="#SCA" height="200" x="-100" y="-100">
+</use>
+</svg>

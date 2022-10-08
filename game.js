@@ -155,8 +155,8 @@ const handleT8Message = (data, socket) => {
 				socket.game.remainingPlayers -= 1;
 				if (socket.game.remainingPlayers == 1) {
 					socket.game.players.forEach((player) => {
-						socket.send('{"event" : "gameOver"}');
-						socket.close(1000, "Game is over");			
+						player.send('{"event" : "gameOver"}');
+						player.close(1000, "Game is over");			
 					});
 				}
 				socket.gameData.playing = false;

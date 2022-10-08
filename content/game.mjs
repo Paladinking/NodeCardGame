@@ -256,7 +256,7 @@ const initGraphics = async (round) =>
     round.confirmButton.innerText = "OK";
 
     round.colorIndicator.classList.add('color-indicator');
-    round.colorIndicator.src = "/suits/C.png";
+    round.colorIndicator.src = "/suits/C.svg";
     round.colorIndicator.width = "40";
     round.colorIndicator.style.display = "none";
     round.centerElement.append(round.colorIndicator);
@@ -324,7 +324,7 @@ const chooseColorPopup = (round) =>
         for (let i = 0; i < 4; i++)
         {
             const element = document.createElement('img');
-            element.src = `/suits/${colors[i]}.png`;
+            element.src = `/suits/${colors[i]}.svg`;
             element.draggable = false;
             container.append(element);
         }
@@ -473,7 +473,7 @@ const handleMessage = async (msg, round) =>
             {
                 const topCard = round.tableCards[round.tableCards.length - 1];
                 topCard.name = `${topCard.name[0]}${msg.color}`;
-                round.colorIndicator.src = `/suits/${msg.color}.png`;
+                round.colorIndicator.src = `/suits/${msg.color}.svg`;
                 round.colorIndicator.style.display = null;
                 nextTurn(round);
                 if (round.players[round.currentTurn].isPlayer)
