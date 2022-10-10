@@ -2,6 +2,7 @@
 const CARD_NUMBERS = "23456789JQKA";
 const CARD_COLORS = "SCDH";
 const smallScreen = window.innerWidth < 1700;
+
 const sortHand = (hand) =>
 {
     for (let i = 0; i < hand.length; i++)
@@ -45,18 +46,19 @@ const createCardElement = (cardName) =>
     return card;
 };
 
-const cloneHand = (round, hand) =>
+const cloneHand = async (round) =>
 {
-    for (const card of hand)
+    for (const card of round.hand)
     {
         const element = card.element.cloneNode(true);
         card.element.remove();
         card.element = element;
         round.centerElement.append(card.element);
+        await imageLoad(card.element.firstElementChild);
     }
 };
 
-const updateHand = async (hand) =>
+const updateHand = (hand) =>
 {
     hand = sortHand(hand);
     for (let i = 0; i < hand.length; i++)
@@ -68,12 +70,11 @@ const updateHand = async (hand) =>
         card.style.transform = `rotate(${rotation}deg)`;
         const top = Math.abs(percentage * 100 - 50);
         card.style.top = `${top}px`;
-        await imageLoad(card.firstElementChild);
         const left = percentage * (350) - 175 - card.offsetWidth / 2;
         card.style.left = `${left}px`;
         card.style.zIndex = i;
         const img = card.firstElementChild;
-        img.style.top = "0px"
+        img.style.top = "0px";
 
         card.addEventListener('mouseover', () =>
         {
@@ -82,7 +83,7 @@ const updateHand = async (hand) =>
         });
         card.addEventListener('mouseout', () =>
         {
-            img.style.top = "0px"
+            img.style.top = "0px";
         });
 
     }
@@ -134,30 +135,30 @@ const validPlacement = (cardName, cardName2) =>
 const getValidMoves = (round, placedCards) => 
 {
     const moves = [];
+    const eights = [];
     const topCard = round.tableCards[round.tableCards.length - 1].name;
     for (const card of round.hand)
     {
-        if (card.name[0] != 8)
+        if (card.name[0] != 8)//card is not an eight
         {
-            if ((placedCards.length == 0 && validPlacement(topCard, card.name)) || (placedCards.length > 0 && placedCards[0].name[0] == card.name[0]))
-            {
-                if (round.hand.length != 1 || card.name[0] != 'A')
-                {
-                    moves.push(card);
-                }
-            }
-        }
-    }
-
-    if (moves.length == 0 /*this is against the rules but the server needs to cooperate*/ && placedCards.length == 0 && round.hand.length != 1)
-    {
-        for (const card of round.hand)
-        {
-            if (card.name[0] == 8)
+            if (((placedCards.length == 0 && validPlacement(topCard, card.name))  //card can either be placed on the top card or on a previusly placed card
+                || (placedCards.length > 0 && placedCards[0].name[0] == card.name[0]))
+                && (card.name[0] != 'A' //card is not last card or card is not an ace
+                    || round.hand.length != 1))
             {
                 moves.push(card);
             }
         }
+        else
+        {
+            eights.push(card);
+        }
+
+    }
+
+    if (moves.length == 0 /*this is against the rules but the server needs to cooperate*/ && placedCards.length == 0 && round.hand.length != 1)
+    {
+        moves.push(...eights);
     }
     return moves;
 };
@@ -170,11 +171,20 @@ const wait = (time) =>
     });
 };
 
+const refreshHand = async (round) =>
+{
+    await cloneHand(round);
+    updateHand(round.hand);
+};
+
 let turnClick;
 
 const makeTurn = (round) =>
 {
-    console.log("Making turn");
+    if (round.finishedPlayers.length == round.players.length - 1)
+    {
+        return;
+    }
     const placedCards = [];
     turnClick = async (e) =>
     {
@@ -195,15 +205,13 @@ const makeTurn = (round) =>
                     movedCard.element = makeTableCard(newMovedCardElement);
                     animateCard(newMovedCardElement, { top: pos.top, left: pos.left }, { top: movedCard.element.style.top, left: movedCard.element.style.left }, 300);
 
-                    cloneHand(round, round.hand);
-                    await updateHand(round.hand);
-                    movedCard.element.firstElementChild.style.top = "0px" //don't know why this is necessary
+                    refreshHand(round);
+                    movedCard.element.firstElementChild.style.top = "0px"; //don't know why this is necessary
                     movedCard.element.addEventListener('click', async () =>
                     {
                         const returnedCard = placedCards.pop();
                         round.hand.push(returnedCard);
-                        cloneHand(round, round.hand);
-                        await updateHand(round.hand);
+                        await refreshHand(round);
                     });
                     round.confirmButton.style.display = null;
                     break;
@@ -233,7 +241,6 @@ const makeTurn = (round) =>
                     cardNames.push(card.name);
                 }
                 const msgObj = { action: "Place", cards: cardNames };
-                console.log(msgObj);
                 round.confirmButton.style.display = "none";
                 round.wsckt.send(JSON.stringify(msgObj));
                 document.removeEventListener('click', turnClick);
@@ -247,7 +254,7 @@ const makeTurn = (round) =>
 const initGraphics = async (round) =>
 {
     drawDeck(round);
-    await updateHand(round.hand);
+    updateHand(round.hand);
     round.confirmButton.classList.add('confirm-button');
     round.centerElement.append(round.confirmButton);
     round.centerElement.append(round.tableCards[0].element);
@@ -286,10 +293,6 @@ const initGame = async (round) =>
     if (round.players[round.currentTurn].isPlayer)
     {
         makeTurn(round);
-    }
-    else
-    {
-        console.log("Not my turn");
     }
 };
 
@@ -346,60 +349,78 @@ const chooseColorPopup = (round) =>
     });
 };
 
+let startVictoryCards;
+
+const toVictory = async (round) =>
+{
+    document.querySelector('#content').innerHTML = '<main class = "lobby-main" id = "background-wrapper"></main>';
+    const main = document.querySelector('#background-wrapper');
+    main.innerHTML =
+        `<div class="win-screen">
+            <div class="winner">
+                1. ${round.finishedPlayers[0].name}
+            </div>
+            <div class="podium">
+                    ${round.finishedPlayers.length > 1 ? `<div>2. ${round.finishedPlayers[1].name}</div>` : ``}
+                    ${round.finishedPlayers.length > 2 ? `<div>3. ${round.finishedPlayers[2].name}</div>` : ``}
+            </div>
+            <div class="remaining-players" id = "remaining"></div>
+        </div>`;
+    const remaining = document.querySelector('#remaining');
+    for (let i = 3; i < round.finishedPlayers.length; i++)
+    {
+        const element = document.createElement('span');
+        element.innerHTML = `${i}. ${round.finishedPlayers[i]}`;
+        remaining.append(element);
+    }
+    startVictoryCards();
+
+};
+
 const nextTurn = (round) => //does not start the next round for the relevant player
 {
     round.players[round.currentTurn].playerDiv.classList.remove('current-round');
     round.currentTurn = (round.currentTurn + 1) % round.players.length;
     round.players[round.currentTurn].playerDiv.classList.add('current-round');
     round.draws = 0;
-    if (round.players[round.currentTurn].won)
+    if (round.finishedPlayers.length == round.players.length - 1)
     {
-        let allPlayersWon = true;
-        const sums = round.players.reduce((sum, cur) =>
-        {
-            sum + (cur.won ? 1 : 0);
-        });
-        console.log(sums);
         for (const player of round.players)
         {
-            if (!player.won)
+            if (!round.finishedPlayers.includes(player))
             {
-                allPlayersWon = false;
+                round.finishedPlayers.push(player);
             }
         }
-        if (!allPlayersWon)
-        {
-            nextTurn(round);
-        }
-        else
-        {
-            console.log("Game finished!");
-        }
+        toVictory(round);
     }
+    else if (round.players[round.currentTurn].won)
+    {
+        nextTurn(round);
+    }
+
 };
 
 const drawSelfAnimate = async (round, newCardNames) =>
 {
     const newCards = createHand(newCardNames);
     round.hand.push(...newCards);
-    cloneHand(round, round.hand);
-    await updateHand(round.hand);
+    await refreshHand(round);
     for (const newCard of newCards)
     {
         animateCard(newCard.element, { top: round.deckElement.style.top, left: "-20rem" }, { top: newCard.element.style.top, left: newCard.element.style.left }, 300);
     }
 };
 
-const changePlayerCards = (player, amount) =>
+const changePlayerCards = (round, player, amount) =>
 {
     player.cards += amount;
     player.playerDiv.querySelector('h3').innerText = player.cards;
-    console.log(player.name, player.cards);
     if (player.cards <= 0)
     {
         player.won = true;
+        round.finishedPlayers.push(player);
         player.playerDiv.classList.add('won');
-        console.log(`${player.name} won!`);
     }
 };
 
@@ -411,7 +432,7 @@ const handleMessage = async (msg, round) =>
             {
                 round.colorIndicator.style.display = "none";
                 const currentTurnPlayer = round.players[round.currentTurn];
-                changePlayerCards(currentTurnPlayer, -msg.cards.length);
+                changePlayerCards(round, currentTurnPlayer, -msg.cards.length);
                 if (!currentTurnPlayer.isPlayer)
                 {
                     for (const cardName of msg.cards)
@@ -441,18 +462,16 @@ const handleMessage = async (msg, round) =>
                 {
                     if (cardNr == 'A')
                     {
-
                         for (const player of round.players)
                         {
-                            if (player != currentTurnPlayer)
+                            if (player != currentTurnPlayer && !player.won)
                             {
-                                changePlayerCards(player, msg.cards.length);
+                                changePlayerCards(round, player, msg.cards.length);
                             }
                         }
 
-                        if (!(currentTurnPlayer.isPlayer))
+                        if (!(currentTurnPlayer.isPlayer || round.hand.length == 0))
                         {
-
                             await drawSelfAnimate(round, msg.newCards);
                         }
                         round.draws = 0;
@@ -486,7 +505,7 @@ const handleMessage = async (msg, round) =>
         case 'drawSelf':
             {
                 await drawSelfAnimate(round, [msg.card]);
-                changePlayerCards(round.players[round.currentTurn], 1);
+                changePlayerCards(round, round.players[round.currentTurn], 1);
                 if (round.draws == 3 && getValidMoves(round, []).length == 0)
                 {
                     document.removeEventListener('click', turnClick);
@@ -497,7 +516,7 @@ const handleMessage = async (msg, round) =>
         case 'drawOther':
             {
                 round.draws++;
-                changePlayerCards(round.players[round.currentTurn], 1);
+                changePlayerCards(round, round.players[round.currentTurn], 1);
                 if (msg.passed)
                 {
                     round.draws = 0;
@@ -529,9 +548,14 @@ const handleMessage = async (msg, round) =>
 
 export const game =
 {
-    startGame: (wsckt, hand, players, topCard) =>
+    startGame: (wsckt, hand, players, topCard, startCards) =>
     {
-        console.log("Starting game");
+        document.querySelector('#content').innerHTML =
+            `<main class = "lobby-main" id = "main">
+                <div id = "center-div" class = "center"></div>
+                <div id = "sidebar" class = "player-sidebar"></div>
+            </main>`;
+        startVictoryCards = startCards;
         const round =
         {
             wsckt: wsckt,
@@ -543,7 +567,8 @@ export const game =
             tableCards: [{ element: makeTableCard(createCardElement(topCard)), name: topCard }],
             confirmButton: document.createElement('div'),
             centerElement: document.querySelector('#center-div'),
-            colorIndicator: document.createElement('img')
+            colorIndicator: document.createElement('img'),
+            finishedPlayers: []
         };
         game.handleMessage = (msg) =>
         {
@@ -551,4 +576,4 @@ export const game =
         };
         initGame(round);
     }
-};;
+};

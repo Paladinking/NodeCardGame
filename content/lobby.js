@@ -68,8 +68,7 @@ const init = (name) =>
                         }
                     case 'start':
                         {
-                            document.querySelector('#content').innerHTML = `<main class = "lobby-main" id = "main"><div id = "center-div" class = "center"></div><div id = "sidebar" class = "player-sidebar"></div></main>`;
-                            game.startGame(wsckt, msg.hand, players, msg.topCard);
+                            game.startGame(wsckt, msg.hand, players, msg.topCard, startBackgroundCards);
                             gameState = IN_GAME;
                             break;
                         }
@@ -86,15 +85,16 @@ const init = (name) =>
             if (event.reason != "Game is over")
             {
                 kicked = true;
-                document.querySelector('#content').innerHTML =
+                document.querySelector('#content').innerHTML +=
                     `<div class = "error-wrap">
-                    <div class = "error-box">
-                        <h2>Connection closed</h2>
-                        <p>The connection to the server was closed unexpectedly</p>
-                        ${event.reason.length != 0 ? `<p>Reason: ${event.reason}</p>` : ""}
-                        <a href="/">Return to main page<a>
-                    </div>
-                </div>`;
+                        <div class = "error-box">
+                            <h2>Connection closed</h2>
+                            <p>The connection to the server was closed unexpectedly</p>
+                            ${event.reason.length != 0 ? `<p>Reason: ${event.reason}</p>` : "Thats all we know."}
+                            <br>
+                            <a href="/">Return to main page<a>
+                        </div>
+                    </div>`;
             }
         });
         document.querySelector('#start-button').setAttribute('available', "true");
@@ -143,7 +143,7 @@ else
     }, 5000);
 }
 
-let startBackgroundCards = () =>
+let startBackgroundCards = (stopOnGameState = LOBBY) =>
 {
     const main = document.querySelector('#background-wrapper');
     for (let i = 0; i < 15; i++)
@@ -156,7 +156,7 @@ let startBackgroundCards = () =>
         main.prepend(card);
         const animate = () =>
         {
-            if (gameState != IN_GAME)
+            if (gameState != stopOnGameState)
             {
                 const timing = 2000 + Math.floor(Math.random() * 10000);
                 const x = Math.floor(Math.random() * main.offsetWidth + 200) - 400;
@@ -173,7 +173,6 @@ let startBackgroundCards = () =>
                     {
                         left: `${x + xOffset}px`,
                         top: `${y + yOffset}px`
-
                     }], timing);
                 setTimeout((animate), timing);
             }
@@ -183,8 +182,7 @@ let startBackgroundCards = () =>
             }
         };
         animate();
-
     }
 };
 
-startBackgroundCards();
+startBackgroundCards(IN_GAME);

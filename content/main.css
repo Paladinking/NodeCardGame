@@ -131,6 +131,7 @@ body
 {
     flex: 1 1 auto;
     display: flex;
+    position: relative;
 }
 
 .lobby-main
@@ -151,9 +152,10 @@ body
     font-size: 40px;
     position: relative;
     background-color: #a8cefa;
-    border-radius: 1rem;
+    border-radius: 3rem;
     width: 18rem;
     text-align: center;
+    padding: 1rem;
 }
 
 .card-wrapper
@@ -407,7 +409,10 @@ body
     color: gray;
 }
 
-.error-wrap {
+.error-wrap
+{
+    z-index: 1000;
+    position: absolute;
     width: 100%;
     height: 100%;
     background-color: #00000026;
@@ -416,12 +421,85 @@ body
     align-items: center;
 }
 
-.error-box {
+.error-box
+{
     height: fit-content;
     width: fit-content;
     background-color: white;
     padding: 3rem;
     border-radius: 2rem;
+}
+
+.win-screen
+{
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff59;
+}
+
+.winner
+{
+    height: 40%;
+    width: 100%;
+    font-size: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: gold;
+    font-weight: bold;
+    animation: expand 0.5s backwards;
+}
+
+.podium
+{
+    font-size: 60px;
+    width: 100%;
+    height: 20%;
+    display: flex;
+    font-weight: bold;
+}
+
+.podium div
+{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+    color: #CD7F32;
+    border: black solid 1px;
+    animation: expand 0.5s 1s backwards; 
+}
+
+.podium div:first-child
+{
+    color: silver;
+    animation: expand 0.5s 2s backwards; 
+}
+
+.podium div:first-child:last-child
+{
+    width: 100%;
+    animation: expand 0.5s 1s backwards; 
+}
+
+@keyframes expand
+{
+    from
+    {
+        font-size: 10px;
+    }
+}
+
+.remaining-players
+{
+    height: 40%;
+    width: 100%;
+    justify-content: space-around;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    font-size: 40px;
+    font-weight: 600;
 }
 
 @media screen and (max-width: 700px)
