@@ -86,7 +86,15 @@ const init = (name) =>
             if (event.reason != "Game is over")
             {
                 kicked = true;
-                window.location.href = "/"; //should probably show a screen or something but whatevs
+                document.querySelector('#content').innerHTML =
+                    `<div class = "error-wrap">
+                    <div class = "error-box">
+                        <h2>Connection closed</h2>
+                        <p>The connection to the server was closed unexpectedly</p>
+                        ${event.reason.length != 0 ? `<p>Reason: ${event.reason}</p>` : ""}
+                        <a href="/">Return to main page<a>
+                    </div>
+                </div>`;
             }
         });
         document.querySelector('#start-button').setAttribute('available', "true");
