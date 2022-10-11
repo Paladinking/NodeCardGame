@@ -518,12 +518,22 @@ body
     font-weight: 300;
     border-radius: 0 0 2em 2em;
     cursor: pointer;
+    overflow: hidden;
+    animation: popup 0.5s 3s backwards;
 }
 
 .restart-button:hover
 {
     background-color: #9adcfa;
 
+}
+
+@keyframes popup
+{
+    from
+    {
+        height: 0rem;
+    }
 }
 
 @media screen and (max-width: 700px)

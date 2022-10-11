@@ -68,7 +68,12 @@ const init = (name) =>
                         }
                     case 'start':
                         {
-                            game.startGame(wsckt, msg.hand, players, msg.topCard, startBackgroundCards, init, name);
+                            game.startGame(wsckt, msg.hand, players, msg.topCard, startBackgroundCards, () => 
+                            {
+                                init(name);
+                                gameState = undefined;
+                                startBackgroundCards(IN_GAME);
+                            });
                             gameState = IN_GAME;
                             break;
                         }

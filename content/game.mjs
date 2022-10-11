@@ -378,7 +378,7 @@ const toVictory = (round) =>
     document.querySelector('#restart').addEventListener('click', async () =>
     {
         document.querySelector('#content').innerHTML = new DOMParser().parseFromString(await (await fetch('/lobby.html?game=T8')).text(),'text/html').querySelector('#content').innerHTML;
-        round.restart(round.playerName);
+        round.restart();
     });
 
 
@@ -586,7 +586,6 @@ export const game =
             colorIndicator: document.createElement('img'),
             finishedPlayers: [],
             restart: restart,
-            playerName: playerName
         };
         game.handleMessage = (msg) =>
         {
