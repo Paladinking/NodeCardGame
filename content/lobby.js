@@ -4,7 +4,6 @@ const CARD_NUMBERS = "A23456789JQK";
 const CARD_COLORS = "SCDH";
 const LOBBY = 0, IN_GAME = 1;
 const gameId = new URLSearchParams(window.location.search).get('game');
-const playersSpan = document.querySelector('#players');
 let kicked = false;
 let gameState;
 import { game } from "/game.mjs";
@@ -20,6 +19,7 @@ const init = (name) =>
     let wsckt = new WebSocket("ws://" + window.location.href.split('//')[1].split('?')[0]);
     wsckt.addEventListener('open', () =>
     {
+        const playersSpan = document.querySelector('#players');
         gameState = LOBBY;
         wsckt.send(JSON.stringify({ "gameId": gameId, "name": name }));
         wsckt.addEventListener('message', (e) =>
@@ -68,7 +68,7 @@ const init = (name) =>
                         }
                     case 'start':
                         {
-                            game.startGame(wsckt, msg.hand, players, msg.topCard, startBackgroundCards);
+                            game.startGame(wsckt, msg.hand, players, msg.topCard, startBackgroundCards, init, name);
                             gameState = IN_GAME;
                             break;
                         }
@@ -125,7 +125,7 @@ const init = (name) =>
 if (GAME_TYPES[gameId] != undefined)
 {
     document.querySelector('#main-title').innerText = GAME_TYPES[gameId].name;
-    playersSpan.innerText = `${GAME_TYPES[gameId].minPlayers}`;
+    document.querySelector('#players').innerText = `${GAME_TYPES[gameId].minPlayers}`;
     document.querySelector('#join-button').addEventListener('click', () =>
     {
         const name = document.querySelector('#join-input').value;
@@ -143,7 +143,7 @@ else
     }, 5000);
 }
 
-let startBackgroundCards = (stopOnGameState = LOBBY) =>
+const startBackgroundCards = (stopOnGameState = LOBBY) =>
 {
     const main = document.querySelector('#background-wrapper');
     for (let i = 0; i < 15; i++)

@@ -351,7 +351,7 @@ const chooseColorPopup = (round) =>
 
 let startVictoryCards;
 
-const toVictory = async (round) =>
+const toVictory = (round) =>
 {
     document.querySelector('#content').innerHTML = '<main class = "lobby-main" id = "background-wrapper"></main>';
     const main = document.querySelector('#background-wrapper');
@@ -365,7 +365,8 @@ const toVictory = async (round) =>
                     ${round.finishedPlayers.length > 2 ? `<div>3. ${round.finishedPlayers[2].name}</div>` : ``}
             </div>
             <div class="remaining-players" id = "remaining"></div>
-        </div>`;
+        </div>
+        <div class="restart-button" id="restart">Restart</div>`;
     const remaining = document.querySelector('#remaining');
     for (let i = 3; i < round.finishedPlayers.length; i++)
     {
@@ -374,6 +375,13 @@ const toVictory = async (round) =>
         remaining.append(element);
     }
     startVictoryCards();
+    document.querySelector('#restart').addEventListener('click', async () =>
+    {
+        document.querySelector('#content').innerHTML = new DOMParser().parseFromString(await (await fetch('/lobby.html?game=T8')).text(),'text/html').querySelector('#content').innerHTML;
+        round.restart(round.playerName);
+    });
+
+
 
 };
 
@@ -394,7 +402,7 @@ const nextTurn = (round) => //does not start the next round for the relevant pla
         }
         toVictory(round);
     }
-    else if (round.players[round.currentTurn].won)
+    else if (round.finishedPlayers.includes(round.players[round.currentTurn]))
     {
         nextTurn(round);
     }
@@ -404,10 +412,15 @@ const nextTurn = (round) => //does not start the next round for the relevant pla
 const drawSelfAnimate = async (round, newCardNames) =>
 {
     const newCards = createHand(newCardNames);
+    newCards.forEach((card) =>
+    {
+        card.element.style.opacity = "0"; //to prevent the card appearing briefly
+    });
     round.hand.push(...newCards);
     await refreshHand(round);
     for (const newCard of newCards)
     {
+        newCard.element.style.opacity = null;
         animateCard(newCard.element, { top: round.deckElement.style.top, left: "-20rem" }, { top: newCard.element.style.top, left: newCard.element.style.left }, 300);
     }
 };
@@ -418,7 +431,6 @@ const changePlayerCards = (round, player, amount) =>
     player.playerDiv.querySelector('h3').innerText = player.cards;
     if (player.cards <= 0)
     {
-        player.won = true;
         round.finishedPlayers.push(player);
         player.playerDiv.classList.add('won');
     }
@@ -464,7 +476,7 @@ const handleMessage = async (msg, round) =>
                     {
                         for (const player of round.players)
                         {
-                            if (player != currentTurnPlayer && !player.won)
+                            if (player != currentTurnPlayer && !round.finishedPlayers.includes(player))
                             {
                                 changePlayerCards(round, player, msg.cards.length);
                             }
@@ -533,13 +545,17 @@ const handleMessage = async (msg, round) =>
             {
                 round.players[msg.id].playerDiv.remove();
                 round.players.splice(msg.id, 1);
-                if (round.currentTurn >= msg.id)
+                if (round.currentTurn == msg.id)
                 {
                     nextTurn(round);
                     if (round.players[round.currentTurn].isPlayer)
                     {
                         makeTurn(round);
                     }
+                }
+                else if (round.currentTurn > msg.id)
+                {
+                    round.currentTurn -= 1;
                 }
             }
     }
@@ -548,7 +564,7 @@ const handleMessage = async (msg, round) =>
 
 export const game =
 {
-    startGame: (wsckt, hand, players, topCard, startCards) =>
+    startGame: (wsckt, hand, players, topCard, startCards, restart, playerName) =>
     {
         document.querySelector('#content').innerHTML =
             `<main class = "lobby-main" id = "main">
@@ -568,7 +584,9 @@ export const game =
             confirmButton: document.createElement('div'),
             centerElement: document.querySelector('#center-div'),
             colorIndicator: document.createElement('img'),
-            finishedPlayers: []
+            finishedPlayers: [],
+            restart: restart,
+            playerName: playerName
         };
         game.handleMessage = (msg) =>
         {
