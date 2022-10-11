@@ -1,7 +1,7 @@
 "use strict";
 const CARD_NUMBERS = "23456789JQKA";
 const CARD_COLORS = "SCDH";
-const smallScreen = window.innerWidth < 1700;
+let smallScreen = window.innerWidth < 1700;
 
 const sortHand = (hand) =>
 {
@@ -377,7 +377,7 @@ const toVictory = (round) =>
     startVictoryCards();
     document.querySelector('#restart').addEventListener('click', async () =>
     {
-        document.querySelector('#content').innerHTML = new DOMParser().parseFromString(await (await fetch('/lobby.html?game=T8')).text(),'text/html').querySelector('#content').innerHTML;
+        document.querySelector('#content').innerHTML = new DOMParser().parseFromString(await (await fetch('/lobby.html?game=T8')).text(), 'text/html').querySelector('#content').innerHTML;
         round.restart();
     });
 
@@ -564,7 +564,7 @@ const handleMessage = async (msg, round) =>
 
 export const game =
 {
-    startGame: (wsckt, hand, players, topCard, startCards, restart, playerName) =>
+    startGame: (wsckt, hand, players, topCard, startCards, restart) =>
     {
         document.querySelector('#content').innerHTML =
             `<main class = "lobby-main" id = "main">
@@ -587,6 +587,15 @@ export const game =
             finishedPlayers: [],
             restart: restart,
         };
+        window.addEventListener('resize', async () =>
+        {
+            smallScreen = window.innerWidth < 1700;
+            const allCardsElements = document.querySelectorAll('.card-wrapper');
+            allCardsElements.forEach((card) =>
+            {
+                card.firstElementChild.width = smallScreen ? 120 : 160;
+            });
+        });
         game.handleMessage = (msg) =>
         {
             handleMessage(msg, round);

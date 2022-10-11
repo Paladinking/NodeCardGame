@@ -335,14 +335,7 @@ body
     border: solid black 1px;
     padding: 10px;
     animation: show-up 0.3s;
-}
-
-@media screen and (max-width: 1700px)
-{
-    .color-indicator
-    {
-        top: -300px;
-    }
+    z-index: 1;
 }
 
 @keyframes show-up
@@ -350,15 +343,28 @@ body
     from
     {
         opacity: 0;
-        top: -180px;
-    }
-
-    to
-    {
-        opacity: 100;
-        top: -200x;
+        top: -500px;
     }
 }
+
+@media screen and (max-width: 1700px)
+{
+    .color-indicator
+    {
+        top: -200px;
+        left: 100px;
+    }
+
+    @keyframes show-up
+    {
+        from
+        {
+            opacity: 0;
+            left: 0px;
+        }
+    }
+}
+
 
 .deck
 {
@@ -553,6 +559,14 @@ body
     {
         top: 12rem;
         height: 12rem;
+    }
+    .player-sidebar
+    {
+        width: 7rem;
+    }
+    .player-div
+    {
+        font-size: 0.8em;
     }
 }
 
