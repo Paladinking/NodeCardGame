@@ -8,19 +8,34 @@ let noLeaveWarning = false;
 let gameState;
 import { game } from "/game.mjs";
 
-
-
 const init = (name) =>
 {
     const players = [];
-
     const ul = document.querySelector('#playlist');
     ul.innerHTML = "";
+    const playersSpan = document.querySelector('#players');
+
+
+    const createPlayer = (name, newPlayer = true) =>
+    {
+        const li = document.createElement('li');
+        li.classList.add('player-box');
+        li.innerText = name;
+        ul.append(li);
+        const player = { name: name, cards: 7 };
+        players.push(player);
+        if (newPlayer)
+        {
+            li.classList.add('new');
+            playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
+        }
+        return player;
+    };
+
     let wsckt = new WebSocket("ws://" + window.location.href.split('//')[1].split('?')[0]);
     wsckt.addEventListener('open', () =>
     {
         noLeaveWarning = false;
-        const playersSpan = document.querySelector('#players');
         gameState = LOBBY;
         wsckt.send(JSON.stringify({ "gameId": gameId, "name": name }));
         wsckt.addEventListener('message', (e) =>
@@ -36,28 +51,15 @@ const init = (name) =>
                         {
                             for (const player of msg.players)
                             {
-                                const li = document.createElement('li');
-                                li.innerText = player;
-                                ul.append(li);
-                                players.push({ name: player, cards: 7 });
-                            }
-                            const li = document.createElement('li');
-                            li.classList.add('new');
-                            li.innerText = name;
-                            ul.append(li);
-                            players.push({ name: name, isPlayer: true, cards: 7 });
 
-                            playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
+                                createPlayer(player, false);
+                            }
+                            createPlayer(name).isPlayer = true;
                             break;
                         }
                     case 'join':
                         {
-                            const li = document.createElement('li');
-                            li.classList.add('new');
-                            li.innerText = msg.name;
-                            ul.append(li);
-                            players.push({ name: msg.name, cards: 7 });
-                            playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
+                            createPlayer(msg.name);
                             break;
                         }
                     case 'leave':

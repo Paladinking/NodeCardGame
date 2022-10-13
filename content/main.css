@@ -199,18 +199,24 @@ body
     list-style: circle;
 }
 
-.playlist li
+.playlist>li
 {
-    /*width: 100%;*/
+    height: 100%;
     font-size: 20px;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
     border-bottom: 1px solid black;
     margin-left: 0rem;
 }
 
+.player-box
+{
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
 .join-input
 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
     font-size: 20px;
     height: 100%;
     width: 100%;
@@ -222,6 +228,12 @@ body
 .join-input:focus-visible
 {
     outline: 1px solid black;
+}
+
+.join-button
+{
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
 .join-button:hover
