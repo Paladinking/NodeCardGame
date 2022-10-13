@@ -39,7 +39,7 @@ const animateCard = (card, from, time) =>
 const createCardElement = (cardName) =>
 {
     const card = document.createElement('div');
-    card.classList.add('playing-card', 'card-wrapper')
+    card.classList.add('playing-card', 'card-wrapper');
     const width = smallScreen ? 120 : 160;
     card.innerHTML = `<img src = "/2color/${cardName}.svg" draggable = "false" width = ${width}>`;
     card.style.top = "initial";
@@ -59,7 +59,8 @@ const updateHand = (hand) =>
         card.style.transform = `rotate(${rotation}deg)`;
         const top = Math.abs(percentage * 100 - 50);
         card.style.top = `${top}px`;
-        const left = percentage * (350) - 175 - card.offsetWidth / 2;
+        const width = hand.length <= 2 ? 150: 350
+        const left = percentage * width - width/2 - card.offsetWidth / 2;
         card.style.left = `${left}px`;
         card.style.zIndex = i + 10;
     }
@@ -182,8 +183,7 @@ const makeTurn = (round) =>
             if (isClicked(e.target, round.deckElement))
             {
                 round.draws++;
-                const msgObj = { action: "Draw" };
-                round.wsckt.send(JSON.stringify(msgObj));
+                round.wsckt.send(`{"action":"Draw"}`);
                 return;
             }
         }
@@ -516,7 +516,7 @@ const handleMessage = async (msg, round) =>
                 {
                     toVictory(round);
                 }
-                if (round.currentTurn == msg.id)
+                else if (round.currentTurn == msg.id)
                 {
                     nextTurn(round);
                     if (round.players[round.currentTurn].isPlayer)
