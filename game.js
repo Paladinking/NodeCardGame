@@ -153,12 +153,6 @@ const handleT8Message = (data, socket) => {
 			});
 			if (hand.length == 0) {
 				socket.game.remainingPlayers -= 1;
-				if (socket.game.remainingPlayers == 1) {
-					socket.game.players.forEach((player) => {
-						player.send('{"event" : "gameOver"}');
-						player.close(1000, "Game is over");			
-					});
-				}
 				socket.gameData.playing = false;
 			}
 			break;
@@ -257,10 +251,6 @@ const handleT8Close = (socket) => {
 	socket.game.remainingPlayers -= 1;
 	for (let i = 0; i < socket.game.players.length; i++) {
 		socket.game.players[i].send(`{"event" : "leave", "id" : ${socket.gameData.id}}`);
-		if (socket.game.remainingPlayers == 1) {
-			socket.game.players[i].send('{"event" : "gameOver"}');
-			socket.game.players[i].close(1000, "Game is over");
-		}
 		if (socket.game.players[i].gameData.id != i) {
 			socket.game.players[i].gameData.id = i;
 		}
