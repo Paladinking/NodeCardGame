@@ -2,6 +2,7 @@
 const CARD_NUMBERS = "23456789JQKA";
 const CARD_COLORS = "SCDH";
 let smallScreen = window.innerWidth < 1700;
+let onResize;
 
 const sortHand = (hand) =>
 {
@@ -30,32 +31,19 @@ const sortHand = (hand) =>
 };
 
 
-const animateCard = (card, from, to, time) =>
+const animateCard = (card, from, time) =>
 {
-    card.animate([from, to], { duration: time, easing: 'ease' });
+    card.animate([from, {}], { duration: time, easing: 'ease' });
 };
 
 const createCardElement = (cardName) =>
 {
     const card = document.createElement('div');
-    card.classList.add('card-wrapper');
-    card.classList.add('hoverable-card');
+    card.classList.add('playing-card', 'card-wrapper')
     const width = smallScreen ? 120 : 160;
     card.innerHTML = `<img src = "/2color/${cardName}.svg" draggable = "false" width = ${width}>`;
     card.style.top = "initial";
     return card;
-};
-
-const cloneHand = async (round) =>
-{
-    for (const card of round.hand)
-    {
-        const element = card.element.cloneNode(true);
-        card.element.remove();
-        card.element = element;
-        round.centerElement.append(card.element);
-        await imageLoad(card.element.firstElementChild);
-    }
 };
 
 const updateHand = (hand) =>
@@ -64,6 +52,7 @@ const updateHand = (hand) =>
     for (let i = 0; i < hand.length; i++)
     {
         const card = hand[i].element;
+        card.classList.add('hoverable-card');
         const percentage = hand.length == 1 ? 0.5 : i / (hand.length - 1);
         const degrees = hand.length == 2 ? 20 : 38;
         const rotation = (percentage * degrees * 2) - degrees;
@@ -72,20 +61,7 @@ const updateHand = (hand) =>
         card.style.top = `${top}px`;
         const left = percentage * (350) - 175 - card.offsetWidth / 2;
         card.style.left = `${left}px`;
-        card.style.zIndex = i;
-        const img = card.firstElementChild;
-        img.style.top = "0px";
-
-        card.addEventListener('mouseover', () =>
-        {
-            img.style.top = `-90px`;
-
-        });
-        card.addEventListener('mouseout', () =>
-        {
-            img.style.top = "0px";
-        });
-
+        card.style.zIndex = i + 10;
     }
 };
 
@@ -117,13 +93,15 @@ const drawDeck = (round) =>
     round.deckElement.style.top = `${smallScreen ? -200 : -400}px`;
 };
 
-const makeTableCard = (card) =>
+const makeTableCard = (card, zIndex) =>
 {
     const rotation = Math.floor(Math.random() * 25) * (Math.round(Math.random()) == 0 ? -1 : 1);
     card.style.transform = `rotate(${rotation}deg)`;
-    card.style.top = `${smallScreen ? -200 : -400}px`;
+    card.style.top = null;//`${smallScreen ? -200 : -400}px`;
+    card.classList.add('table-card');
+    card.classList.remove('hoverable-card');
     card.style.left = `${-1 * card.offsetWidth / 2}px`;
-    card.style.zIndex = null;
+    card.style.zIndex = zIndex;
     return card;
 };
 
@@ -171,12 +149,6 @@ const wait = (time) =>
     });
 };
 
-const refreshHand = async (round) =>
-{
-    await cloneHand(round);
-    updateHand(round.hand);
-};
-
 let turnClick;
 
 const makeTurn = (round) =>
@@ -197,24 +169,11 @@ const makeTurn = (round) =>
                 {
                     round.hand.splice(round.hand.indexOf(movedCard), 1);
                     placedCards.push(movedCard);
-
-                    const newMovedCardElement = movedCard.element.cloneNode(true);
-                    const pos = { top: movedCard.element.style.top, left: movedCard.element.style.left };
-                    movedCard.element.remove();
-                    round.centerElement.append(newMovedCardElement);
-                    movedCard.element = makeTableCard(newMovedCardElement);
-                    animateCard(newMovedCardElement, { top: pos.top, left: pos.left }, { top: movedCard.element.style.top, left: movedCard.element.style.left }, 300);
-
-                    refreshHand(round);
-                    movedCard.element.firstElementChild.style.top = "0px"; //don't know why this is necessary
-                    movedCard.element.addEventListener('click', async () =>
-                    {
-                        const returnedCard = placedCards.pop();
-                        round.hand.push(returnedCard);
-                        await refreshHand(round);
-                    });
+                    makeTableCard(movedCard.element, round.tableCards.length);
+                    round.tableCards.push(movedCard);
+                    updateHand(round.hand);
                     round.confirmButton.style.display = null;
-                    break;
+                    return;
                 }
             }
         }
@@ -225,26 +184,31 @@ const makeTurn = (round) =>
                 round.draws++;
                 const msgObj = { action: "Draw" };
                 round.wsckt.send(JSON.stringify(msgObj));
+                return;
             }
         }
         if (placedCards.length > 0)
         {
+            for (const placedCard of placedCards)
+            {
+                if (isClicked(e.target, placedCard.element))
+                {
+                    const returnedCard = placedCards.pop();
+                    round.tableCards.pop();
+                    returnedCard.element.style.top = `${window.innerHeight < 1000 ? -200 : -400}px`;
+                    returnedCard.element.classList.remove('table-card');
+                    round.hand.push(returnedCard);
+                    updateHand(round.hand);
+                    return;
+                }
+            }
             if (isClicked(e.target, round.confirmButton))
             {
-                const cardNames = [];
-                for (const card of placedCards)
-                {
-                    const newElement = card.element.cloneNode(true);
-                    card.element.remove();
-                    round.centerElement.append(newElement);
-                    card.element = newElement;
-                    cardNames.push(card.name);
-                }
+                const cardNames = placedCards.map(card => card.name);
                 const msgObj = { action: "Place", cards: cardNames };
                 round.confirmButton.style.display = "none";
                 round.wsckt.send(JSON.stringify(msgObj));
                 document.removeEventListener('click', turnClick);
-                round.tableCards.push(...placedCards);
             }
         }
     };
@@ -353,6 +317,13 @@ let startVictoryCards;
 
 const toVictory = (round) =>
 {
+    for (const player of round.players)
+    {
+        if (!round.finishedPlayers.includes(player))
+        {
+            round.finishedPlayers.push(player);
+        }
+    }
     document.querySelector('#content').innerHTML = '<main class = "lobby-main" id = "background-wrapper"></main>';
     const main = document.querySelector('#background-wrapper');
     main.innerHTML =
@@ -375,13 +346,21 @@ const toVictory = (round) =>
         remaining.append(element);
     }
     startVictoryCards();
+    window.removeEventListener('resize', onResize);
     document.querySelector('#restart').addEventListener('click', async () =>
     {
-        document.querySelector('#content').innerHTML = new DOMParser().parseFromString(await (await fetch('/lobby.html?game=T8')).text(), 'text/html').querySelector('#content').innerHTML;
+        document.querySelector('#content').innerHTML = new DOMParser()
+            .parseFromString(await (await fetch('/lobby.html?game=T8')
+                .catch(() =>
+                {
+                    const close = new CloseEvent("close", { code: 1000, reason: 'Could not load new game' });
+                    round.wsckt.dispatchEvent(close);
+                }
+                ))
+                .text(), 'text/html')
+            .querySelector('#content').innerHTML;
         round.restart();
     });
-
-
 
 };
 
@@ -391,15 +370,8 @@ const nextTurn = (round) => //does not start the next round for the relevant pla
     round.currentTurn = (round.currentTurn + 1) % round.players.length;
     round.players[round.currentTurn].playerDiv.classList.add('current-round');
     round.draws = 0;
-    if (round.finishedPlayers.length == round.players.length - 1)
+    if (round.finishedPlayers.length >= round.players.length - 1)
     {
-        for (const player of round.players)
-        {
-            if (!round.finishedPlayers.includes(player))
-            {
-                round.finishedPlayers.push(player);
-            }
-        }
         toVictory(round);
     }
     else if (round.finishedPlayers.includes(round.players[round.currentTurn]))
@@ -412,16 +384,11 @@ const nextTurn = (round) => //does not start the next round for the relevant pla
 const drawSelfAnimate = async (round, newCardNames) =>
 {
     const newCards = createHand(newCardNames);
-    newCards.forEach((card) =>
-    {
-        card.element.style.opacity = "0"; //to prevent the card appearing briefly
-    });
     round.hand.push(...newCards);
-    await refreshHand(round);
+    updateHand(round.hand);
     for (const newCard of newCards)
     {
-        newCard.element.style.opacity = null;
-        animateCard(newCard.element, { top: round.deckElement.style.top, left: "-20rem" }, { top: newCard.element.style.top, left: newCard.element.style.left }, 300);
+        animateCard(newCard.element, { top: round.deckElement.style.top, left: "-20rem" }, 300);
     }
 };
 
@@ -453,8 +420,8 @@ const handleMessage = async (msg, round) =>
                         round.centerElement.append(card);
                         card.style.top = null;
                         await imageLoad(card.firstElementChild); //so that image is loaded when card is animated
-                        makeTableCard(card);
-                        animateCard(card, { top: `${smallScreen ? -400 : -600}px` }, { top: card.style.top }, 300);
+                        makeTableCard(card, round.tableCards.length);
+                        animateCard(card, { top: `${smallScreen ? -400 : -600}px` }, 300);
                         round.tableCards.push({ element: card, name: cardName });
                         await wait(500);
                     }
@@ -545,6 +512,10 @@ const handleMessage = async (msg, round) =>
             {
                 round.players[msg.id].playerDiv.remove();
                 round.players.splice(msg.id, 1);
+                if (round.players.length == 1)
+                {
+                    toVictory(round);
+                }
                 if (round.currentTurn == msg.id)
                 {
                     nextTurn(round);
@@ -580,14 +551,14 @@ export const game =
             currentTurn: 0,
             draws: 0,
             deckElement: document.createElement('div'),
-            tableCards: [{ element: makeTableCard(createCardElement(topCard)), name: topCard }],
+            tableCards: [{ element: makeTableCard(createCardElement(topCard), 0), name: topCard }],
             confirmButton: document.createElement('div'),
             centerElement: document.querySelector('#center-div'),
             colorIndicator: document.createElement('img'),
             finishedPlayers: [],
             restart: restart,
         };
-        window.addEventListener('resize', async () =>
+        onResize = async () =>
         {
             smallScreen = window.innerWidth < 1700;
             const allCardsElements = document.querySelectorAll('.card-wrapper');
@@ -595,7 +566,8 @@ export const game =
             {
                 card.firstElementChild.width = smallScreen ? 120 : 160;
             });
-        });
+        };
+        window.addEventListener('resize', onResize);
         game.handleMessage = (msg) =>
         {
             handleMessage(msg, round);

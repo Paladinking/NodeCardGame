@@ -162,20 +162,26 @@ body
 {
     position: absolute;
     top: -200rem;
-    cursor: pointer;
 }
 
-.card-wrapper img
+.playing-card
+{
+    cursor: pointer;
+    transition-property: height, width, left, right, top, bottom, transform;
+    transition-duration: 0.3s;
+}
+
+.card-wrapper>img
 {
     position: relative;
     transition-property: height, width, left, right, top, bottom, transform;
     transition-duration: 0.3s;
+    top: 0px;
 }
 
-.hoverable-card
+.hoverable-card:hover>img
 {
-    transition-property: height, width, left, right, top, bottom, transform;
-    transition-duration: 0.3s;
+    top: -90px
 }
 
 .playlist-container
@@ -338,6 +344,11 @@ body
     z-index: 1;
 }
 
+.table-card
+{
+    top: -400px;
+}
+
 @keyframes show-up
 {
     from
@@ -347,7 +358,7 @@ body
     }
 }
 
-@media screen and (max-width: 1700px)
+@media screen and (max-height: 1000px)
 {
     .color-indicator
     {
@@ -362,6 +373,11 @@ body
             opacity: 0;
             left: 0px;
         }
+    }
+
+    .table-card
+    {
+        top: -200px;
     }
 }
 
@@ -560,10 +576,12 @@ body
         top: 12rem;
         height: 12rem;
     }
+
     .player-sidebar
     {
         width: 7rem;
     }
+
     .player-div
     {
         font-size: 0.8em;

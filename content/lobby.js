@@ -4,7 +4,7 @@ const CARD_NUMBERS = "A23456789JQK";
 const CARD_COLORS = "SCDH";
 const LOBBY = 0, IN_GAME = 1;
 const gameId = new URLSearchParams(window.location.search).get('game');
-let kicked = false;
+let noLeaveWarning = false;
 let gameState;
 import { game } from "/game.mjs";
 
@@ -19,6 +19,7 @@ const init = (name) =>
     let wsckt = new WebSocket("ws://" + window.location.href.split('//')[1].split('?')[0]);
     wsckt.addEventListener('open', () =>
     {
+        noLeaveWarning = false;
         const playersSpan = document.querySelector('#players');
         gameState = LOBBY;
         wsckt.send(JSON.stringify({ "gameId": gameId, "name": name }));
@@ -87,9 +88,9 @@ const init = (name) =>
         });
         wsckt.addEventListener('close', (event) =>
         {
+            noLeaveWarning = true;
             if (event.reason != "Game is over")
             {
-                kicked = true;
                 document.querySelector('#content').innerHTML +=
                     `<div class = "error-wrap">
                         <div class = "error-box">
@@ -117,7 +118,7 @@ const init = (name) =>
         });
         window.addEventListener('beforeunload', (e) =>
         {
-            if (!kicked)
+            if (!noLeaveWarning)
             {
                 e.preventDefault();
                 return e.returnValue = "Are you sure you want to exit?";
