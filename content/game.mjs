@@ -49,6 +49,7 @@ const createCardElement = (cardName) =>
 const updateHand = (hand) =>
 {
     hand = sortHand(hand);
+    const width = hand.length <= 2 ? 150 : 350;
     for (let i = 0; i < hand.length; i++)
     {
         const card = hand[i].element;
@@ -59,8 +60,7 @@ const updateHand = (hand) =>
         card.style.transform = `rotate(${rotation}deg)`;
         const top = Math.abs(percentage * 100 - 50);
         card.style.top = `${top}px`;
-        const width = hand.length <= 2 ? 150: 350
-        const left = percentage * width - width/2 - card.offsetWidth / 2;
+        const left = percentage * width - width / 2 - card.offsetWidth / 2;
         card.style.left = `${left}px`;
         card.style.zIndex = i + 10;
     }
@@ -189,13 +189,13 @@ const makeTurn = (round) =>
         }
         if (placedCards.length > 0)
         {
-            for (const placedCard of placedCards)
+            for (const card of round.tableCards)
             {
-                if (isClicked(e.target, placedCard.element))
+                if (isClicked(e.target, card.element))
                 {
                     const returnedCard = placedCards.pop();
                     round.tableCards.pop();
-                    returnedCard.element.style.top = `${window.innerHeight < 1000 ? -200 : -400}px`;
+                    returnedCard.element.style.top = `${window.innerHeight < 1200 ? -200 : -400}px`;
                     returnedCard.element.classList.remove('table-card');
                     round.hand.push(returnedCard);
                     updateHand(round.hand);
@@ -317,6 +317,7 @@ let startVictoryCards;
 
 const toVictory = (round) =>
 {
+    round.finishedPlayers = [{ name: "hello" }, { name: "thobre" }, { name: "sup" }];
     for (const player of round.players)
     {
         if (!round.finishedPlayers.includes(player))
@@ -331,18 +332,23 @@ const toVictory = (round) =>
             <div class="winner">
                 1. ${round.finishedPlayers[0].name}
             </div>
-            <div class="podium">
-                    ${round.finishedPlayers.length > 1 ? `<div>2. ${round.finishedPlayers[1].name}</div>` : ``}
-                    ${round.finishedPlayers.length > 2 ? `<div>3. ${round.finishedPlayers[2].name}</div>` : ``}
-            </div>
+            <div class="podium" id = "podium"></div>
             <div class="remaining-players" id = "remaining"></div>
         </div>
         <div class="restart-button" id="restart">Restart</div>`;
+    const podium = document.querySelector('#podium');
+    for (let i = 1; i < Math.min(round.finishedPlayers.length, 3); i++)
+    {
+        const element = document.createElement('div');
+        element.innerText = `${i + 1}. ${round.finishedPlayers[i].name}`;
+        podium.append(element);
+    }
+
     const remaining = document.querySelector('#remaining');
     for (let i = 3; i < round.finishedPlayers.length; i++)
     {
         const element = document.createElement('span');
-        element.innerHTML = `${i}. ${round.finishedPlayers[i]}`;
+        element.innerHTML = `${i + 1}. ${round.finishedPlayers[i].name}`;
         remaining.append(element);
     }
     startVictoryCards();
@@ -421,7 +427,7 @@ const handleMessage = async (msg, round) =>
                         card.style.top = null;
                         await imageLoad(card.firstElementChild); //so that image is loaded when card is animated
                         makeTableCard(card, round.tableCards.length);
-                        animateCard(card, { top: `${smallScreen ? -400 : -600}px` }, 300);
+                        animateCard(card, { top: `${window.innerHeight < 1200 ? -400 : -600}px` }, 300);
                         round.tableCards.push({ element: card, name: cardName });
                         await wait(500);
                     }

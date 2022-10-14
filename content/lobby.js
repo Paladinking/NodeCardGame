@@ -51,7 +51,6 @@ const init = (name) =>
                         {
                             for (const player of msg.players)
                             {
-
                                 createPlayer(player, false);
                             }
                             createPlayer(name).isPlayer = true;

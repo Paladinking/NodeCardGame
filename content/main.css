@@ -370,7 +370,7 @@ body
     }
 }
 
-@media screen and (max-height: 1000px)
+@media screen and (max-height: 1200px)
 {
     .color-indicator
     {
@@ -495,7 +495,7 @@ body
     font-weight: bold;
 }
 
-.podium div
+.podium>div
 {
     display: flex;
     justify-content: center;
@@ -503,19 +503,18 @@ body
     width: 50%;
     color: #CD7F32;
     border: black solid 1px;
-    animation: expand 0.5s 1s backwards;
-}
-
-.podium div:first-child
-{
-    color: silver;
     animation: expand 0.5s 2s backwards;
 }
 
-.podium div:first-child:last-child
+.podium>div:first-child
+{
+    color: silver;
+    animation: expand 0.5s 1s backwards;
+}
+
+.podium>div:only-child
 {
     width: 100%;
-    animation: expand 0.5s 1s backwards;
 }
 
 @keyframes expand
@@ -545,9 +544,7 @@ body
     width: 12rem;
     height: 4rem;
     background-color: #b9e9ff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    text-align: center;
     font-size: 40px;
     font-weight: 300;
     border-radius: 0 0 2em 2em;
