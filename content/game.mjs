@@ -317,7 +317,6 @@ let startVictoryCards;
 
 const toVictory = (round) =>
 {
-    round.finishedPlayers = [{ name: "hello" }, { name: "thobre" }, { name: "sup" }];
     for (const player of round.players)
     {
         if (!round.finishedPlayers.includes(player))
