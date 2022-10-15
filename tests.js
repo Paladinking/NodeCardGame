@@ -45,7 +45,7 @@ const objEq = (a, b) => {
 
 
 // socketData : [{toReceive : [{"event" : "something", etc}, {"event" : ...}, someOtherJsonObj...], closeStep : 2}, {socket2data} ...]
-// actions : [{id: socketIndex, toSend : {...}}]
+// actions : [{id : socketIndex, toSend : {...}}]
 const wsTest = async (socketData, actions) => {
 	return new Promise(async (resolve, reject) => {
 		let returning = false;
@@ -138,7 +138,7 @@ const runWsTest = async (socketData, actions, name) => {
 			resolve(1);
 		},
 		(err) => {
-			testOut("Test failded,", err);	
+			testOut("Test failed,", err);	
 			resolve(0);
 		});
 	});
@@ -510,6 +510,200 @@ const aceT8Plays = async () => {
 			{id : 0, toSend : {action : "Place", cards : ["7S"]}},
 		], 
 		"Ace draw Play");
+	tests.handleInit = (game) => {
+		game.handleInit(game, 
+			[
+				'AC', '2S', '2D', '8D', 'QD', '7H',
+				'KD', '3S', '9D', 'QH', '3C', '4S',
+				'6D', 'QC', '4C', '3H', 'AD', '2C',
+				'6S', 'JD', '9S', '8S', 'JH', '9C',
+				'JC', 'KC', 'AH', '4H', '9H', '7D',
+				'4D', '6C', '6H', '5C', 'KS', 'KH',
+				'8H', '5D', 'AS', '7S', '7C', 'JS',
+				'8C', '5S', '2H', '3D', 'QS', '5H'
+			]);
+	};
+	completedTests += await runWsTest(
+		[
+			{
+				toReceive : [
+					{event: 'joined', players: []},
+					{event: 'join', name: 'abc', id : 1},
+					{event: 'start', topCard: '2S', hand: ["5H","QS","3D","2H","5S","8C","JS"]},
+					{event: 'place', cards: ["5S"], newCards: []},
+					{event: 'place', cards: ["AS"], newCards: ["5C"]},
+					{event: 'place', cards: ["7S","7C"], newCards: []},
+					{event: 'place', cards: ["5C","5H"], newCards: []},
+					{event: 'place', cards: ["5D"], newCards: []},
+					{event: 'place', cards: ["3D"], newCards: []},
+					{event: 'place', cards: ["8H"], newCards: []},
+					{event: 'chooseColor', color: 'D'},
+					{event: 'place', cards: ["8C"], newCards: []},
+					{event: 'chooseColor', color: 'C'},
+					{event: 'drawOther', passed: false},
+					{event: 'drawOther', passed: false},
+					{event: 'place', cards: ["6C"], newCards: []},
+					{event: 'drawSelf', card: '4D'},
+					{event: 'drawSelf', card: '7D'},
+					{event: 'drawSelf', card: '9H'},
+					{event: 'place', cards: ["6H"], newCards: []},
+					{event: 'place', cards: ["2H"], newCards: []},
+					{event: 'place', cards: ["KH"], newCards: []},
+					{event: 'place', cards: ["9H"], newCards: []},
+					{event: 'drawOther', passed: false},
+					{event: 'place', cards: ["4H"], newCards: []},
+					{event: 'place', cards: ["4D"], newCards: []},
+					{event: 'drawOther', passed: false},
+					{event: 'drawOther', passed: false},
+					{event: 'drawOther', passed: true},
+					{event: 'place', cards: ["7D"], newCards: []},
+					{event: 'drawOther', passed: false},
+					{event: 'drawOther', passed: false},
+					{event: 'drawOther', passed: false},
+					{event: 'place', cards: ["8S"], newCards: []},
+					{event: 'chooseColor', color: 'C'},
+					{event: 'drawSelf', card: '9S'},
+					{event: 'drawSelf', card: 'JD'},
+					{event: 'drawSelf', card: '6S'},
+					{event: 'place', cards: ["9C"], newCards: []},
+					{event: 'place', cards: ["9S"], newCards: []},
+					{event: 'place', cards: ["KS","KC"], newCards: []},
+					{event: 'drawSelf', card: '2C'},
+					{event: 'place', cards: ["2C"], newCards: []},
+					{event: 'place', cards: ["JC"], newCards: []},
+					{event: 'place', cards: ["JS"], newCards: []},
+					{event: 'place', cards: ["JH"], newCards: []},
+					{event: 'place', cards: ["JD"], newCards: []},
+					{event: 'drawOther', passed: false},
+					{event: 'place', cards: ["AD"], newCards: ["3H"]},
+					{event: 'drawOther', passed: false},
+					{event: 'place', cards: ["AH"], newCards: ["QC"]},
+					{event: 'drawOther', passed: false},
+					{event: 'drawOther', passed: false},
+					{event: 'drawOther', passed: true}
+				],
+				closeStep : 60,
+				closeReason : "Game ended"
+			},
+			{
+				toReceive : [
+					{event : "joined", players : ["123"]},
+					{event : "start", topCard : "2S", hand : ["7C","7S","AS","5D","8H","KH","KS"]},
+					{event : "place", cards : ["5S"], newCards : []},
+					{event : "place", cards : ["AS"], newCards : []},
+					{event : "place", cards : ["7S","7C"], newCards : []},
+					{event : "place", cards : ["5C","5H"], newCards : []},
+					{event : "place", cards : ["5D"], newCards : []},
+					{event : "place", cards : ["3D"], newCards : []},
+					{event : "place", cards : ["8H"], newCards : []},
+					{event : "chooseColor", "color" : "D"},
+					{event : "place", cards : ["8C"], newCards : []},
+					{event : "chooseColor", "color" : "C"},
+					{event : "drawSelf", card : "6H"},
+					{event : "drawSelf", card : "6C"},
+					{event : "place", cards : ["6C"], newCards : []},
+					{event : "drawOther", passed : false},
+					{event : "drawOther", passed : false},
+					{event : "drawOther", passed : true},
+					{event : "place", cards : ["6H"], newCards : []},
+					{event : "place", cards : ["2H"], newCards : []},
+					{event : "place", cards : ["KH"], newCards : []},
+					{event : "place", cards : ["9H"], newCards : []},
+					{event : "drawSelf", card : "4H"},
+					{event : "place", cards : ["4H"], newCards : []},
+					{event : "place", cards : ["4D"], newCards : []},
+					{event : "drawSelf", card : "AH"},
+					{event : "drawSelf", card : "KC"},
+					{event : "drawSelf", card : "JC"},
+					{event : "place", cards : ["7D"], newCards : []},
+					{event : "drawSelf", card : "9C"},
+					{event : "drawSelf", card : "JH"},
+					{event : "drawSelf", card : "8S"},
+					{event : "place", cards : ["8S"], newCards : []},
+					{event : "chooseColor", "color" : "C"},
+					{event : "drawOther", passed : false},
+					{event : "drawOther", passed : false},
+					{event : "drawOther", passed : true},
+					{event : "place", cards : ["9C"], newCards : []},
+					{event : "place", cards : ["9S"], newCards : []},
+					{event : "place", cards : ["KS","KC"], newCards : []},
+					{event : "drawOther", passed : false},
+					{event : "place", cards : ["2C"], newCards : []},
+					{event : "place", cards : ["JC"], newCards : []},
+					{event : "place", cards : ["JS"], newCards : []},
+					{event : "place", cards : ["JH"], newCards : []},
+					{event : "place", cards : ["JD"], newCards : []},
+					{event : "drawSelf", card : "AD"},
+					{event : "place", cards : ["AD"], newCards : []},
+					{event : "drawSelf", card : "4C"},
+					{event : "place", cards : ["AH"], newCards : []},
+					{event : "drawSelf", card : "6D"},
+					{event : "drawSelf", card : "4S"},
+					{event : "drawSelf", card : "3C"}				
+				],
+				closeStep : 60,
+				closeReason : "Game ended"
+			}
+		],
+		[
+			{id : 0, toSend: {gameId : "T8", name: "123"}},
+			{id : 1, toSend: {gameId : "T8", name: "abc"}},
+			{id : 1, toSend: {action : "Start"}},
+			{id : 0, toSend: { action: 'Place', cards: [ '5S' ] }},
+			{id : 1, toSend: { action: 'Place', cards: [ 'AS' ] }},
+			{id : 1, toSend: { action: 'Place', cards: [ '7S', '7C' ] }},
+			{id : 0, toSend: { action: 'Place', cards: [ '5C', '5H' ] }},
+			{id : 1, toSend: { action: 'Place', cards: [ '5D' ] }},
+			{id : 0, toSend: { action: 'Place', cards: [ '3D' ] }},
+			{id : 1, toSend: { action: 'Place', cards: [ '8H' ] }},
+			{id : 1, toSend: { action: 'ChooseColor', color: 'D' }},
+			{id : 0, toSend: { action: 'Place', cards: [ '8C' ] }},
+			{id : 0, toSend: { action: 'ChooseColor', color: 'C' }},
+			{id : 1, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Place', cards: [ '6C' ] }},
+			{id : 0, toSend: { action: 'Draw' }},
+			{id : 0, toSend: { action: 'Draw' }},
+			{id : 0, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Place', cards: [ '6H' ] }},
+			{id : 0, toSend: { action: 'Place', cards: [ '2H' ] }},
+			{id : 1, toSend: { action: 'Place', cards: [ 'KH' ] }},
+			{id : 0, toSend: { action: 'Place', cards: [ '9H' ] }},
+			{id : 1, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Place', cards: [ '4H' ] }},
+			{id : 0, toSend: { action: 'Place', cards: [ '4D' ] }},
+			{id : 1, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Draw' }},
+			{id : 0, toSend: { action: 'Place', cards: [ '7D' ] }},
+			{id : 1, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Place', cards: [ '8S' ] }},
+			{id : 1, toSend: { action: 'ChooseColor', color: 'C' }},
+			{id : 0, toSend: { action: 'Draw' }},
+			{id : 0, toSend: { action: 'Draw' }},
+			{id : 0, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Place', cards: [ '9C' ] }},
+			{id : 0, toSend: { action: 'Place', cards: [ '9S' ] }},
+			{id : 1, toSend: { action: 'Place', cards: [ 'KS', 'KC' ] }},
+			{id : 0, toSend: { action: 'Draw' }},
+			{id : 0, toSend: { action: 'Place', cards: [ '2C' ] }},
+			{id : 1, toSend: { action: 'Place', cards: [ 'JC' ] }},
+			{id : 0, toSend: { action: 'Place', cards: [ 'JS' ] }},
+			{id : 1, toSend: { action: 'Place', cards: [ 'JH' ] }},
+			{id : 0, toSend: { action: 'Place', cards: [ 'JD' ] }},
+			{id : 1, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Place', cards: [ 'AD' ] }},
+			{id : 1, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Place', cards: [ 'AH' ] }},
+			{id : 1, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Draw' }},
+			{id : 1, toSend: { action: 'Draw' }}
+		],
+		"Long ace draw test"
+
+	)
 	return completedTests;
 }
 
@@ -525,7 +719,7 @@ const tests = {
 		completedTests += await playStandardT8();
 		completedTests += await invalidT8Playes();
 		completedTests += await aceT8Plays();
-		testOut(`Passed ${completedTests} tests out of 10`);
+		testOut(`Passed ${completedTests} tests out of 11`);
 		console.log = testOut;
 	},
 	

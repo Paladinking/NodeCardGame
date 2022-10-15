@@ -44,6 +44,19 @@ const passTurn = (game) => {
 	console.log("Nobody left playing...");
 }
 
+const T8HasMove = (hand, game) => {
+	if (hand.length == 1 &&(hand[0][0] == 'A' || hand[0][0] == '8')) {
+		return false;
+	}
+	const topCard = game.pile[game.pile.length - 1];
+	for (const card of hand) {
+		if (card[0] == "8" || card[0] == topCard[0] || card[1] == game.color) {
+			return true;
+		}
+	} 
+	return false;
+}
+
 const handleT8Message = (data, socket) => {
 	switch (data.action) {
 		case "Start" :
@@ -117,6 +130,7 @@ const handleT8Message = (data, socket) => {
 
 			//Now the move is validated...
 			//Now real changes to game can happen
+			socket.gameData.draws = 0;
 			socket.game.color = color;
 			socket.gameData.hand = hand;
 			for (let i = 0; i < data.cards.length; i++) {
@@ -172,32 +186,24 @@ const handleT8Message = (data, socket) => {
 				return;
 			}
 			socket.gameData.draws++;
-			const topCard = socket.game.pile[socket.game.pile.length - 1];
 			const firstCard = socket.gameData.hand[0];
 			if (!(socket.gameData.hand.length == 1 && (firstCard[0] == '8' || firstCard[0] == 'A'))) {
-				for (let i = 0; i < socket.gameData.hand.length; i++) {
-					const card = socket.gameData.hand[i];
-					if (card[0] == '8' || card[0] == topCard[0] || card[1] == socket.game.color) {
-						socket.close(1000, "Only draw when no legal move exists");
-						return;
-					}
+				if(T8HasMove(socket.gameData.hand, socket.game)) {
+					socket.close(1000, "Only draw when no legal move exists");
+					return;
 				}
-			} else if (firstCard[0] == '8' || firstCard[1] == socket.game.color) {
-				socket.gameData.draws = 0;
 			}
 
 			const newCard = drawCard(socket.game);
-			
 			socket.gameData.hand.push(newCard);
-			if (newCard[0] == topCard[0] || newCard[1] == socket.game.color || newCard[0] == "8") {
-				socket.gameData.draws = 0;
-			} 
 
+			const shouldPass = socket.gameData.draws == 3 && !T8HasMove(socket.gameData.hand, socket.game);
+	
 			for (let i = 0; i < socket.game.players.length; i++) {
 				if (i == socket.gameData.id) continue;
-				socket.game.players[i].send(`{"event" : "drawOther", "passed" : ${socket.gameData.draws == 3}}`);
+				socket.game.players[i].send(`{"event" : "drawOther", "passed" : ${shouldPass}}`);
 			}
-			if (socket.gameData.draws == 3) {
+			if (shouldPass) {
 				socket.gameData.draws = 0;
 				passTurn(socket.game);
 			}
