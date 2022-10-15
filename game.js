@@ -1,18 +1,5 @@
 "use strict";
 
-const testing = false;
-
-const testingDeck = [
-  'AS', '2D', '8D', '2C', 'JH', 'KH',
-  '3S', '9H', '3C', '6C', '8H', '9D',
-  'JC', 'QC', '7S', '5H', 'AD', 'QD',
-  '7C', '5C', '3D', '7H', '8S', '2H',
-  '7D', 'QS', '9C', 'QH', 'KS', '8C',
-  'AC', '6H', '5S', 'JS', '6S', '4H',
-  '6D', 'JD', '2S', '4D', '9S', 'AH',
-  'KC', '4S', 'KD', '4C', '5D', '3H'
-];
-
 const createDeck = () => {
 	let deck = [];
 	for (const number of "A23456789JQK") {
@@ -21,6 +8,7 @@ const createDeck = () => {
 		}
 	}
 	return deck;
+	
 }
 
 const shuffleDeck = (deck) => {
@@ -55,7 +43,6 @@ const passTurn = (game) => {
 	}
 	console.log("Nobody left playing...");
 }
-
 
 const handleT8Message = (data, socket) => {
 	switch (data.action) {
@@ -184,8 +171,10 @@ const handleT8Message = (data, socket) => {
 				socket.close(1000, "Not your turn");
 				return;
 			}
+			socket.gameData.draws++;
 			const topCard = socket.game.pile[socket.game.pile.length - 1];
-			if (!(socket.gameData.hand.length == 1 && (socket.gameData.hand[0][0] == '8' || socket.gameData.hand[0][0] == 'A'))) {
+			const firstCard = socket.gameData.hand[0];
+			if (!(socket.gameData.hand.length == 1 && (firstCard[0] == '8' || firstCard[0] == 'A'))) {
 				for (let i = 0; i < socket.gameData.hand.length; i++) {
 					const card = socket.gameData.hand[i];
 					if (card[0] == '8' || card[0] == topCard[0] || card[1] == socket.game.color) {
@@ -193,12 +182,13 @@ const handleT8Message = (data, socket) => {
 						return;
 					}
 				}
+			} else if (firstCard[0] == '8' || firstCard[1] == socket.game.color) {
+				socket.gameData.draws = 0;
 			}
 
 			const newCard = drawCard(socket.game);
-			socket.gameData.draws++;
-			socket.gameData.hand.push(newCard);
 			
+			socket.gameData.hand.push(newCard);
 			if (newCard[0] == topCard[0] || newCard[1] == socket.game.color || newCard[0] == "8") {
 				socket.gameData.draws = 0;
 			} 
@@ -222,11 +212,15 @@ const handleT8Message = (data, socket) => {
 
 };
 
-let handleT8Init = (game) => {
-	game.deck = testing ? testingDeck.slice() : createDeck();
-	if (!testing) shuffleDeck(game.deck);
+let handleT8Init = (game, deck) => {
+	if (deck == undefined) {
+		deck = createDeck();
+		shuffleDeck(deck);
+	}
+	game.deck = deck;
 	game.turn = 0;
 	let index = 0;
+	console.log(game.deck);
 	while (game.deck[index][0] == 'A' || game.deck[index][0] == '8') {
 		index++;
 	}
@@ -296,7 +290,6 @@ const game = {
 			socket.game = game;
 			socket.gameData.status = IN_GAME;
 		});
-		game.handleInit(game);
 	} 
 };
 

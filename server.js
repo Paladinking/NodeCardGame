@@ -1,10 +1,15 @@
 "use strict";
 
+const runTests = process.argv[2] == "--tests";
+console.log("Testing : ", runTests);
+
 const http = require("http");
 const ws = require("ws");
 
 const fs = require("fs");
 const gameModule = require("./game.js");
+const testModule = require("./tests.js");
+
 
 const hostname = "127.0.0.1";
 const port = 3000;
@@ -35,16 +40,17 @@ let folderContent = {
 	"/lobby.html" : contentTypes.html,
 	"/lobby.js" : contentTypes.js,
 	"/game.mjs" : contentTypes.js,
-	"/suits/S.svg" : contentTypes.svg,
-	"/suits/D.svg" : contentTypes.svg,
-	"/suits/C.svg" : contentTypes.svg,
-	"/suits/H.svg" : contentTypes.svg
+	"/cards/S.svg" : contentTypes.svg,
+	"/cards/D.svg" : contentTypes.svg,
+	"/cards/C.svg" : contentTypes.svg,
+	"/cards/H.svg" : contentTypes.svg,
+	"/cards/Card_back.svg" : contentTypes.svg
 };
 
 
 for (const number of "A23456789JQK") {
 	for (const color of "SCDH") {
-		folderContent[`/2color/${number}${color}.svg`] = contentTypes.svg;
+		folderContent[`/cards/${number}${color}.svg`] = contentTypes.svg;
 	}
 }
 
@@ -135,7 +141,7 @@ const server = http.createServer((req, res) => {
 	}
  }
  */
-server.listen(port, hostname, () => {
+server.listen(port, () => {
 	console.log(`Server running at http://${hostname}:${port}/`);
 });
 
@@ -216,6 +222,11 @@ socketServer.on("connection", (socket, req) => {
 				if (data.action == "Start") {
 					if (socket.gameData.lobby.players.length >= socket.gameData.lobby.minPlayers) {
 						gameModule.createGame(socket.gameData.lobby);
+						if (runTests) {
+							testModule.handleInit(socket.game);
+						} else {
+							socket.game.handleInit(socket.game);
+						}
 					}
 					return;
 				}
@@ -246,3 +257,10 @@ socketServer.on("connection", (socket, req) => {
 		console.log(`${socket.gameData.name ? socket.gameData.name : "Someone"} left, ${connectedCount} remaining`);
 	});
 });
+
+if (runTests) {
+	(async () => {
+		await testModule.general();
+		process.exit(0);
+	})();
+}
