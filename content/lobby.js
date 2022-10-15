@@ -8,6 +8,20 @@ let noLeaveWarning = false;
 let gameState;
 import { game } from "/game.mjs";
 
+const showErrorMessage = (error, longError, reason) =>
+{
+    document.querySelector('#content').innerHTML +=
+        `<div class = "error-wrap">
+        <div class = "error-box">
+            <h2>${error}</h2>
+            <p>${longError}</p>
+            <p>${reason}</p>
+            <br>
+            <a href="/">Return to main page<a>
+        </div>
+    </div>`;
+};
+
 const init = (name) =>
 {
     const players = [];
@@ -92,16 +106,7 @@ const init = (name) =>
             noLeaveWarning = true;
             if (event.reason != "Game is over")
             {
-                document.querySelector('#content').innerHTML +=
-                    `<div class = "error-wrap">
-                        <div class = "error-box">
-                            <h2>Connection closed</h2>
-                            <p>The connection to the server was closed unexpectedly</p>
-                            ${event.reason.length != 0 ? `<p>Reason: ${event.reason}</p>` : "Thats all we know."}
-                            <br>
-                            <a href="/">Return to main page<a>
-                        </div>
-                    </div>`;
+                showErrorMessage("Connection closed", "The connection to the server was closed unexpectedly", `${event.reason.length != 0 ? `Reason: ${event.reason}` : "Thats all we know."}`);
             }
         });
         document.querySelector('#start-button').setAttribute('available', "true");
@@ -144,10 +149,7 @@ if (GAME_TYPES[gameId] != undefined)
 }
 else 
 {
-    setTimeout(() =>
-    {
-        window.location.href = "/";
-    }, 5000);
+    showErrorMessage("No game found", `No game with ID ${gameId ? gameId.replace('>', "&gt;").replace('<', '&lt;') : 'null'} found`, "Make sure that you have entered the URL correctly");
 }
 
 const startBackgroundCards = (stopOnGameState = LOBBY) =>
@@ -159,7 +161,7 @@ const startBackgroundCards = (stopOnGameState = LOBBY) =>
         const color = CARD_COLORS[Math.floor(Math.random() * CARD_COLORS.length)];
         const card = document.createElement('div');
         card.classList.add('card-wrapper');
-        card.innerHTML = `<img src = "/2color/${number}${color}.svg" draggable = "false" width = 140>`;
+        card.innerHTML = `<img src = "/suits/${number}${color}.svg" draggable = "false" width = 140>`;
         main.prepend(card);
         const animate = () =>
         {
