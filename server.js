@@ -40,16 +40,17 @@ let folderContent = {
 	"/lobby.html" : contentTypes.html,
 	"/lobby.js" : contentTypes.js,
 	"/game.mjs" : contentTypes.js,
-	"/suits/S.svg" : contentTypes.svg,
-	"/suits/D.svg" : contentTypes.svg,
-	"/suits/C.svg" : contentTypes.svg,
-	"/suits/H.svg" : contentTypes.svg
+	"/cards/S.svg" : contentTypes.svg,
+	"/cards/D.svg" : contentTypes.svg,
+	"/cards/C.svg" : contentTypes.svg,
+	"/cards/H.svg" : contentTypes.svg,
+	"/cards/Card_back.svg" : contentTypes.svg
 };
 
 
 for (const number of "A23456789JQK") {
 	for (const color of "SCDH") {
-		folderContent[`/2color/${number}${color}.svg`] = contentTypes.svg;
+		folderContent[`/cards/${number}${color}.svg`] = contentTypes.svg;
 	}
 }
 

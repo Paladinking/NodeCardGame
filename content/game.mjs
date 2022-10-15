@@ -41,7 +41,7 @@ const createCardElement = (cardName) =>
     const card = document.createElement('div');
     card.classList.add('playing-card', 'card-wrapper');
     const width = smallScreen ? 120 : 160;
-    card.innerHTML = `<img src = "/2color/${cardName}.svg" draggable = "false" width = ${width}>`;
+    card.innerHTML = `<img src = "/cards/${cardName}.svg" draggable = "false" width = ${width}>`;
     card.style.top = "initial";
     return card;
 };
@@ -227,7 +227,7 @@ const initGraphics = async (round) =>
     round.confirmButton.innerText = "OK";
 
     round.colorIndicator.classList.add('color-indicator');
-    round.colorIndicator.src = "/suits/C.svg";
+    round.colorIndicator.src = "/cards/C.svg";
     round.colorIndicator.width = "40";
     round.colorIndicator.style.display = "none";
     round.centerElement.append(round.colorIndicator);
@@ -291,7 +291,7 @@ const chooseColorPopup = (round) =>
         for (let i = 0; i < 4; i++)
         {
             const element = document.createElement('img');
-            element.src = `/suits/${colors[i]}.svg`;
+            element.src = `/cards/${colors[i]}.svg`;
             element.draggable = false;
             container.append(element);
         }
@@ -476,7 +476,7 @@ const handleMessage = async (msg, round) =>
             {
                 const topCard = round.tableCards[round.tableCards.length - 1];
                 topCard.name = `${topCard.name[0]}${msg.color}`;
-                round.colorIndicator.src = `/suits/${msg.color}.svg`;
+                round.colorIndicator.src = `/cards/${msg.color}.svg`;
                 round.colorIndicator.style.display = null;
                 nextTurn(round);
                 if (round.players[round.currentTurn].isPlayer)

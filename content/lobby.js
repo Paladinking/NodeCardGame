@@ -159,7 +159,7 @@ const startBackgroundCards = (stopOnGameState = LOBBY) =>
         const color = CARD_COLORS[Math.floor(Math.random() * CARD_COLORS.length)];
         const card = document.createElement('div');
         card.classList.add('card-wrapper');
-        card.innerHTML = `<img src = "/2color/${number}${color}.svg" draggable = "false" width = 140>`;
+        card.innerHTML = `<img src = "/cards/${number}${color}.svg" draggable = "false" width = 140>`;
         main.prepend(card);
         const animate = () =>
         {
