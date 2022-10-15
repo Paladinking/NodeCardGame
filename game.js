@@ -44,7 +44,6 @@ const passTurn = (game) => {
 	console.log("Nobody left playing...");
 }
 
-
 const handleT8Message = (data, socket) => {
 	switch (data.action) {
 		case "Start" :
@@ -172,8 +171,10 @@ const handleT8Message = (data, socket) => {
 				socket.close(1000, "Not your turn");
 				return;
 			}
+			socket.gameData.draws++;
 			const topCard = socket.game.pile[socket.game.pile.length - 1];
-			if (!(socket.gameData.hand.length == 1 && (socket.gameData.hand[0][0] == '8' || socket.gameData.hand[0][0] == 'A'))) {
+			const firstCard = socket.gameData.hand[0];
+			if (!(socket.gameData.hand.length == 1 && (firstCard[0] == '8' || firstCard[0] == 'A'))) {
 				for (let i = 0; i < socket.gameData.hand.length; i++) {
 					const card = socket.gameData.hand[i];
 					if (card[0] == '8' || card[0] == topCard[0] || card[1] == socket.game.color) {
@@ -181,12 +182,13 @@ const handleT8Message = (data, socket) => {
 						return;
 					}
 				}
+			} else if (firstCard[0] == '8' || firstCard[1] == socket.game.color) {
+				socket.gameData.draws = 0;
 			}
 
 			const newCard = drawCard(socket.game);
-			socket.gameData.draws++;
-			socket.gameData.hand.push(newCard);
 			
+			socket.gameData.hand.push(newCard);
 			if (newCard[0] == topCard[0] || newCard[1] == socket.game.color || newCard[0] == "8") {
 				socket.gameData.draws = 0;
 			} 

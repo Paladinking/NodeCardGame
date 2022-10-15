@@ -422,14 +422,14 @@ const invalidT8Playes = async () => {
 const aceT8Plays = async () => {
 	tests.handleInit = (game) => {
 		game.handleInit(game, [
-			'AS', '2C', '8D', '2D', 'JH', 'KH',
-			'KD', '9H', '5D', '6C', '8H', '9D',
-			'JC', 'QC', '7S', '5H', '4S', 'QD',
-			'7C', '5C', '7H', '7D', '4C', '2H',
-			'8S', 'AH', 'QS', 'QH', 'KS', '8C',
+			'KC', '2C', '8D', '2D', 'JD', 'KH',
+			'KD', '9H', '6C', '8H', '9D', '9C',
+		 	'QC', '2H', '5H', '4S', '8S', '7C',
+			'5C', '7H', '7D', '7S', '4C', 'QD', 
+			'AH', 'QS', '5D', 'QH', 'KS', '8C',
 			'AC', '6H', 'AD', '5S', '6S', '4H',
-			'6D', 'JD', '2S', '4D', '9S', 'JS',
-			'KC', '9C', '3S', '3D', '3C', '3H'
+			'6D', 'JC', '2S', '4D', '9S', 'JS',
+			'AS', 'JH', '3S', '3D', '3C', '3H'
 		]);
 	};
 	let completedTests = 0;
@@ -438,49 +438,56 @@ const aceT8Plays = async () => {
 			{
 				toReceive : [
 					{event : "joined", players : []}, {event : "join", name : "Beta", id : 1}, {event : "join", name : "Ceta", id : 2},
-					{event : "start", topCard : "2C", hand : ["3H", "3C", "3D", "3S", "9C", "KC", "JS"]},
+					{event : "start", topCard : "KC", hand : ["3H", "3C", "3D", "3S", "JH", "AS", "JS"]},
 					{event : "place", cards : ["3C", "3H", "3S", "3D"], newCards : []},
 					{event : "place", cards : ["4D", "4H"], newCards : []},
 					{event : "place", cards : ["6H"], newCards : []},
-					{event : "drawSelf", card : "QS"},
-					{event : "drawSelf", card : "AH"},
-					{event : "place", cards : ["AH"], newCards : []},
+					{event : "place", cards : ["JH", "JS"], newCards : []},
+					{event : "place", cards : ["6S"], newCards : []},
+					{event : "place", cards : ["KS"], newCards : []},
+					{event : "drawSelf", card : "5D"},
+					{event : "place", cards : ["AS"], newCards : []},
+					{event : "drawSelf", card : "QD"},
 					{event : "drawSelf", card : "4C"},
-					{event : "drawSelf", card : "7D"},
-					{event : "drawSelf", card : "7H"},
-					{event : "place", cards : ["7H"], newCards : []}
+					{event : "drawSelf", card : "7S"},
+					{event : "place", cards : ["7S"], newCards : []}
+
 				]
-			},				
+			},			
 			{
 				toReceive : [
 					{event : "joined", players : ["Alpha"]}, {event : "join", name : "Ceta", id : 2 },
-					{event : "start", topCard : "2C", hand : ['9S', '4D', '2S', 'JD', '6D', '4H', "6S"]},
+					{event : "start", topCard : "KC", hand : ['9S', '4D', '2S', 'JC', '6D', '4H', "6S"]},
 					{event : "place", cards : ["3C", "3H", "3S", "3D"], newCards : []},
 					{event : "place", cards : ["4D", "4H"], newCards : []},
 					{event : "place", cards : ["6H"], newCards : []},
+					{event : "place", cards : ["JH", "JS"], newCards : []},
+					{event : "place", cards : ["6S"], newCards : []},
+					{event : "place", cards : ["KS"], newCards : []},
+					{event : "drawOther", passed : false},
+					{event : "place", cards : ["AS"], newCards : ["QS"]},
 					{event : "drawOther", passed : false},
 					{event : "drawOther", passed : false},
-					{event : "place", cards : ["AH"], newCards : ["8S"]},
 					{event : "drawOther", passed : false},
-					{event : "drawOther", passed : false},
-					{event : "drawOther", passed : false},
-					{event : "place", cards : ["7H"], newCards : []}
+					{event : "place", cards : ["7S"], newCards : []}
 				]
-			}, 
+			},
 			{
 				toReceive : [
 					{event : "joined", players : ["Alpha", "Beta"]},
-					{event : "start", topCard : "2C", hand : ["5S", "AD", "6H", "AC", "8C", "KS", "QH"]},
+					{event : "start", topCard : "KC", hand : ["5S", "AD", "6H", "AC", "8C", "KS", "QH"]},
 					{event : "place", cards : ["3C", "3H", "3S", "3D"], newCards : []},
 					{event : "place", cards : ["4D", "4H"], newCards : []},
 					{event : "place", cards : ["6H"], newCards : []},
+					{event : "place", cards : ["JH", "JS"], newCards : []},
+					{event : "place", cards : ["6S"], newCards : []},
+					{event : "place", cards : ["KS"], newCards : []},
+					{event : "drawOther", passed : false},
+					{event : "place", cards : ["AS"], newCards : ["AH"]},
 					{event : "drawOther", passed : false},
 					{event : "drawOther", passed : false},
-					{event : "place", cards : ["AH"], newCards : ["2H"]},
 					{event : "drawOther", passed : false},
-					{event : "drawOther", passed : false},
-					{event : "drawOther", passed : false},
-					{event : "place", cards : ["7H"], newCards : []}
+					{event : "place", cards : ["7S"], newCards : []}
 				]
 			}
 		], 
@@ -492,13 +499,15 @@ const aceT8Plays = async () => {
 			{id : 0, toSend : {action : "Place", cards : ["3C", "3H", "3S", "3D"]}},
 			{id : 1, toSend : {action : "Place", cards : ["4D", "4H"]}},
 			{id : 2, toSend : {action : "Place", cards : ["6H"]}},
+			{id : 0, toSend : {action : "Place", cards : ["JH", "JS"]}},
+			{id : 1, toSend : {action : "Place", cards : ["6S"]}},
+			{id : 2, toSend : {action : "Place", cards : ["KS"]}},
+			{id : 0, toSend : {action : "Draw"}},
+			{id : 0, toSend : {action : "Place", cards : ["AS"]}},
 			{id : 0, toSend : {action : "Draw"}},
 			{id : 0, toSend : {action : "Draw"}},
-			{id : 0, toSend : {action : "Place", cards : ["AH"]}},
 			{id : 0, toSend : {action : "Draw"}},
-			{id : 0, toSend : {action : "Draw"}},
-			{id : 0, toSend : {action : "Draw"}},
-			{id : 0, toSend : {action : "Place", cards : ["7H"]}},
+			{id : 0, toSend : {action : "Place", cards : ["7S"]}},
 		], 
 		"Ace draw Play");
 	return completedTests;
