@@ -154,7 +154,7 @@ let turnClick;
 
 const makeTurn = (round) =>
 {
-    if (round.finishedPlayers.length == round.players.length - 1)
+    if (round.finishedPlayers.length >= round.players.length - 1)
     {
         return;
     }
