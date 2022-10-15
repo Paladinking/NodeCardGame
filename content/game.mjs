@@ -421,8 +421,69 @@ const drawOtherAnimate = async (round, player) =>
     });
 };
 
-const changePlayerCards = (round, player, amount) =>
+const animateShuffle = (round) =>
 {
+    return new Promise((resolve) =>
+    {
+        const cardsToRemove = round.tableCards.splice(0, round.tableCards.length);
+        const animations = [];
+        for (const card of cardsToRemove)
+        {
+            animations.push(card.element.animate([
+                {
+
+                },
+                {
+                    top: `${-window.innerHeight}px`
+                }],
+                {
+                    duration: 700, easing: "ease", fill: "forwards"
+                }));
+        }
+        setTimeout(() =>
+        {
+            const topCard = cardsToRemove.pop();
+            round.tableCards.push(topCard);
+            topCard.element.style.zIndex = "0";
+            for (const animation of animations)
+            {
+                animation.cancel();
+            }
+            topCard.element.animate([
+                {
+                    top: `${-window.innerHeight}px`
+                },
+                {
+                    top: `${window.innerHeight < 1200 ? "-200px" : "-400px"}`
+                }],
+                {
+                    duration: 700, easing: "ease"
+                });
+            cardsToRemove.forEach((card) =>
+            {
+                card.element.remove();
+            });
+            setTimeout(() =>
+            {
+                resolve();
+            }, 750);
+        }, 750);
+    });
+};
+
+const changePlayerCards = async (round, player, amount) =>
+{
+    if (amount > 0)
+    {
+        round.totalCards -= amount;
+        if (round.totalCards <= 0)
+        {
+            await animateShuffle(round);
+            const sumOfHands = round.players.reduce(sum, cur => sum + cur.cards, 0);
+            round.totalCards = 51 - sumOfHands + round.totalCards;
+        }
+        console.log(round.totalCards);
+    }
     player.cards += amount;
     player.playerDiv.querySelector('h3').innerText = player.cards;
     if (player.cards <= 0)
@@ -481,7 +542,7 @@ const handleMessage = async (msg, round) =>
                                         await drawOtherAnimate(round, player);
                                     }
                                 }
-                                changePlayerCards(round, player, msg.cards.length);
+                                await changePlayerCards(round, player, msg.cards.length);
                             }
                         }
 
@@ -520,7 +581,7 @@ const handleMessage = async (msg, round) =>
         case 'drawSelf':
             {
                 await drawSelfAnimate(round, [msg.card]);
-                changePlayerCards(round, round.players[round.currentTurn], 1);
+                await changePlayerCards(round, round.players[round.currentTurn], 1);
                 if (round.draws == 3 && getValidMoves(round, []).length == 0)
                 {
                     document.removeEventListener('click', turnClick);
@@ -532,7 +593,7 @@ const handleMessage = async (msg, round) =>
             {
                 round.draws++;
                 await drawOtherAnimate(round, round.players[round.currentTurn]);
-                changePlayerCards(round, round.players[round.currentTurn], 1);
+                await changePlayerCards(round, round.players[round.currentTurn], 1);
                 if (msg.passed)
                 {
                     round.draws = 0;
@@ -594,7 +655,7 @@ export const game =
             colorIndicator: document.createElement('img'),
             finishedPlayers: [],
             restart: restart,
-            totalCards: 52 - 7 * players.length
+            totalCards: 51 - 7 * players.length
         };
         onResize = async () =>
         {

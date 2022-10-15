@@ -398,6 +398,7 @@ body
 {
     /*background-color: #6fce6f;*/
     left: -20vw;
+    box-shadow: -4px 2px 0px 0px rgb(0 0 0), -7px 4px 0px 0px rgb(255 255 255), -11px 7px 0px 0px rgb(0 0 0);
 }
 
 .player-sidebar
@@ -426,6 +427,7 @@ body
     transition-duration: 0.3s;
     flex-direction: column;
 }
+
 .current-round
 {
     font-size: 1.4em;

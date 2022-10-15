@@ -194,4 +194,4 @@ const startBackgroundCards = (stopOnGameState = LOBBY) =>
     }
 };
 
-startBackgroundCards(IN_GAME);
+//startBackgroundCards(IN_GAME);
