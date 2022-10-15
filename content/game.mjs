@@ -393,6 +393,7 @@ const drawSelfAnimate = async (round, newCardNames) =>
     updateHand(round.hand);
     for (const newCard of newCards)
     {
+        await imageLoad(newCard.element.firstElementChild);
         animateCard(newCard.element, { top: round.deckElement.style.top, left: "-20rem" }, 300);
     }
 };
