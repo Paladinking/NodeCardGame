@@ -1,10 +1,15 @@
 "use strict";
 
+const runTests = process.argv[2] == "--tests";
+console.log("Testing : ", runTests);
+
 const http = require("http");
 const ws = require("ws");
 
 const fs = require("fs");
 const gameModule = require("./game.js");
+const testModule = require("./tests.js");
+
 
 const hostname = "127.0.0.1";
 const port = 3000;
@@ -216,6 +221,11 @@ socketServer.on("connection", (socket, req) => {
 				if (data.action == "Start") {
 					if (socket.gameData.lobby.players.length >= socket.gameData.lobby.minPlayers) {
 						gameModule.createGame(socket.gameData.lobby);
+						if (runTests) {
+							testModule.handleInit(socket.game);
+						} else {
+							socket.game.handleInit(socket.game);
+						}
 					}
 					return;
 				}
@@ -246,3 +256,10 @@ socketServer.on("connection", (socket, req) => {
 		console.log(`${socket.gameData.name ? socket.gameData.name : "Someone"} left, ${connectedCount} remaining`);
 	});
 });
+
+if (runTests) {
+	(async () => {
+		await testModule.general();
+		process.exit(0);
+	})();
+}

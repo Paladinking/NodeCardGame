@@ -1,18 +1,5 @@
 "use strict";
 
-const testing = false;
-
-const testingDeck = [
-  'AS', '2D', '8D', '2C', 'JH', 'KH',
-  '3S', '9H', '3C', '6C', '8H', '9D',
-  'JC', 'QC', '7S', '5H', 'AD', 'QD',
-  '7C', '5C', '3D', '7H', '8S', '2H',
-  '7D', 'QS', '9C', 'QH', 'KS', '8C',
-  'AC', '6H', '5S', 'JS', '6S', '4H',
-  '6D', 'JD', '2S', '4D', '9S', 'AH',
-  'KC', '4S', 'KD', '4C', '5D', '3H'
-];
-
 const createDeck = () => {
 	let deck = [];
 	for (const number of "A23456789JQK") {
@@ -21,6 +8,7 @@ const createDeck = () => {
 		}
 	}
 	return deck;
+	
 }
 
 const shuffleDeck = (deck) => {
@@ -222,9 +210,12 @@ const handleT8Message = (data, socket) => {
 
 };
 
-let handleT8Init = (game) => {
-	game.deck = testing ? testingDeck.slice() : createDeck();
-	if (!testing) shuffleDeck(game.deck);
+let handleT8Init = (game, deck) => {
+	if (deck == undefined) {
+		deck = createDeck();
+		shuffleDeck(deck);
+	}
+	game.deck = deck;
 	game.turn = 0;
 	let index = 0;
 	while (game.deck[index][0] == 'A' || game.deck[index][0] == '8') {
@@ -296,7 +287,6 @@ const game = {
 			socket.game = game;
 			socket.gameData.status = IN_GAME;
 		});
-		game.handleInit(game);
 	} 
 };
 

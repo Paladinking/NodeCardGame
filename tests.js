@@ -23,7 +23,7 @@ const closeSocket = async (socket) => {
 		};
 		socket.on("close", onClose);
 		socket.close();
-		await new Promise((resolve) => {setTimeout(resolve, 10)});
+		await new Promise((resolve) => {setTimeout(resolve, 1000)});
 		reject("Socket already closed");
 	});
 };
@@ -103,7 +103,7 @@ const wsTest = async (socketData, actions) => {
 				} else {
 					socketData[actions[i].id].socket.send(JSON.stringify(actions[i].toSend));
 				}
-				await new Promise((resolve) => {setTimeout(resolve, 10)});
+				await new Promise((resolve) => {setTimeout(resolve, 100)});
 				for (let j = 0; j < socketData.length; j++) {
 					const data = socketData[j];
 					if (data.closeStep == currentStep && !data.isClosed) {
@@ -124,17 +124,14 @@ const wsTest = async (socketData, actions) => {
 	});
 }; 
 
-const runWsTest = async (socketData, actions, errorMsg = undefined) => {
+const runWsTest = async (socketData, actions, name) => {
+	testOut("\nRunning test '" + name + "'");
 	return new Promise((resolve, reject) => {
 		wsTest(socketData, actions).then(() => {
 			resolve(1);
 		},
 		(err) => {
-			if (errorMsg == undefined) {
-				console.log(err);
-			} else {
-				console.log(errorMsg + ", " + err);
-			}
+			testOut("Test failded,", err);	
 			resolve(0);
 		});
 	});
@@ -185,7 +182,8 @@ const lobbyValid = async () => {
 			{id : 1, toSend : {action : "Leave"}}, 
 			{id : 3, toSend : {gameId : "T8", name : "Ceta"}},
 			{id : 0, close : true}
-		]
+		],
+		"Lobby valid"
 	);
 };
 
@@ -194,17 +192,17 @@ const joinLobbyInvalid = async () => {
 	completedTests += await runWsTest(
 		[{toReceive : [], closeStep : 0, closeReason : "TMI"}],
 		[{id : 0, toSend : {gameId : "T8", name : "abcdefghijklmnopqrstuww"}}, undefined],
-		"To long name was not closed"
+		"To long name"
 	);
 	completedTests += await runWsTest(
 		[{toReceive : [], closeStep : 0}],
 		[{id : 0, toSend : {gameId : "Bad", name : "Hello"}}, undefined],
-		"Bad gameId was not closed"
+		"Bad gameId"
 	);
 	completedTests += await runWsTest(
 		[{toReceive : [], closeStep : 0}],
 		[{id : 0, toSend : "Hello world"}],
-		"Bad data was not closed"
+		"Bad data"
 	);
 	return completedTests;
 };
@@ -217,7 +215,7 @@ const inLobbyInvalid = async () => {
 			{id : 0, toSend : {gameId : "T8", name : "Good Name"}},
 			{id : 0, toSend : "Not a valid message"}
 		],
-		"Bad lobby message was not closed"
+		"Bad lobby message"
 	);
 	completedTests += await runWsTest(
 		[
@@ -264,7 +262,8 @@ const inLobbyInvalid = async () => {
 			{id : 3, toSend : {gameId : "T8", name : "d"}}, {id : 4, toSend : {gameId : "T8", name : "e"}},
 			{id : 5, toSend : {gameId : "T8", name : "f"}},
 			undefined
-		]
+		],
+		"Full lobby"
 		
 	);
 	completedTests += await runWsTest(
@@ -276,20 +275,25 @@ const inLobbyInvalid = async () => {
 			{id : 0 , toSend : {action : "Start"}},
 			undefined
 		],
-		"Start test"
+		"Bad start"
 	);
 	return completedTests;
 };
-/*
-  'AS', '2D', '8D', '2C', 'JH', 'KH',
-  '3S', '9H', '3C', '6C', '8H', '9D',
-  'JC', 'QC', '7S', '5H', 'AD', 'QD',
-  '7C', '5C', '3D', '7H', '8S', '2H',
-  '7D', 'QS', '9C', 'QH', 'KS', '8C',
-  'AC', '6H', '5S', 'JS', '6S', '4H',
-  '6D', 'JD', '2S', '4D', '9S', 'AH',
-  'KC', '4S', 'KD', '4C', '5D', '3H'*/
+const testingDeck = [
+	'AS', '2D', '8D', '2C', 'JH', 'KH',
+	'3S', '9H', '3C', '6C', '8H', '9D',
+	'JC', 'QC', '7S', '5H', 'AD', 'QD',
+	'7C', '5C', '3D', '7H', '8S', '2H',
+	'7D', 'QS', '9C', 'QH', 'KS', '8C',
+	'AC', '6H', '5S', 'JS', '6S', '4H',
+	'6D', 'JD', '2S', '4D', '9S', 'AH',
+	'KC', '4S', 'KD', '4C', '5D', '3H'
+  ];
+  
 const playStandardT8 = async () => {
+	tests.handleInit = (game) => {
+		game.handleInit(game, testingDeck.slice())
+	}
 	return await runWsTest(
 		[{
 			toReceive : [
@@ -353,11 +357,14 @@ const playStandardT8 = async () => {
 			{id : 0, toSend : {action : "Place", cards : ["5D"]}},
 			undefined
 		],
-		"PlayT8 test"
+		"Valid T8 Game"
 	)
 };
 
 const invalidT8Playes = async () => {
+	tests.handleInit = (game) => {
+		game.handleInit(game, testingDeck.slice())
+	}
 	let completedTests = 0;
 	completedTests += await runWsTest(
 		[
@@ -408,15 +415,19 @@ const invalidT8Playes = async () => {
 	return completedTests;
 };
 
+const testOut = console.log;
+
 const tests = {
 	general : async () => {
+		console.log = (msg) => {};
 		let completedTests = 0;
 		completedTests += await lobbyValid();
 		completedTests += await joinLobbyInvalid();
 		completedTests += await inLobbyInvalid();
 		completedTests += await playStandardT8();
 		completedTests += await invalidT8Playes();
-		console.log(`Passed ${completedTests} tests out of 9`);
+		testOut(`Passed ${completedTests} tests out of 9`);
+		console.log = testOut;
 	},
 	
 	T8 : () => {
@@ -426,7 +437,8 @@ const tests = {
 
 			
 		}
-	}
+	},
+	
+	handleInit : (game) => {}
 };
-
-tests.general();
+module.exports = tests;
