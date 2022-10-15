@@ -1,7 +1,7 @@
 "use strict";
 const CARD_NUMBERS = "23456789JQKA";
 const CARD_COLORS = "SCDH";
-let smallScreen = window.innerWidth < 1700;
+let smallScreen = window.innerWidth < 1700 || window.innerHeight < 1200;
 let onResize;
 
 const sortHand = (hand) =>
@@ -89,9 +89,7 @@ const drawDeck = (round) =>
 {
     round.deckElement.classList.add('deck');
     round.centerElement.append(round.deckElement);
-    round.deckElement.style.width = `${smallScreen ? 120 : 160}px`;
-    round.deckElement.style.height = `${smallScreen ? 168 : 224}px`;
-    round.deckElement.style.top = `${smallScreen ? -200 : -400}px`;
+    round.deckElement.style.top = `${window.innerHeight < 1200 ? -200 : -400}px`;
 };
 
 const makeTableCard = (card, zIndex) =>
@@ -240,7 +238,6 @@ const initGraphics = async (round) =>
         let isPlayerString = "";
         if (player.isPlayer)
         {
-            playerDiv.classList.add('current-player');
             isPlayerString = " (You)";
         }
         playerDiv.innerHTML = `<h2>${player.name}${isPlayerString}</h2><br><h3>7<h3>`;
@@ -398,6 +395,32 @@ const drawSelfAnimate = async (round, newCardNames) =>
     }
 };
 
+const drawOtherAnimate = async (round, player) =>
+{
+    return new Promise(async (resolve) =>
+    {
+        const animatedCard = createCardElement('Card_back');
+        round.centerElement.append(animatedCard);
+        const top = player.playerDiv.offsetTop + animatedCard.offsetHeight / 2;
+        await imageLoad(animatedCard.firstElementChild);
+        animatedCard.animate([
+            {
+                top: round.deckElement.style.top, left: "-20vw", zIndex: 100
+            },
+            {
+                top: `${top - round.centerElement.parentElement.offsetHeight / 2}px`, left: `${window.innerWidth / 2 + 200}px`, zIndex: 100
+            }],
+            {
+                duration: 700, easing: "ease", fill: "forwards"
+            });
+        setTimeout(() =>
+        {
+            animatedCard.remove();
+            resolve();
+        }, 750);
+    });
+};
+
 const changePlayerCards = (round, player, amount) =>
 {
     player.cards += amount;
@@ -425,7 +448,7 @@ const handleMessage = async (msg, round) =>
                         const card = createCardElement(cardName);
                         round.centerElement.append(card);
                         card.style.top = null;
-                        await imageLoad(card.firstElementChild); //so that image is loaded when card is animated
+                        await imageLoad(card.firstElementChild);
                         makeTableCard(card, round.tableCards.length);
                         animateCard(card, { top: `${window.innerHeight < 1200 ? -400 : -600}px` }, 300);
                         round.tableCards.push({ element: card, name: cardName });
@@ -451,6 +474,13 @@ const handleMessage = async (msg, round) =>
                         {
                             if (player != currentTurnPlayer && !round.finishedPlayers.includes(player))
                             {
+                                if (!player.isPlayer)
+                                {
+                                    for (let i = 0; i < msg.cards.length; i++)
+                                    {
+                                        await drawOtherAnimate(round, player);
+                                    }
+                                }
                                 changePlayerCards(round, player, msg.cards.length);
                             }
                         }
@@ -501,6 +531,7 @@ const handleMessage = async (msg, round) =>
         case 'drawOther':
             {
                 round.draws++;
+                await drawOtherAnimate(round, round.players[round.currentTurn]);
                 changePlayerCards(round, round.players[round.currentTurn], 1);
                 if (msg.passed)
                 {
@@ -556,22 +587,24 @@ export const game =
             players: players,
             currentTurn: 0,
             draws: 0,
-            deckElement: document.createElement('div'),
+            deckElement: createCardElement('Card_back'),
             tableCards: [{ element: makeTableCard(createCardElement(topCard), 0), name: topCard }],
             confirmButton: document.createElement('div'),
             centerElement: document.querySelector('#center-div'),
             colorIndicator: document.createElement('img'),
             finishedPlayers: [],
             restart: restart,
+            totalCards: 52 - 7 * players.length
         };
         onResize = async () =>
         {
-            smallScreen = window.innerWidth < 1700;
+            smallScreen = window.innerWidth < 1700 || window.innerHeight < 1200;
             const allCardsElements = document.querySelectorAll('.card-wrapper');
             allCardsElements.forEach((card) =>
             {
                 card.firstElementChild.width = smallScreen ? 120 : 160;
             });
+            round.deckElement.style.top = `${window.innerHeight < 1200 ? -200 : -400}px`;
         };
         window.addEventListener('resize', onResize);
         game.handleMessage = (msg) =>
