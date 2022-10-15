@@ -48,7 +48,7 @@ const drawCard = (game) => {
 const passTurn = (game) => {
 	for (let i = 0; i < game.players.length; i++) {
 		game.turn = (game.turn + 1) % game.players.length;
-		if (game.players[i].gameData.playing) {
+		if (game.players[game.turn].gameData.playing) {
 			console.log("New turn: " + game.turn);
 			return;
 		}
