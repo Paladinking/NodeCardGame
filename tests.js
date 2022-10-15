@@ -114,6 +114,13 @@ const wsTest = async (socketData, actions) => {
 			}
 			currentStep++;
 		}
+		for(let i = 0; i < socketData.length; i++) {
+			const data = socketData[i];
+			if (data.toReceive.length != data.msgNr) {
+				doReject(`Socket ${i} did not recieve all messages (${data.msgNr} / ${data.toReceive.length})`, reject);
+				return;
+			}
+		}
 		returning = true;
 		for (const data of socketData) {
 			if (!data.isClosed) {
@@ -192,7 +199,7 @@ const joinLobbyInvalid = async () => {
 	completedTests += await runWsTest(
 		[{toReceive : [], closeStep : 0, closeReason : "TMI"}],
 		[{id : 0, toSend : {gameId : "T8", name : "abcdefghijklmnopqrstuww"}}, undefined],
-		"To long name"
+		"Too long name"
 	);
 	completedTests += await runWsTest(
 		[{toReceive : [], closeStep : 0}],
@@ -312,8 +319,7 @@ const playStandardT8 = async () => {
 				{event : "place", cards : ["8C"], newCards : []},
 				{event : "chooseColor", color : "S"},
 				{event : "place", cards : ["5S"], newCards : []},
-				{event : "place", cards : ["5D"], newCards : []},
-				{event : "gameOver"}
+				{event : "place", cards : ["5D"], newCards : []}
 
 			], closeStep : 18, closeReason : "Game is over"},
 		{
@@ -333,8 +339,7 @@ const playStandardT8 = async () => {
 				{event : "place", cards : ["8C"], newCards : []},
 				{event : "chooseColor", color : "S"},
 				{event : "place", cards : ["5S"], newCards : []},
-				{event : "place", cards : ["5D"], newCards : []},
-				{event : "gameOver"}
+				{event : "place", cards : ["5D"], newCards : []}
 			], closeStep : 18, closeReason : "Game is over"}
 		],
 		[
@@ -355,7 +360,6 @@ const playStandardT8 = async () => {
 			{id : 0, toSend : {action : "ChooseColor", color : "S"}},
 			{id : 1, toSend : {action : "Place", cards : ["5S"]}},
 			{id : 0, toSend : {action : "Place", cards : ["5D"]}},
-			undefined
 		],
 		"Valid T8 Game"
 	)
@@ -363,7 +367,7 @@ const playStandardT8 = async () => {
 
 const invalidT8Playes = async () => {
 	tests.handleInit = (game) => {
-		game.handleInit(game, testingDeck.slice())
+		game.handleInit(game, testingDeck.slice());
 	}
 	let completedTests = 0;
 	completedTests += await runWsTest(
@@ -374,8 +378,7 @@ const invalidT8Playes = async () => {
 					{event : "start", topCard : "2D", hand : ["3H", "5D", "4C", "KD", "4S", "KC", "AH"]},
 					{event : "leave", id : 1},
 					{event : "place", cards : ["5D"], newCards : []},
-					{event : "leave", id : 1},
-					{event : "gameOver"}
+					{event : "leave", id : 1}
 				],
 				closeStep : 6, closeReason : "Game is over"
 			},
@@ -415,6 +418,92 @@ const invalidT8Playes = async () => {
 	return completedTests;
 };
 
+
+const aceT8Plays = async () => {
+	tests.handleInit = (game) => {
+		game.handleInit(game, [
+			'AS', '2C', '8D', '2D', 'JH', 'KH',
+			'KD', '9H', '5D', '6C', '8H', '9D',
+			'JC', 'QC', '7S', '5H', '4S', 'QD',
+			'7C', '5C', '7H', '7D', '4C', '2H',
+			'8S', 'AH', 'QS', 'QH', 'KS', '8C',
+			'AC', '6H', 'AD', '5S', '6S', '4H',
+			'6D', 'JD', '2S', '4D', '9S', 'JS',
+			'KC', '9C', '3S', '3D', '3C', '3H'
+		]);
+	};
+	let completedTests = 0;
+	completedTests = await runWsTest(
+		[
+			{
+				toReceive : [
+					{event : "joined", players : []}, {event : "join", name : "Beta", id : 1}, {event : "join", name : "Ceta", id : 2},
+					{event : "start", topCard : "2C", hand : ["3H", "3C", "3D", "3S", "9C", "KC", "JS"]},
+					{event : "place", cards : ["3C", "3H", "3S", "3D"], newCards : []},
+					{event : "place", cards : ["4D", "4H"], newCards : []},
+					{event : "place", cards : ["6H"], newCards : []},
+					{event : "drawSelf", card : "QS"},
+					{event : "drawSelf", card : "AH"},
+					{event : "place", cards : ["AH"], newCards : []},
+					{event : "drawSelf", card : "4C"},
+					{event : "drawSelf", card : "7D"},
+					{event : "drawSelf", card : "7H"},
+					{event : "place", cards : ["7H"], newCards : []}
+				]
+			},				
+			{
+				toReceive : [
+					{event : "joined", players : ["Alpha"]}, {event : "join", name : "Ceta", id : 2 },
+					{event : "start", topCard : "2C", hand : ['9S', '4D', '2S', 'JD', '6D', '4H', "6S"]},
+					{event : "place", cards : ["3C", "3H", "3S", "3D"], newCards : []},
+					{event : "place", cards : ["4D", "4H"], newCards : []},
+					{event : "place", cards : ["6H"], newCards : []},
+					{event : "drawOther", passed : false},
+					{event : "drawOther", passed : false},
+					{event : "place", cards : ["AH"], newCards : ["8S"]},
+					{event : "drawOther", passed : false},
+					{event : "drawOther", passed : false},
+					{event : "drawOther", passed : false},
+					{event : "place", cards : ["7H"], newCards : []}
+				]
+			}, 
+			{
+				toReceive : [
+					{event : "joined", players : ["Alpha", "Beta"]},
+					{event : "start", topCard : "2C", hand : ["5S", "AD", "6H", "AC", "8C", "KS", "QH"]},
+					{event : "place", cards : ["3C", "3H", "3S", "3D"], newCards : []},
+					{event : "place", cards : ["4D", "4H"], newCards : []},
+					{event : "place", cards : ["6H"], newCards : []},
+					{event : "drawOther", passed : false},
+					{event : "drawOther", passed : false},
+					{event : "place", cards : ["AH"], newCards : ["2H"]},
+					{event : "drawOther", passed : false},
+					{event : "drawOther", passed : false},
+					{event : "drawOther", passed : false},
+					{event : "place", cards : ["7H"], newCards : []}
+				]
+			}
+		], 
+		[
+			{id : 0, toSend : {gameId : "T8", name : "Alpha"}},
+			{id : 1, toSend : {gameId : "T8", name : "Beta"}},
+			{id : 2, toSend : {gameId : "T8", name : "Ceta"}},
+			{id : 2, toSend : {action : "Start"}},
+			{id : 0, toSend : {action : "Place", cards : ["3C", "3H", "3S", "3D"]}},
+			{id : 1, toSend : {action : "Place", cards : ["4D", "4H"]}},
+			{id : 2, toSend : {action : "Place", cards : ["6H"]}},
+			{id : 0, toSend : {action : "Draw"}},
+			{id : 0, toSend : {action : "Draw"}},
+			{id : 0, toSend : {action : "Place", cards : ["AH"]}},
+			{id : 0, toSend : {action : "Draw"}},
+			{id : 0, toSend : {action : "Draw"}},
+			{id : 0, toSend : {action : "Draw"}},
+			{id : 0, toSend : {action : "Place", cards : ["7H"]}},
+		], 
+		"Ace draw Play");
+	return completedTests;
+}
+
 const testOut = console.log;
 
 const tests = {
@@ -426,7 +515,8 @@ const tests = {
 		completedTests += await inLobbyInvalid();
 		completedTests += await playStandardT8();
 		completedTests += await invalidT8Playes();
-		testOut(`Passed ${completedTests} tests out of 9`);
+		completedTests += await aceT8Plays();
+		testOut(`Passed ${completedTests} tests out of 10`);
 		console.log = testOut;
 	},
 	

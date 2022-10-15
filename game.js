@@ -218,6 +218,7 @@ let handleT8Init = (game, deck) => {
 	game.deck = deck;
 	game.turn = 0;
 	let index = 0;
+	console.log(game.deck);
 	while (game.deck[index][0] == 'A' || game.deck[index][0] == '8') {
 		index++;
 	}
