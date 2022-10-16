@@ -357,7 +357,7 @@ const toVictory = (round) =>
     document.querySelector('#restart').addEventListener('click', async () =>
     {
         document.querySelector('#content').innerHTML = new DOMParser()
-            .parseFromString(await (await fetch('/lobby.html?game=T8')
+            .parseFromString(await (await fetch('/T8.html')
                 .catch(() =>
                 {
                     const close = new CloseEvent("close", { code: 1000, reason: 'Could not load new game' });
