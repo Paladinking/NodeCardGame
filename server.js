@@ -38,13 +38,13 @@ const contentTypes = {
 	png: {contentType : "image/png", plain : false},
 }
 
-const templateContent = (ct, templateFile, keys) => {
+const templateContent = (ct, templateFile, args) => {
 	return {
 		contentType : ct.contentType,
 		plain : true,
 		template : true,
 		templateFile : templateFile,
-		keys : keys
+		args : args
 	}
 }
 
@@ -54,8 +54,9 @@ let folderContent = {
 	"/main.css" : contentTypes.css,
 	"/index.js" : contentTypes.js,
 	"/favicon.ico" : contentTypes.icon,
-	"/lobby.html" : templateContent(contentTypes.html, "/lobby.ejs", {game : '?'}),
-	"/lobby.js" : contentTypes.js,
+	"/T8" : templateContent(contentTypes.html, "/lobby.html.ejs", {jsFile : "T8.mjs"}),
+	"/CN" : templateContent(contentTypes.html, "/lobby.hmtl.ejs", {jsFile : "CN.mjs"}),
+	"/client.js" : contentTypes.js,
 	"/T8.mjs" : contentTypes.js,
 	"/cards/S.svg" : contentTypes.svg,
 	"/cards/D.svg" : contentTypes.svg,
@@ -94,17 +95,11 @@ const sendError = (res, code, msg = errors[code]) => {
 };
 
 const handleGet = (req, res) => {
-	const params = new URLSearchParams(req.url.split('?')[1]);
 	const resObj = findFile(req.url);
 	if (resObj.status == 200) {
 		if (resObj.template) {
-			const keys = {};
-			Object.entries(resObj.keys).forEach(([key, val]) => {
-				keys[key] = val == '?' ? params.get(key) : val;
-			});
-			console.log(keys);
 			res.writeHead(200, {'Content-Type' : resObj.contentType});
-			res.write(renderFile("./content" + resObj.templateFile, keys));
+			res.write(renderFile("./content" + resObj.templateFile, resObj.args));
 			res.end();
 		} else if (resObj.plain) {
 			fs.readFile("./content" + resObj.url, "utf8", (err, data) => {

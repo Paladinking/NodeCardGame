@@ -3,7 +3,7 @@ const GAME_TYPES = { "T8": { name: "Vändåtta", minPlayers: 2, maxPlayers: 5 },
 const CARD_NUMBERS = "A23456789JQK";
 const CARD_COLORS = "SCDH";
 const LOBBY = 0, IN_GAME = 1;
-const gameId = new URLSearchParams(window.location.search).get('game');
+const gameId = window.location.pathname.substr(1, 2);
 let noLeaveWarning = false;
 let gameState;
 let game;
