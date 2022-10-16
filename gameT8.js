@@ -1,45 +1,6 @@
 "use strict";
 
-const createDeck = () => {
-	let deck = [];
-	for (const number of "A23456789JQK") {
-		for (const color of "SCDH") {
-			deck.push(number + color);
-		}
-	}
-	return deck;
-}
-
-const shuffleDeck = (deck) => {
-    for (let i = deck.length - 1; i > 0; i--) {
-        let j = Math.floor(Math.random() * (i + 1));
-        let temp = deck[i];
-        deck[i] = deck[j];
-        deck[j] = temp;
-    }
-}
-
-
-const drawCard = (game) => {
-	const c = game.deck.pop();
-	if (game.deck.length == 0) {
-		const topCard = game.pile.pop();
-		game.deck = game.pile;
-		game.pile = [topCard];
-		shuffleDeck(game.deck);
-	}
-	return c;
-};
-
-const passTurn = (game) => {
-	for (let i = 0; i < game.players.length; i++) {
-		game.turn = (game.turn + 1) % game.players.length;
-		if (game.players[game.turn].playing) {
-			return;
-		}
-	}
-	console.err("Nobody left playing...");
-}
+const gameModule = require('./game.js');
 
 const T8HasMove = (hand, game) => {
 	if (hand.length == 1 &&(hand[0][0] == 'A' || hand[0][0] == '8')) {
@@ -134,14 +95,14 @@ const handleT8Message = (data, game, player) => {
 			}
 
 			if (cardNr != 'A' && cardNr != '8') {
-				passTurn(game);
+				gameModule.passTurn(game);
 			}
 			const playedCardsStr = `[${data.cards.map(c => '"' + c + '"')}]`;
 			game.players.forEach((player, index) => {
 				let newCards = [];
 				if (cardNr == 'A' && index != game.turn) {
 					for(let i = 0; i < data.cards.length; i++) {
-						const card = drawCard(game);
+						const card = gameModule.drawCard(game);
 						player.hand.push(card);
 						newCards.push(`"${card}"`);
 					}
@@ -170,7 +131,7 @@ const handleT8Message = (data, game, player) => {
 			} 
 			player.chooseColor = false;
 			game.color = data.color;
-			passTurn(game);
+			gameModule.passTurn(game);
 			game.players.forEach((player) => {
 				player.send(`{"event" : "chooseColor", "color" : "${data.color}"}`);
 			});
@@ -190,7 +151,7 @@ const handleT8Message = (data, game, player) => {
 				}
 			}
 
-			const newCard = drawCard(game);
+			const newCard = gameModule.drawCard(game);
 			player.hand.push(newCard);
 
 			const shouldPass = player.draws == 3 && !T8HasMove(player.hand, game);
@@ -201,7 +162,7 @@ const handleT8Message = (data, game, player) => {
 			}
 			if (shouldPass) {
 				player.draws = 0;
-				passTurn(game);
+				gameModule.passTurn(game);
 			}
 			player.send(`{"event" : "drawSelf", "card" : "${newCard}"}`);
 			break;
@@ -216,8 +177,8 @@ const handleT8Message = (data, game, player) => {
 
 let handleT8Init = (game, deck) => {
 	if (deck == undefined) {
-		deck = createDeck();
-		shuffleDeck(deck);
+		deck = gameModule.createDeck();
+		gameModule.shuffleDeck(deck);
 	}
 	game.deck = deck;
 	game.turn = 0;
@@ -261,11 +222,8 @@ const handleT8Close = (game, player) => {
 	if (game.remainingPlayers == 1) {
 		return;
 	}
-	
-	game.turn = game.turn % game.players.length;
-	if(!game.players[game.turn].playing) {
-		passTurn(game);
-	}
+
+	gameModule.adjustTurn(game);
 };
 
 const T8 = {

@@ -8,8 +8,13 @@ const http = require("http");
 const ws = require("ws");
 
 const fs = require("fs");
-const lobbyModule = require("./lobby.js")(runTests);
+const lobbyModule = require("./lobby.js");
 const testModule = require("./tests.js");
+
+if (runTests) {
+	lobbyModule.handleInit = (game) => testModule.handleInit(game);
+}
+
 
 
 const hostname = "127.0.0.1";

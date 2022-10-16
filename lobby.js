@@ -3,7 +3,10 @@
 const UNIDENTIFIED = 0, IN_LOBBY = 1, IN_GAME = 2;
 
 const T8 = require("./gameT8.js");
-const testModule = require("./tests.js");
+
+const lobbyModule = {
+	handleInit : (game) => game.handleInit(game)
+};
 
 const games = {
 	"T8" : {
@@ -40,12 +43,9 @@ const lobbyHandleMessage = (data, game, player) => {
 				player.status = IN_GAME;
 			});
 			delete game.lobby;
-
-			if (runTests) {
-				testModule.handleInit(game);
-			} else {
-				game.handleInit(game);
-			}
+			
+			// testModule.handleInit or game.handleInit, depending.
+			lobbyModule.handleInit(game);
 		}
 		return;
 	}
@@ -113,11 +113,6 @@ const joinLobby = (data, socket) => {
 	game.players.push(socket.player);
 }
 
-const lobbyModule = {
-	joinLobby : joinLobby
-}
+lobbyModule.joinLobby = joinLobby;
 
-module.exports = (tests) => {
-	runTests = tests;
-	return lobbyModule;
-};
+module.exports = lobbyModule;
