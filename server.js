@@ -119,29 +119,6 @@ const server = http.createServer((req, res) => {
 	}
 });
 
-/*
-	//lobby object -- one per game type
-	game[game] = {
-		minPlayers : minimum number of players
-		maxPlayers : maximum number of players
-		players : list of sockets
-	}
-
-    socket.game = {
-		status : UNIDENTIFIED or IN_LOBBY or IN_GAME
-		id : index in lobby.players
-		name : name string,
-		lobby : lobby object for relevant game, undefined while IN_GAME
-		
-	//game object -- many per game (in theory)
-	{
-		players : list of sockets,
-		handleMessage : function(data, socket), 
-		handleClose : function(socket),
-		..game data unique to each game
-	}
- }
- */
 server.listen(port, () => {
 	console.log(`Server running at http://${hostname}:${port}/`);
 });
@@ -163,28 +140,38 @@ const UNIDENTIFIED = 0, IN_LOBBY = 1, IN_GAME = 2;
 let connectedCount = 0;
 
 
-const messageInLobby = (data, socket) => {
-	if (!isValidMsg(data, ["action"])) {
-		socket.close(1000, "Invalid message");
-		return;
-	}
+const lobbyHandleMessage = (data, game, player) => {
 	if (data.action == "Leave") {
-		socket.close(1000, "Left game");
+		player.close(1000, "Left game");
 		return;
 	}
 	if (data.action == "Start") {
-		if (socket.player.lobby.players.length >= socket.player.lobby.minPlayers) {
-			gameModule.createGame(socket.player.lobby);
+		if (game.players.length >= player.lobby.minPlayers) {
+			console.log(player.lobby);
+			player.lobby.players = [];
+			player.lobby = undefined;
+			//createGame exchanges the player.game object to one for the specific game.
+			gameModule.createGame(game);
 			if (runTests) {
-				testModule.handleInit(socket.game);
+				testModule.handleInit(player.game);
 			} else {
-				socket.game.handleInit(socket.game);
+				player.game.handleInit(player.game);
 			}
 		}
 		return;
 	}
-	socket.close(1000, "Invalid message");
+	player.close(1000, "Invalid message");
 };
+
+const lobbyHandleClose = (game, player) => {
+	game.players.splice(player.id, 1);
+	for (let i = 0; i < game.players.length; i++) {
+		game.players[i].send(`{"event" : "leave", "id" : ${player.id}}`);
+		if (game.players[i].id != i) {
+			game.players[i].id = i;
+		}
+	}
+}
 
 const messageUnidentified = (data, socket) => {
 	if (!isValidMsg(data, ["gameId", "name"])) {
@@ -216,14 +203,19 @@ const messageUnidentified = (data, socket) => {
 	socket.player.name = data.name;
 	socket.player.status = IN_LOBBY;
 	socket.player.lobby = lobby;
-	socket.game = {id : lobby.gameName + '_' + lobby.id};
+	socket.game = {
+		id : lobby.gameName + '_' + lobby.id,
+		handleMessage : lobbyHandleMessage,
+		handleClose : lobbyHandleClose,
+		players : lobby.players
+	};
 
 	const names = lobby.players.map(s => `"${s.player.name}"`);
-	for (let i = 0; i < lobby.players.length; i++) {
-		lobby.players[i].send(`{"event" : "join", "name" : "${socket.player.name}", "id" : ${socket.player.id}}`);
-	}
-	socket.send(`{"event" : "joined", "players" : [${names}]}`);
-	lobby.players.push(socket);
+	lobby.playes.forEach((player) => {
+		player.send(`{"event" : "join", "name" : "${socket.player.name}", "id" : ${socket.player.id}}`);
+	});
+	player.send(`{"event" : "joined", "players" : [${names}]}`);
+	lobby.players.push(socket.player);
 }
 
 
@@ -254,8 +246,6 @@ socketServer.on("connection", (socket, req) => {
 				messageUnidentified(data, socket);
 				break;
 			case IN_LOBBY:
-				messageInLobby(data, socket);
-				break;
 			case IN_GAME:
 				if (!isValidMsg(data, ["action"])) {
 					socket.close(1000, "Invalid message");
@@ -270,17 +260,14 @@ socketServer.on("connection", (socket, req) => {
 	});
 	socket.on("close", (code, reason) => {
 		connectedCount--;
-		if (socket.player.status == IN_LOBBY) {
-			socket.player.lobby.players.splice(socket.player.id, 1);
-			for (let i = 0; i < socket.player.lobby.players.length; i++) {
-				socket.player.lobby.players[i].send(`{"event" : "leave", "id" : ${socket.player.id}}`);
-				if (socket.player.lobby.players[i].player.id != i) {
-					socket.player.lobby.players[i].player.id = i;
-				}
-			}
-		} else if (socket.player.status == IN_GAME) {
+		if (socket.player.status != UNIDENTIFIED) {
 			socket.game.handleClose(socket.game, socket.player);
 		}
+		/*if (socket.player.status == IN_LOBBY) {
+
+		} else if (socket.player.status == IN_GAME) {
+			socket.game.handleClose(socket.game, socket.player);
+		}*/
 		console.log(`${socket.player.name ? socket.player.name : "Someone"} left, ${connectedCount} remaining`);
 	});
 });

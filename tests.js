@@ -711,7 +711,7 @@ const testOut = console.log;
 
 const tests = {
 	general : async () => {
-		console.log = (msg) => {};
+		//console.log = (msg) => {};
 		let completedTests = 0;
 		completedTests += await lobbyValid();
 		completedTests += await joinLobbyInvalid();
