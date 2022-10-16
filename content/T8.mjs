@@ -351,20 +351,7 @@ const toVictory = (round) =>
     }
     round.startVictoryCards();
     window.removeEventListener('resize', onResize);
-    document.querySelector('#restart').addEventListener('click', async () =>
-    {
-        document.querySelector('#content').innerHTML = new DOMParser()
-            .parseFromString(await (await fetch('/T8.html')
-                .catch(() =>
-                {
-                    const close = new CloseEvent("close", { code: 1000, reason: 'Could not load new game' });
-                    round.wsckt.dispatchEvent(close);
-                }
-                ))
-                .text(), 'text/html')
-            .querySelector('#content').innerHTML;
-        round.restart();
-    });
+    document.querySelector('#restart').addEventListener('click', round.restart);
 
 };
 
@@ -678,5 +665,6 @@ export const game =
         };
         initGame(round);
     },
-	gameId : "T8"
+    maxPlayers: 5,
+    minPlayers: 2
 };

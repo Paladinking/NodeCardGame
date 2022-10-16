@@ -41,5 +41,7 @@ export const game =
             handleMessage(msg, round);
         };
         initGame(round);
-    }
+    },
+    maxPlayers: 2,
+    minPlayers: 2
 };

@@ -1,9 +1,8 @@
 "use strict";
-const GAME_TYPES = { "T8": { name: "Vändåtta", minPlayers: 2, maxPlayers: 5 }, "CN": { name: "Caravan", minPlayers: 2, maxPlayers: 2 } };
 const CARD_NUMBERS = "A23456789JQK";
 const CARD_COLORS = "SCDH";
 const LOBBY = 0, IN_GAME = 1;
-const gameId = window.location.pathname.substr(1, 2);
+const gameId = window.location.pathname.substring(1, 3);
 let noLeaveWarning = false;
 let gameState;
 let game;
@@ -41,7 +40,7 @@ const init = (name) =>
         if (newPlayer)
         {
             li.classList.add('new');
-            playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
+            playersSpan.innerText = players.length;
         }
         return player;
     };
@@ -79,13 +78,23 @@ const init = (name) =>
                         {
                             ul.querySelectorAll('li')[msg.id].remove();
                             players.splice(msg.id, 1);
-                            playersSpan.innerText = `${players.length}/${GAME_TYPES[gameId].minPlayers}`;
+                            playersSpan.innerText = players.length;
                             break;
                         }
                     case 'start':
                         {
-                            game.startGame(wsckt, msg.hand, players, msg.topCard, startBackgroundCards, () => 
+                            game.startGame(wsckt, msg, players, startBackgroundCards, async () => 
                             {
+                                document.querySelector('#content').innerHTML = new DOMParser()
+                                    .parseFromString(await (await fetch(`/${gameId}`)
+                                        .catch(() =>
+                                        {
+                                            const close = new CloseEvent("close", { code: 1000, reason: 'Could not load new game' });
+                                            round.wsckt.dispatchEvent(close);
+                                        }
+                                        ))
+                                        .text(), 'text/html')
+                                    .querySelector('#content').innerHTML;
                                 init(name);
                                 gameState = undefined;
                                 startBackgroundCards(IN_GAME);
@@ -112,14 +121,14 @@ const init = (name) =>
         document.querySelector('#start-button').setAttribute('available', "true");
         document.querySelector('#start-button').addEventListener('click', () =>
         {
-            if (players.length >= GAME_TYPES[gameId].minPlayers)
+            if (players.length >= game.minPlayers)
             {
                 let response = { action: "Start" };
                 wsckt.send(JSON.stringify(response));
             }
             else
             {
-                document.querySelector('#start-button').animate([{ left: "0px" }, { left: "3px" }, { left: "0px" }, { left: "-3px" }, { left: "0px" }], 150);
+                document.querySelector('#start-button').animate([{ left: "0px" }, { left: "7px" }, { left: "0px" }, { left: "-7px" }, { left: "0px" }], 150);
             }
         });
         window.addEventListener('beforeunload', (e) =>
@@ -133,24 +142,6 @@ const init = (name) =>
     });
 
 };
-
-if (GAME_TYPES[gameId] != undefined)
-{
-    document.querySelector('#main-title').innerText = GAME_TYPES[gameId].name;
-    document.querySelector('#players').innerText = `${GAME_TYPES[gameId].minPlayers}`;
-    document.querySelector('#join-button').addEventListener('click', () =>
-    {
-        const name = document.querySelector('#join-input').value;
-        if (name && name.length < 21)
-        {
-            init(name);
-        }
-    });
-}
-else 
-{
-    showErrorMessage("No game found", `No game with ID ${gameId ? gameId.replace('>', "&gt;").replace('<', '&lt;') : 'null'} found`, "Make sure that you have entered the URL correctly");
-}
 
 const startBackgroundCards = (stopOnGameState = LOBBY) =>
 {
@@ -194,4 +185,13 @@ const startBackgroundCards = (stopOnGameState = LOBBY) =>
     }
 };
 
+
+document.querySelector('#join-button').addEventListener('click', () =>
+{
+    const name = document.querySelector('#join-input').value;
+    if (name && name.length < 21)
+    {
+        init(name);
+    }
+});
 startBackgroundCards(IN_GAME);
