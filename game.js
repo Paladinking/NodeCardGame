@@ -271,22 +271,17 @@ const handleT8Close = (game, player) => {
 const UNIDENTIFIED = 0, IN_LOBBY = 1, IN_GAME = 2;
 
 const game = {
-	createGame : (lobby) => {
-		let game = {players : lobby.players.map((p) => p.player), id : lobby.gameName + "_" + lobby.id};
-		lobby.id += 1;
-		switch (lobby.gameName) {
+	createGame : (game, gameName) => {
+		switch (gameName) {
 			case "T8":
 				game.handleMessage = handleT8Message;
 				game.handleClose = handleT8Close;
 				game.handleInit = handleT8Init;
 				break;
 		}
-		lobby.players.forEach((socket) => {
-			socket.player.lobby = undefined;
-			socket.game = game;
-			socket.player.status = IN_GAME;
+		game.players.forEach((player) => {
+			player.status = IN_GAME;
 		});
-		lobby.players = [];
 	} 
 };
 
