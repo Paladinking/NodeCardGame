@@ -314,9 +314,6 @@ const chooseColorPopup = (round) =>
         document.addEventListener('click', colorClick);
     });
 };
-
-let startVictoryCards;
-
 const toVictory = (round) =>
 {
     for (const player of round.players)
@@ -352,7 +349,7 @@ const toVictory = (round) =>
         element.innerHTML = `${i + 1}. ${round.finishedPlayers[i].name}`;
         remaining.append(element);
     }
-    startVictoryCards();
+    round.startVictoryCards();
     window.removeEventListener('resize', onResize);
     document.querySelector('#restart').addEventListener('click', async () =>
     {
@@ -640,29 +637,29 @@ const handleMessage = async (msg, round) =>
 
 export const game =
 {
-    startGame: (wsckt, hand, players, topCard, startCards, restart) =>
+    startGame: (wsckt, msg, players, startCards, restart) =>
     {
         document.querySelector('#content').innerHTML =
             `<main class = "lobby-main" id = "main">
                 <div id = "center-div" class = "center"></div>
                 <div id = "sidebar" class = "player-sidebar"></div>
             </main>`;
-        startVictoryCards = startCards;
         const round =
         {
             wsckt: wsckt,
-            hand: createHand(hand),
+            hand: createHand(msg.hand),
             players: players,
             currentTurn: 0,
             draws: 0,
             deckElement: createCardElement('Card_back'),
-            tableCards: [{ element: makeTableCard(createCardElement(topCard), 0), name: topCard }],
+            tableCards: [{ element: makeTableCard(createCardElement(msg.topCard), 0), name: msg.topCard }],
             confirmButton: document.createElement('div'),
             centerElement: document.querySelector('#center-div'),
             colorIndicator: document.createElement('img'),
             finishedPlayers: [],
             restart: restart,
-            totalCards: 51 - 7 * players.length
+            totalCards: 51 - 7 * players.length,
+            startVictoryCards: startCards
         };
         onResize = async () =>
         {
