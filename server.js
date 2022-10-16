@@ -11,6 +11,7 @@ const fs = require("fs");
 const gameModule = require("./game.js");
 const testModule = require("./tests.js");
 
+const {renderFile} = require('node-html-templates')(__dirname)
 
 const hostname = "127.0.0.1";
 const port = 3000;
@@ -40,7 +41,7 @@ let folderContent = {
 	"/favicon.ico" : contentTypes.icon,
 	"/lobby.html" : contentTypes.html,
 	"/lobby.js" : contentTypes.js,
-	"/game.mjs" : contentTypes.js,
+	"/T8.mjs" : contentTypes.js,
 	"/cards/S.svg" : contentTypes.svg,
 	"/cards/D.svg" : contentTypes.svg,
 	"/cards/C.svg" : contentTypes.svg,
@@ -78,18 +79,26 @@ const sendError = (res, code, msg = errors[code]) => {
 };
 
 const handleGet = (req, res) => {
+	const gameId = new URLSearchParams(req.url.split('?')[1]).get('game');
 	const resObj = findFile(req.url);
 	if (resObj.status == 200) {
 		if (resObj.plain) {
-			fs.readFile("./content" + resObj.url, "utf8", (err, data) => {
-				if (err) {
-					sendError(res, 500);
-				} else {
-					res.writeHead(200, {'Content-Type' : resObj.contentType});
-					res.write(data);
-					res.end();
-				}
-			});
+			if(gameId) {
+				res.writeHead(200, {'Content-Type' : resObj.contentType});
+				res.write(renderFile("./content" + resObj.url.split('.')[0] + ".ejs", {gameId: gameId}));
+				res.end();
+			}
+			else {
+				fs.readFile("./content" + resObj.url, "utf8", (err, data) => {
+					if (err) {
+						sendError(res, 500);
+					} else {
+						res.writeHead(200, {'Content-Type' : resObj.contentType});
+						res.write(data);
+						res.end();
+					}
+				});
+			}
 		} else {
 			fs.createReadStream("./content" + resObj.url).pipe(res);
 		}

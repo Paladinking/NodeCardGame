@@ -6,7 +6,7 @@ const LOBBY = 0, IN_GAME = 1;
 const gameId = new URLSearchParams(window.location.search).get('game');
 let noLeaveWarning = false;
 let gameState;
-import { game } from "/game.mjs";
+let game;
 
 const showErrorMessage = (error, longError, reason) =>
 {
@@ -194,4 +194,4 @@ const startBackgroundCards = (stopOnGameState = LOBBY) =>
     }
 };
 
-//startBackgroundCards(IN_GAME);
+startBackgroundCards(IN_GAME);

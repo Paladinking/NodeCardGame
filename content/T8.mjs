@@ -197,6 +197,11 @@ const makeTurn = (round) =>
                     returnedCard.element.classList.remove('table-card');
                     round.hand.push(returnedCard);
                     updateHand(round.hand);
+                    if (placedCards.length == 0)
+                    {
+                        round.confirmButton.style.display = "none";
+                    }
+
                     return;
                 }
             }
@@ -383,14 +388,16 @@ const nextTurn = (round) => //does not start the next round for the relevant pla
 
 };
 
-const drawSelfAnimate = async (round, newCardNames) =>
+const drawSelf = async (round, newCardNames) =>
 {
     const newCards = createHand(newCardNames);
     round.hand.push(...newCards);
     updateHand(round.hand);
     for (const newCard of newCards)
     {
+        newCard.element.style.opacity = "0";
         await imageLoad(newCard.element.firstElementChild);
+        newCard.element.style.opacity = null;
         animateCard(newCard.element, { top: round.deckElement.style.top, left: "-20rem" }, 300);
     }
 };
@@ -479,7 +486,7 @@ const changePlayerCards = async (round, player, amount) =>
         if (round.totalCards <= 0)
         {
             await animateShuffle(round);
-            const sumOfHands = round.players.reduce(sum, cur => sum + cur.cards, 0);
+            const sumOfHands = round.players.reduce((sum, cur) => sum + cur.cards, 0);
             round.totalCards = 51 - sumOfHands + round.totalCards;
         }
         console.log(round.totalCards);
@@ -548,7 +555,7 @@ const handleMessage = async (msg, round) =>
 
                         if (!(currentTurnPlayer.isPlayer || round.hand.length == 0))
                         {
-                            await drawSelfAnimate(round, msg.newCards);
+                            await drawSelf(round, msg.newCards);
                         }
                         round.draws = 0;
                     }
@@ -580,7 +587,7 @@ const handleMessage = async (msg, round) =>
             }
         case 'drawSelf':
             {
-                await drawSelfAnimate(round, [msg.card]);
+                await drawSelf(round, [msg.card]);
                 await changePlayerCards(round, round.players[round.currentTurn], 1);
                 if (round.draws == 3 && getValidMoves(round, []).length == 0)
                 {
