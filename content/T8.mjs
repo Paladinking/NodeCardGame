@@ -680,5 +680,6 @@ export const game =
             handleMessage(msg, round);
         };
         initGame(round);
-    }
+    },
+	gameId : "T8"
 };
