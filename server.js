@@ -55,7 +55,7 @@ let folderContent = {
 	"/index.js" : contentTypes.js,
 	"/favicon.ico" : contentTypes.icon,
 	"/T8" : templateContent(contentTypes.html, "/lobby.html.ejs", {jsFile : "T8.mjs", gameName : "Vändåtta", minPlayers: 2}),
-	"/CN" : templateContent(contentTypes.html, "/lobby.hmtl.ejs", {jsFile : "CN.mjs", gameName : "Caravan", minPlayers: 2}),
+	"/CN" : templateContent(contentTypes.html, "/lobby.html.ejs", {jsFile : "CN.mjs", gameName : "Caravan", minPlayers: 2}),
 	"/client.js" : contentTypes.js,
 	"/T8.mjs" : contentTypes.js,
 	"/cards/S.svg" : contentTypes.svg,
