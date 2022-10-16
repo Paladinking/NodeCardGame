@@ -1,6 +1,7 @@
 "use strict";
 
-const runTests = process.argv[2] == "--tests";
+const runTests = process.argv.includes("--tests");
+const outputTestCase = process.argv.includes("--generateTests");
 console.log("Testing : ", runTests);
 
 const http = require("http");
@@ -152,6 +153,7 @@ const games = {
 		gameName : "T8",
 		minPlayers : 2,
 		maxPlayers : 5,
+		id : 0,
 		players : []
 	}
 };
@@ -160,8 +162,83 @@ const UNIDENTIFIED = 0, IN_LOBBY = 1, IN_GAME = 2;
 
 let connectedCount = 0;
 
+
+const messageInLobby = (data, socket) => {
+	if (!isValidMsg(data, ["action"])) {
+		socket.close(1000, "Invalid message");
+		return;
+	}
+	if (data.action == "Leave") {
+		socket.close(1000, "Left game");
+		return;
+	}
+	if (data.action == "Start") {
+		if (socket.player.lobby.players.length >= socket.player.lobby.minPlayers) {
+			gameModule.createGame(socket.player.lobby);
+			if (runTests) {
+				testModule.handleInit(socket.game);
+			} else {
+				socket.game.handleInit(socket.game);
+			}
+		}
+		return;
+	}
+	socket.close(1000, "Invalid message");
+};
+
+const messageUnidentified = (data, socket) => {
+	if (!isValidMsg(data, ["gameId", "name"])) {
+		socket.close(1000, "Invalid message");
+		return;
+	}
+	if (data.gameId.length != 2 || data.name.length > 20) {
+		socket.close(1000, "TMI");
+		return;
+	}
+
+	let lobby = undefined;
+	for (let gameName in games) {
+		if (gameName == data.gameId) {
+			lobby = games[gameName];
+			break;
+		}
+	}
+	if (lobby == undefined) {
+		socket.close(1000, "Invalid game");
+		return;
+	}
+	if (lobby.players.length == lobby.maxPlayers) {
+		socket.close(1000, "Lobby is full");
+		return;
+	}
+
+	socket.player.id = lobby.players.length;
+	socket.player.name = data.name;
+	socket.player.status = IN_LOBBY;
+	socket.player.lobby = lobby;
+	socket.game = {id : lobby.gameName + '_' + lobby.id};
+
+	const names = lobby.players.map(s => `"${s.player.name}"`);
+	for (let i = 0; i < lobby.players.length; i++) {
+		lobby.players[i].send(`{"event" : "join", "name" : "${socket.player.name}", "id" : ${socket.player.id}}`);
+	}
+	socket.send(`{"event" : "joined", "players" : [${names}]}`);
+	lobby.players.push(socket);
+}
+
+
 socketServer.on("connection", (socket, req) => {
-	socket.gameData = {status : UNIDENTIFIED};
+	socket.player = {
+		status : UNIDENTIFIED, 
+		send : (str) => {
+			if (outputTestCase && socket.player.status != UNIDENTIFIED) {
+				const fileName = `logs/${socket.game.id}_${socket.player.id}.log`;
+				fs.writeFile(fileName, str + '\n', { flag: 'a+' }, err => {});
+			}
+			socket.send(str)
+		}, 
+		close : (n, r) => socket.close(n, r)
+	};
 	connectedCount++;
 	socket.on("message", (msg) => {
 		let data;
@@ -172,89 +249,39 @@ socketServer.on("connection", (socket, req) => {
 			return;
 		}
 		console.log(data);
-		switch (socket.gameData.status) {
+		switch (socket.player.status) {
 			case UNIDENTIFIED:
-				if (!isValidMsg(data, ["gameId", "name"])) {
-					socket.close(1000, "Invalid message");
-					return;
-				}
-				if (data.gameId.length != 2 || data.name.length > 20) {
-					socket.close(1000, "TMI");
-					return;
-				}
-				let lobby = undefined;
-				for (let gameName in games) {
-					if (gameName == data.gameId) {
-						lobby = games[gameName];
-						break;
-					}
-				}
-				if (lobby == undefined) {
-					socket.close(1000, "Invalid game");
-					return;
-				}
-				if (lobby.players.length == lobby.maxPlayers) {
-					socket.close(1000, "Lobby is full");
-					return;
-				}
-
-				socket.gameData.id = lobby.players.length;
-				socket.gameData.name = data.name;
-				socket.gameData.status = IN_LOBBY;
-				socket.gameData.lobby = lobby;
-
-				const names = lobby.players.map(s => `"${s.gameData.name}"`);
-				for (let i = 0; i < lobby.players.length; i++) {
-					lobby.players[i].send(`{"event" : "join", "name" : "${socket.gameData.name}", "id" : ${socket.gameData.id}}`);
-				}
-				socket.send(`{"event" : "joined", "players" : [${names}]}`);
-				lobby.players.push(socket);
+				messageUnidentified(data, socket);
 				break;
 			case IN_LOBBY:
-				if (!isValidMsg(data, ["action"])) {
-					socket.close(1000, "Invalid message");
-					return;
-				}
-				if (data.action == "Leave") {
-					socket.close(1000, "Left game");
-					return;
-				}
-				if (data.action == "Start") {
-					if (socket.gameData.lobby.players.length >= socket.gameData.lobby.minPlayers) {
-						gameModule.createGame(socket.gameData.lobby);
-						if (runTests) {
-							testModule.handleInit(socket.game);
-						} else {
-							socket.game.handleInit(socket.game);
-						}
-					}
-					return;
-				}
-				socket.close(1000, "Invalid message");
+				messageInLobby(data, socket);
 				break;
 			case IN_GAME:
 				if (!isValidMsg(data, ["action"])) {
 					socket.close(1000, "Invalid message");
 				}
-				socket.game.handleMessage(data, socket);
+				socket.game.handleMessage(data, socket.game, socket.player);
 				break;
 		}
-
+		if (outputTestCase && socket.player.status != UNIDENTIFIED) {
+			const fileName = `logs/${socket.game.id}_server.log`;
+			fs.writeFile(fileName, `{id : ${socket.player.id}, toSend: ${JSON.stringify(data)}}\n`, { flag: 'a+' }, err => {});
+		}
 	});
 	socket.on("close", (code, reason) => {
 		connectedCount--;
-		if (socket.gameData.status == IN_LOBBY) {
-			socket.gameData.lobby.players.splice(socket.gameData.id, 1);
-			for (let i = 0; i < socket.gameData.lobby.players.length; i++) {
-				socket.gameData.lobby.players[i].send(`{"event" : "leave", "id" : ${socket.gameData.id}}`);
-				if (socket.gameData.lobby.players[i].gameData.id != i) {
-					socket.gameData.lobby.players[i].gameData.id = i;
+		if (socket.player.status == IN_LOBBY) {
+			socket.player.lobby.players.splice(socket.player.id, 1);
+			for (let i = 0; i < socket.player.lobby.players.length; i++) {
+				socket.player.lobby.players[i].send(`{"event" : "leave", "id" : ${socket.player.id}}`);
+				if (socket.player.lobby.players[i].player.id != i) {
+					socket.player.lobby.players[i].player.id = i;
 				}
 			}
-		} else if (socket.gameData.status == IN_GAME) {
-			socket.game.handleClose(socket);
+		} else if (socket.player.status == IN_GAME) {
+			socket.game.handleClose(socket.game, socket.player);
 		}
-		console.log(`${socket.gameData.name ? socket.gameData.name : "Someone"} left, ${connectedCount} remaining`);
+		console.log(`${socket.player.name ? socket.player.name : "Someone"} left, ${connectedCount} remaining`);
 	});
 });
 

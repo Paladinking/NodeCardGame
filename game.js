@@ -8,7 +8,6 @@ const createDeck = () => {
 		}
 	}
 	return deck;
-	
 }
 
 const shuffleDeck = (deck) => {
@@ -18,7 +17,6 @@ const shuffleDeck = (deck) => {
         deck[i] = deck[j];
         deck[j] = temp;
     }
-	console.log("Shuffle");
 }
 
 
@@ -36,12 +34,11 @@ const drawCard = (game) => {
 const passTurn = (game) => {
 	for (let i = 0; i < game.players.length; i++) {
 		game.turn = (game.turn + 1) % game.players.length;
-		if (game.players[game.turn].gameData.playing) {
-			console.log("New turn: " + game.turn);
+		if (game.players[game.turn].playing) {
 			return;
 		}
 	}
-	console.log("Nobody left playing...");
+	console.err("Nobody left playing...");
 }
 
 const T8HasMove = (hand, game) => {
@@ -57,66 +54,65 @@ const T8HasMove = (hand, game) => {
 	return false;
 }
 
-const handleT8Message = (data, socket) => {
+const handleT8Message = (data, game, player) => {
 	switch (data.action) {
 		case "Start" :
 			break; // If several players start at the same time this event could get here.
 		case "Place" : {
-			if (socket.gameData.chooseColor) {
-				socket.close(1000, "You should choose a color");
+			if (player.chooseColor) {
+				player.close(1000, "You should choose a color");
 				return;
 			}
-			if (socket.gameData.id != socket.game.turn) {
-				socket.close(1000, "Not your turn");
+			if (player.id != game.turn) {
+				player.close(1000, "Not your turn");
 				return;
 			}
 
 			if (!Array.isArray(data.cards)) {
-				socket.close(1000, "Bad message");
+				player.close(1000, "Bad message");
 				return;
 			}
 
 			const cardNr = data.cards[0][0];
 			
 			for(let j = 0; j < data.cards.length; j++) {
-				if (!socket.gameData.hand.includes(data.cards[j])) {
-					console.log(socket.gameData.hand, data.cards)
-					socket.close(1000, "Played card not in hand");
+				if (!player.hand.includes(data.cards[j])) {
+					player.close(1000, "Played card not in hand");
 					return;
 				}
 				if (data.cards[j][0] != cardNr) {
-					socket.close(1000, "Mismatching cards played");
+					player.close(1000, "Mismatching cards played");
 				}
 			}
 			const hand = []; // Get remaining hand
-			for (let i = 0; i < socket.gameData.hand.length; i++) {
-				if (!data.cards.includes(socket.gameData.hand[i])) {
-					hand.push(socket.gameData.hand[i]);
+			for (let i = 0; i < player.hand.length; i++) {
+				if (!data.cards.includes(player.hand[i])) {
+					hand.push(player.hand[i]);
 				}
 			}
-			let topCard = socket.game.pile[socket.game.pile.length - 1];
-			let color = socket.game.color;		
+			let topCard = game.pile[game.pile.length - 1];
+			let color = game.color;		
 			if (cardNr == '8') {
 				if (data.cards.length > 1) {
-					socket.close(1000, "Multiple 8:s played");
+					player.close(1000, "Multiple 8:s played");
 					return;
 				}
 				if (hand.length == 0) {
-					socket.close(1000, "Cannot win on an 8");
+					player.close(1000, "Cannot win on an 8");
 					return;
 				}
 				for (let i = 0; i < hand.length; i++) {
 					if (hand[i][0] == '8') continue;
 					if (hand[i][0] == topCard[0] || hand[i][1] == color) {
-						socket.close(1000, "Not a valid 8 play");
+						player.close(1000, "Not a valid 8 play");
 						return;
 					}
 				}
-				socket.gameData.chooseColor = true;
+				player.chooseColor = true;
 			} else {
 				for (let i = 0; i < data.cards.length; i++) {
 					if (cardNr != topCard[0] && data.cards[i][1] != color) {
-						socket.close(1000, "Not a valid move");
+						player.close(1000, "Not a valid move");
 						return;
 					} 
 					topCard = data.cards[i];
@@ -124,90 +120,90 @@ const handleT8Message = (data, socket) => {
 				}
 			}
 			if (hand.length == 0 && cardNr == 'A') {
-				socket.close(1000, "Cannot win on an Ace");
+				player.close(1000, "Cannot win on an Ace");
 				return;
 			}
 
 			//Now the move is validated...
 			//Now real changes to game can happen
-			socket.gameData.draws = 0;
-			socket.game.color = color;
-			socket.gameData.hand = hand;
+			player.draws = 0;
+			game.color = color;
+			player.hand = hand;
 			for (let i = 0; i < data.cards.length; i++) {
-				socket.game.pile.push(data.cards[i]);
+				game.pile.push(data.cards[i]);
 			}
 
 			if (cardNr != 'A' && cardNr != '8') {
-				passTurn(socket.game);
+				passTurn(game);
 			}
 			const playedCardsStr = `[${data.cards.map(c => '"' + c + '"')}]`;
-			socket.game.players.forEach((player, index) => {
+			game.players.forEach((player, index) => {
 				let newCards = [];
-				if (cardNr == 'A' && index != socket.game.turn) {
+				if (cardNr == 'A' && index != game.turn) {
 					for(let i = 0; i < data.cards.length; i++) {
-						const card = drawCard(socket.game);
-						player.gameData.hand.push(card);
+						const card = drawCard(game);
+						player.hand.push(card);
 						newCards.push(`"${card}"`);
 					}
 				}
 				player.send(`{"event" : "place", "cards" : ${playedCardsStr}, "newCards" : [${newCards}]}`);
 			});
 			if (hand.length == 0) {
-				socket.game.remainingPlayers -= 1;
-				if (socket.game.remainingPlayers == 1) {
-					socket.game.players.forEach((player) => {
+				game.remainingPlayers -= 1;
+				if (game.remainingPlayers == 1) {
+					game.players.forEach((player) => {
 						player.close(1000, "Game is over");			
 					});
 				}
-				socket.gameData.playing = false;
+				player.playing = false;
 			}
 			break;
 		}
 		case "ChooseColor": {
-			if (!socket.gameData.chooseColor) {
-				socket.close(1000, "Not allowed to pick color");
+			if (!player.chooseColor) {
+				player.close(1000, "Not allowed to pick color");
 				return;
 			}
 			if (!(data.color == "S" || data.color == "C" || data.color == "D" || data.color == "H")) {
-				socket.close(1000, "Not a valid color");
+				player.close(1000, "Not a valid color");
 				return;
 			} 
-			socket.gameData.chooseColor = false;
-			socket.game.color = data.color;
-			passTurn(socket.game);
-			socket.game.players.forEach((player) => {
+			player.chooseColor = false;
+			game.color = data.color;
+			passTurn(game);
+			game.players.forEach((player) => {
 				player.send(`{"event" : "chooseColor", "color" : "${data.color}"}`);
 			});
 			break;
 		}
 		case "Draw" : {
-			if (socket.gameData.id != socket.game.turn) {
-				socket.close(1000, "Not your turn");
+			if (player.id != game.turn) {
+				player.close(1000, "Not your turn");
 				return;
 			}
-			socket.gameData.draws++;
-			const firstCard = socket.gameData.hand[0];
-			if (!(socket.gameData.hand.length == 1 && (firstCard[0] == '8' || firstCard[0] == 'A'))) {
-				if(T8HasMove(socket.gameData.hand, socket.game)) {
-					socket.close(1000, "Only draw when no legal move exists");
+			player.draws++;
+			const firstCard = player.hand[0];
+			if (!(player.hand.length == 1 && (firstCard[0] == '8' || firstCard[0] == 'A'))) {
+				if(T8HasMove(player.hand, game)) {
+					player.close(1000, "Only draw when no legal move exists");
 					return;
 				}
 			}
 
-			const newCard = drawCard(socket.game);
-			socket.gameData.hand.push(newCard);
+			const newCard = drawCard(game);
+			player.hand.push(newCard);
 
-			const shouldPass = socket.gameData.draws == 3 && !T8HasMove(socket.gameData.hand, socket.game);
+			const shouldPass = player.draws == 3 && !T8HasMove(player.hand, game);
 	
-			for (let i = 0; i < socket.game.players.length; i++) {
-				if (i == socket.gameData.id) continue;
-				socket.game.players[i].send(`{"event" : "drawOther", "passed" : ${shouldPass}}`);
+			for (let i = 0; i < game.players.length; i++) {
+				if (i == player.id) continue;
+				game.players[i].send(`{"event" : "drawOther", "passed" : ${shouldPass}}`);
 			}
 			if (shouldPass) {
-				socket.gameData.draws = 0;
-				passTurn(socket.game);
+				player.draws = 0;
+				passTurn(game);
 			}
-			socket.send(`{"event" : "drawSelf", "card" : "${newCard}"}`);
+			player.send(`{"event" : "drawSelf", "card" : "${newCard}"}`);
 			break;
 		}
 		default : {
@@ -226,7 +222,6 @@ let handleT8Init = (game, deck) => {
 	game.deck = deck;
 	game.turn = 0;
 	let index = 0;
-	console.log(game.deck);
 	while (game.deck[index][0] == 'A' || game.deck[index][0] == '8') {
 		index++;
 	}
@@ -235,55 +230,50 @@ let handleT8Init = (game, deck) => {
 	game.pile = game.deck.splice(index, 1);
 	game.color = game.pile[0][1];
 	game.players.forEach((player) => {
-		player.gameData.hand = [];
-		player.gameData.chooseColor = false;
-		player.gameData.playing = true;
-		player.gameData.draws = 0;
+		player.hand = [];
+		player.chooseColor = false;
+		player.playing = true;
+		player.draws = 0;
 		for (let j =0 ; j < 7; j++) {
-			player.gameData.hand.push(game.deck.pop());
+			player.hand.push(game.deck.pop());
 		}
-		player.send(`{"event" : "start", "topCard" : "${game.pile[0]}", "hand" : [${player.gameData.hand.map(c => '"'+ c + '"')}]}`);
+		player.send(`{"event" : "start", "topCard" : "${game.pile[0]}", "hand" : [${player.hand.map(c => '"'+ c + '"')}]}`);
 	});
 };
 
-const handleT8Close = (socket) => {
-	if (socket.game.remainingPlayers == 1) {
+const handleT8Close = (game, player) => {
+	if (game.remainingPlayers == 1) {
 		return;
 	}
-	const topCard = socket.game.pile.pop();
-	socket.game.pile.push(...socket.gameData.hand, topCard);
-	socket.game.players.splice(socket.gameData.id, 1);
-	socket.game.remainingPlayers -= 1;
-	for (let i = 0; i < socket.game.players.length; i++) {
-		socket.game.players[i].send(`{"event" : "leave", "id" : ${socket.gameData.id}}`);
-		if (socket.game.remainingPlayers == 1) {
-			socket.game.players[i].close(1000, "Game is over");
+	const topCard = game.pile.pop();
+	game.pile.push(...player.hand, topCard);
+	game.players.splice(player.id, 1);
+	game.remainingPlayers -= 1;
+	for (let i = 0; i < game.players.length; i++) {
+		game.players[i].send(`{"event" : "leave", "id" : ${player.id}}`);
+		if (game.remainingPlayers == 1) {
+			game.players[i].close(1000, "Game is over");
 		}
-		if (socket.game.players[i].gameData.id != i) {
-			socket.game.players[i].gameData.id = i;
+		if (game.players[i].id != i) {
+			game.players[i].id = i;
 		}
 	}
-	if (socket.game.remainingPlayers == 1) {
+	if (game.remainingPlayers == 1) {
 		return;
 	}
 	
-	socket.game.turn = socket.game.turn % socket.game.players.length;
-	if(!socket.game.players[socket.game.turn].gameData.playing) {
-		passTurn(socket.game);
+	game.turn = game.turn % game.players.length;
+	if(!game.players[game.turn].playing) {
+		passTurn(game);
 	}
-	console.log("Player left, new turn: " + socket.game.turn);
 };
-
-
-
-
 
 const UNIDENTIFIED = 0, IN_LOBBY = 1, IN_GAME = 2;
 
 const game = {
 	createGame : (lobby) => {
-		let game = {players : lobby.players};
-		lobby.players = [];
+		let game = {players : lobby.players.map((p) => p.player), id : lobby.gameName + "_" + lobby.id};
+		lobby.id += 1;
 		switch (lobby.gameName) {
 			case "T8":
 				game.handleMessage = handleT8Message;
@@ -291,11 +281,12 @@ const game = {
 				game.handleInit = handleT8Init;
 				break;
 		}
-		game.players.forEach((socket) => {
-			socket.gameData.lobby = undefined;
+		lobby.players.forEach((socket) => {
+			socket.player.lobby = undefined;
 			socket.game = game;
-			socket.gameData.status = IN_GAME;
+			socket.player.status = IN_GAME;
 		});
+		lobby.players = [];
 	} 
 };
 
