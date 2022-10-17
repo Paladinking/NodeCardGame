@@ -284,8 +284,13 @@ const handleCNMessage = (data, game, player) => {
 		default:
 			player.close(1000, "Bad message");
 	}
-	
 };
+
+const handleCNClose = (game, player) => {
+	const otherPlayer = (player.id + 1) % 2;
+	game.players[otherPlayer].send(`{"event" : "leave", "id" : ${player.id}}`);
+	game.players[otherPlayer].close(1000, "Game is over");
+}
 
 
 const handleCNInit = (game) => {
