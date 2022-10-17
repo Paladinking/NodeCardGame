@@ -31,11 +31,11 @@ const updatePile = (pile) => {
 	} else {
 		const diff = getNumber(topCard.card) - getNumber(pile.cards[pile.cards.length - 2].card);
 		if (diff == 0) {
-			dir = 0;
+			pile.dir = 0;
 		} else if (diff > 0) {
-			dir = 1;
+			pile.dir = 1;
 		} else {
-			dir = -1;
+			pile.dir = -1;
 		}
 	}
 	pile.color = topCard.card[1];
@@ -58,17 +58,20 @@ const validateMove = (data, game, player, isSpecial) => {
 		if (data.col != game.setupStep) {
 			return false;
 		}
+		if (data.pos != 0) {
+			return false;
+		}
 		return true;
 	}
 	const pile = game.caravans[data.side][data.col];
-	
 	if (isSpecial) {
-		if (data.card[0] == "Q" && data.pos != pile.card.length - 1) {
+		if (data.card[0] == "Q" && data.pos != pile.cards.length - 1) {
 			return false;
 		}
 		if (data.pos >= pile.cards.length) {
 			return false;
 		}
+		return true;
 	} else {
 		if (data.pos != pile.cards.length || data.side != player.id) {
 			return false;
@@ -77,12 +80,12 @@ const validateMove = (data, game, player, isSpecial) => {
 			return true;
 		}
 
-		const diff = getNumber(card) - getNumber(pile.cards[pile.cards.length - 1].card);
-		
+		const diff = getNumber(data.card) - getNumber(pile.cards[pile.cards.length - 1].card);
+
 		if (diff == 0) {
 			return false;
 		}
-		if (pile.color != card[1] && ((diff > 0 && pile.dir == -1) || (diff < 0 && pile.dir == 1) )) {
+		if (pile.color != data.card[1] && ((diff > 0 && pile.dir == -1) || (diff < 0 && pile.dir == 1) )) {
 			return false;
 		}
 		return true;
@@ -321,7 +324,17 @@ const handleCNInit = (game) => {
 const CN = {
 	handleInit : handleCNInit,
 	handleMessage : handleCNMessage,
-	handleClose : handleCNClose
+	handleClose : handleCNClose,
+	
+	_getNumber : getNumber,
+	_getValue : getValue,
+	_updatePile : updatePile,
+	_validateMove : validateMove,
+	_placeSpecial : placeSpecial,
+	_getWinner : getWinner,
+	_handlePlace : handlePlace,
+	_handleDismissCard : handleDismissCard,
+	_handleDismissLane : handleDismissLane
 };
 
 module.exports = CN;
