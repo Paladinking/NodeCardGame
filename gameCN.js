@@ -4,6 +4,7 @@ const gameModule = require('./game.js');
 
 const getNumber = (card) => {
 	if (card[0] == "A") return 1;
+	if (card[0] == "T") return 10;
 	return Number(card[0]);
 }
 
