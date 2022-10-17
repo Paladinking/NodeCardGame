@@ -1,11 +1,15 @@
 "use strict";
 
-const createDeck = () => {
+const createDeck = (jokers = false) => {
 	let deck = [];
 	for (const number of "A23456789JQK") {
 		for (const color of "SCDH") {
 			deck.push(number + color);
 		}
+	}
+	if (jokers) {
+		deck.push("YB");
+		deck.push("YR");
 	}
 	return deck;
 }
