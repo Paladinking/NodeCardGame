@@ -15,10 +15,10 @@ const hasMove = (hand, game) => {
 	return false;
 }
 
-const validateMove = (data, color, topCard, player, hand) => {
-	const cardNr = data.cards[0][0];
+const validateMove = (cards, color, topCard, hand) => {
+	const cardNr = cards[0][0];
 	if (cardNr == '8') {
-		if (data.cards.length > 1) {
+		if (cards.length > 1) {
 			return false;
 		}
 		if (hand.length == 0) {
@@ -32,14 +32,14 @@ const validateMove = (data, color, topCard, player, hand) => {
 		}
 		return true;
 	} else {
-		for (let i = 0; i < data.cards.length; i++) {
-			if (cardNr != data.cards[i][0]) {
+		for (let i = 0; i < cards.length; i++) {
+			if (cardNr != cards[i][0]) {
 				return false;
 			}
-			if (cardNr != topCard[0] && data.cards[i][1] != color) {
+			if (cardNr != topCard[0] && cards[i][1] != color) {
 				return false;
 			} 
-			topCard = data.cards[i];
+			topCard = cards[i];
 			color = topCard[1];
 		}
 	}
@@ -74,7 +74,7 @@ const handlePlace = (data, game, player) => {
 	}
 	const hand = player.hand.filter((c) => !data.cards.includes(c));
 
-	if (!validateMove(data, game.color, game.pile[game.pile.length -1], player, hand)) {
+	if (!validateMove(data.cards, game.color, game.pile[game.pile.length -1], hand)) {
 		player.close(1000, "Invalid move");
 		return;
 	}
