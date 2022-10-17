@@ -62,6 +62,8 @@ let folderContent = {
 	"/cards/D.svg" : contentTypes.svg,
 	"/cards/C.svg" : contentTypes.svg,
 	"/cards/H.svg" : contentTypes.svg,
+	"/cards/YR.svg" : contentTypes.svg,
+	"/cards/YB.svg" : contentTypes.svg,
 	"/cards/Card_back.svg" : contentTypes.svg
 };
 
