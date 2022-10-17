@@ -159,7 +159,7 @@ const handlePlace = (data, game, player) => {
 		typeof data.card != "string" ||
 		!Number.isInteger(data.side) || 
 		!Number.isInteger(data.col) || 
-		!Number.isInteger(data.pos) ||'
+		!Number.isInteger(data.pos) ||
 		!(data.side == 0 || data.side == 1) ||
 		!(data.col >= 0 && data.col < 3)
 	) {
@@ -194,7 +194,7 @@ const handlePlace = (data, game, player) => {
 		winnder = (player.id + 1) % 2;
 		return;
 	}
-	game.players.forEach((player, id)) {
+	game.players.forEach((player, id) => {
 		if (id == player.id && newCard) {
 			player.send(`{"event" : "place", "card" : "${data.card}", "newCard" : "${newCard}"}`);
 		} else {
@@ -203,7 +203,7 @@ const handlePlace = (data, game, player) => {
 		if (winner != -1) {
 			player.close(1000, "Game is over");
 		}
-	}
+	});
 	if (game.turn == 1) {
 		game.turn = 0;
 		if (game.setup) {
@@ -264,8 +264,7 @@ const handleDismissLane = (data, game, player) => {
 			player.close(1000, "Game is over");
 		}
 	}
-	const 
-}
+};
 
 
 const handleCNMessage = (data, game, player) => {

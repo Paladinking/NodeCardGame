@@ -3,21 +3,27 @@
 const UNIDENTIFIED = 0, IN_LOBBY = 1, IN_GAME = 2;
 
 const T8 = require("./gameT8.js");
+const CN = require("./gameCN.js");
 
 const lobbyModule = {
 	handleInit : (game) => game.handleInit(game)
 };
 
-const games = {
-	"T8" : {
-		gameName : "T8",
-		minPlayers : 2,
-		maxPlayers : 5,
+const createGame = (module, name, min, max) => {
+	return {
+		gameName : name,
+		minPlayers : min,
+		maxPlayers : max,
 		id : 0,
-		handleInit : T8.handleInit,
-		handleMessage : T8.handleMessage,
-		handleClose : T8.handleClose
+		handleInit : module.handleInit,
+		handleMessage : module.handleMessage,
+		handleClose : module.handleClose
 	}
+}
+
+const games = {
+	"T8" : createGame(T8, "T8", 2, 5),
+	"CN" : createGame(CN, "CN", 2, 2)
 };
 
 let runTests = false;
