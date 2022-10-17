@@ -1,6 +1,7 @@
 "use strict";
 
 const ws = require("ws");
+const T8 = require("./gameT8.js");
 
 const openSocket = async (url) => {
 	return new Promise((resolve, reject) => {
@@ -133,6 +134,7 @@ const wsTest = async (socketData, actions) => {
 
 const runWsTest = async (socketData, actions, name) => {
 	testOut("\nRunning test '" + name + "'");
+	totalTests += 1;
 	return new Promise((resolve, reject) => {
 		wsTest(socketData, actions).then(() => {
 			resolve(1);
@@ -707,31 +709,132 @@ const aceT8Plays = async () => {
 	return completedTests;
 }
 
+const assertEq = (a, b) => {
+	if (a != b) {
+		throw `got ${a}, expected ${b}`;
+	}
+}
+
+const assertJsonEq = (a, b) => {
+	const ja = JSON.stringify(a);
+	const jb = JSON.stringify(b);
+	if (ja != jb) {
+		throw `got ${ja}, expected ${jb}`;
+	}
+}
+
+const fnEqTest = (f, args, expected) => {
+	return (msg) => {
+		try {
+			const res = f(...args);
+			assertEq(res, expected);
+			return 1;
+		} catch (err) {
+			testOut("Test failed,", err + ",", msg);
+		}
+		return 0;
+	};
+}
+
+const stateEqTest = (f, args, expected) => {
+	return (msg) => {
+		let i = 0;
+		try {
+			f(...args);
+			args.forEach((arg) => {
+				i += 1;
+				assertJsonEq(arg, expected[i]);
+			});
+		} catch (err) {
+			testOut(`Test failed, for arg ${i}`, err + ",", msg);
+		}
+	}
+}
+
+const runUnitTest = (tests, name)  => {
+	testOut(`\nRunning test '${name}'`);
+	let count = 0;
+	tests.forEach((test, index) => {
+		count += test(`test ${index}`);
+	});
+	totalTests += 1;
+	return count == tests.length ? 1 : 0;
+}
+
+
+const unitTestsT8 = () => {
+	let completedTests = 0;
+	completedTests += runUnitTest(
+		[
+			fnEqTest(T8._hasMove, [["2S"] , {pile : ["3S"], color : "S"}], true),
+			fnEqTest(T8._hasMove, [["2S", "3D", "KC"] , {pile : ["5D", "9D"], color : "D"}], true),
+			fnEqTest(T8._hasMove, [["8C"] , {pile : ["8D"], color : "C"}], false),
+			fnEqTest(T8._hasMove, [["AD"] , {pile : ["7D", "8D", "9D"], color : "D"}], false),
+			fnEqTest(T8._hasMove, [["AD", "2C"] , {pile : ["7D", "8D", "9D"], color : "D"}], true),
+			fnEqTest(T8._hasMove, [["AD", "2C"] , {pile : ["7D", "8D", "9H"], color : "H"}], false)
+		],
+		"T8.hasMove unit test"
+	);
+	completedTests += runUnitTest(
+		[
+			fnEqTest(T8._validateMove, [["7D"], "D", "5D", ["8C", "9S", "AD"]], true),
+			fnEqTest(T8._validateMove, [["7D"], "D", "5D", []], true),
+			fnEqTest(T8._validateMove, [["5C"], "C", "8S", ["TH"]], true),
+			fnEqTest(T8._validateMove, [["KH"], "D", "8H", ["8C", "9S", "AD"]], false),
+			fnEqTest(T8._validateMove, [["KH"], "D", "5D", ["8C", "9S", "AD"]], false),
+			fnEqTest(T8._validateMove, [["9H", "9D"], "H", "5H", ["8C", "9S"]], true),
+			fnEqTest(T8._validateMove, [["9D", "9H"], "H", "5H", ["8C", "9S"]], false),
+			fnEqTest(T8._validateMove, [["TS", "TH", "TD", "TC"], "S", "2S", []], true),
+			fnEqTest(T8._validateMove, [["TH", "TD", "TC"], "S", "TS", ["8S"]], true),
+			fnEqTest(T8._validateMove, [["7D", "9D", "TD"], "D", "TD", ["8S"]], false)
+		],
+		"T8.validateMove standard move unit test"
+	);
+	completedTests += runUnitTest(
+		[
+			fnEqTest(T8._validateMove, [["AD"], "D", "5D", ["8C", "9S", "AD"]], true),
+			fnEqTest(T8._validateMove, [["AC", "AS"], "C", "8S", ["TH"]], true),
+			fnEqTest(T8._validateMove, [["AS", "AC"], "C", "8S", ["TH"]], false),
+			fnEqTest(T8._validateMove, [["AH"], "S", "AS", ["8C", "9S", "AD"]], true),
+			fnEqTest(T8._validateMove, [["AH", "AD"], "S", "AS", ["8C", "9S"]], true),
+			fnEqTest(T8._validateMove, [["AH"], "S", "7S", ["8C", "9S"]], false),
+			fnEqTest(T8._validateMove, [["AH"], "H", "7H", []], false)
+		],
+		"T8.validateMove ace unit test"
+	);
+	completedTests += runUnitTest(
+		[
+			fnEqTest(T8._validateMove, [["8D"], "D", "5D", ["7C", "9S", "AC"]], true),
+			fnEqTest(T8._validateMove, [["8C"], "C", "8S", ["8D", "8H"]], true),
+			fnEqTest(T8._validateMove, [["8C", "AC"], "C", "8S", ["TC"]], false),
+			fnEqTest(T8._validateMove, [["8C", "8H"], "C", "8S", ["TC"]], false),
+			fnEqTest(T8._validateMove, [["8D"], "D", "TD", ["AD"]], false),
+			fnEqTest(T8._validateMove, [["8D", "8H"], "D", "TD", ["AC"]], false),
+			fnEqTest(T8._validateMove, [["8D"], "D", "TD", []], false),
+		],
+		"T8.validateMove 8 unit test"
+	);
+	return completedTests;
+};
+
 const testOut = console.log;
+let totalTests = 0;
 
 const tests = {
 	general : async () => {
-		//console.log = (msg) => {};
+		console.log = (msg) => {};
 		let completedTests = 0;
+		totalTests = 0;
+		completedTests += unitTestsT8();
 		completedTests += await lobbyValid();
 		completedTests += await joinLobbyInvalid();
 		completedTests += await inLobbyInvalid();
 		completedTests += await playStandardT8();
 		completedTests += await invalidT8Playes();
 		completedTests += await aceT8Plays();
-		testOut(`Passed ${completedTests} tests out of 11`);
+		testOut(`Passed ${completedTests} tests out of ${totalTests}`);
 		console.log = testOut;
 	},
-	
-	T8 : () => {
-		let completedTests = 0;
-		{
-			
-
-			
-		}
-	},
-	
 	handleInit : (game) => {}
 };
 module.exports = tests;
