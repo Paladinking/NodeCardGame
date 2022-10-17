@@ -2,6 +2,7 @@
 
 const ws = require("ws");
 const T8 = require("./gameT8.js");
+const CN = require("./gameCN.js");
 
 const openSocket = async (url) => {
 	return new Promise((resolve, reject) => {
@@ -738,16 +739,16 @@ const fnEqTest = (f, args, expected) => {
 
 const stateEqTest = (f, args, expected) => {
 	return (msg) => {
-		let i = 0;
 		try {
 			f(...args);
-			args.forEach((arg) => {
-				i += 1;
+			args.forEach((arg, i) => {
 				assertJsonEq(arg, expected[i]);
 			});
 		} catch (err) {
-			testOut(`Test failed, for arg ${i}`, err + ",", msg);
+			testOut("Test failed,", err + ",", msg);
+			return 0;
 		}
+		return 1;
 	}
 }
 
@@ -817,6 +818,232 @@ const unitTestsT8 = () => {
 	return completedTests;
 };
 
+const unitTestsCN = () => {
+	let completedTests = 0;
+	completedTests += runUnitTest(
+		[
+			fnEqTest(CN._getNumber, ["AS"], 1),
+			fnEqTest(CN._getNumber, ["5D"], 5),
+			fnEqTest(CN._getNumber, ["8S"], 8),
+			fnEqTest(CN._getNumber, ["TS"], 10)
+		],
+		"CN.getNumber unit test"
+	);
+	completedTests += runUnitTest(
+		[
+			fnEqTest(CN._getValue, [{card : "8C", specials : []}], 8),
+			fnEqTest(CN._getValue, [{card : "AD", specials : ["QC", "YR"]}], 1),
+			fnEqTest(CN._getValue, [{card : "TD", specials : ["KH"]}], 20),
+			fnEqTest(CN._getValue, [{card : "4D", specials : ["QS", "JD", "KD"]}], 8),
+			fnEqTest(CN._getValue, [{card : "2D", specials : ["QS", "KD", "QD", "KD", "KS", "YB", "KS", "KC", "KC"]}], 128)
+		],
+		"CN.getValue unit test"
+	);
+	const card = (c, s = []) => {return {card : c, specials : s}};
+	const pile = (color = "?", dir = 0, cards = [], value = 0) => {return {cards : cards, value : value, color : color, dir : dir}};
+	completedTests += runUnitTest(
+		[
+			stateEqTest(CN._updatePile, [{cards : [], value : 13, color : "C", dir : -1}], [{cards : [], value : 13, color : "?", dir : 0}]),
+			stateEqTest(CN._updatePile, 
+				[{cards : [card("2C")], value : 2, color : "C", dir : 1}], 
+				[{cards : [card("2C")], value : 2, color : "C", dir : 0}]
+			),
+			stateEqTest(CN._updatePile, 
+				[{
+					cards : [card("2C"), card("5D"), card("4D"), card("3S"), card("2D")],
+					value : 16,
+					color : "S",
+					dir : -1
+				}],
+				[{
+					cards : [card("2C"), card("5D"), card("4D"), card("3S"), card("2D")],
+					value : 16,
+					color : "D",
+					dir : -1
+				}]
+			),
+			stateEqTest(CN._updatePile,
+				[{cards : [card("8D", ["KH", "KD"]),card("4S", ["QS"]),card("5S", ["QD"])], value : 39, color : "S", dir : -1}],
+				[{cards : [card("8D", ["KH", "KD"]),card("4S", ["QS"]),card("5S", ["QD"])], value : 39, color : "D", dir : -1}]
+			),
+			stateEqTest(CN._updatePile,
+				[{cards : [card("5C"), card("9D", ["QS", "QH"])], value : 14, color : "S", dir : -1}],
+				[{cards : [card("5C"), card("9D", ["QS", "QH"])], value : 14, color : "H", dir : 1}]
+			)
+		],
+		"CN.updatePile unit test"
+	);
+	completedTests += runUnitTest(
+		[
+			fnEqTest(CN._validateMove, [{card : "5D", side : 0, col : 1, pos : 0}, {setup : true, setupStep : 1},
+					{id : 0},
+					false
+				], 
+				true
+			),	
+			fnEqTest(CN._validateMove, [{card : "QD", side : 1, col : 0, pos : 0}, {setup : true, setupStep : 0},
+					{id : 1},
+					true
+				], 
+				false
+			),
+			fnEqTest(CN._validateMove, [{card : "AH", side : 1, col : 2, pos : 0}, {setup : true, setupStep : 1},
+					{id : 1},
+					false
+				], 
+				false
+			),
+			fnEqTest(CN._validateMove, [{card : "6H", side : 1, col : 0, pos : 0}, {setup : true, setupStep : 0},
+					{id : 0},
+					false
+				], 
+				false
+			),
+			fnEqTest(CN._validateMove, [{card : "8C", side : 1, col : 0, pos : 1}, {setup : true, setupStep : 0},
+					{id : 1},
+					false
+				], 
+				false
+			)
+		],
+		"CN.validateMove setup unit test"
+	);
+	completedTests += runUnitTest(
+		[
+			fnEqTest(CN._validateMove, [{card : "AH", side : 1, col : 2, pos : 0},
+				{setup : false, caravans : [[pile(), pile(), pile()], [pile(), pile(), pile()]]},
+				{id : 1},
+				false
+			], true),
+			fnEqTest(CN._validateMove, [{card : "5C", side : 0, col : 1, pos : 2},
+				{setup : false, caravans : [[pile("D", 1, [card("4H"), card("6D")]), pile("C", 1, [card("4D"), card("6C")]), pile()], [pile(), pile(), pile()]]},
+				{id : 0},
+				false
+			], true),
+			fnEqTest(CN._validateMove, [{card : "7H", side : 0, col : 0, pos : 2},
+				{setup : false, caravans : [[pile("D", 1, [card("4H"), card("6D")]), pile("C", 1, [card("4D"), card("6C")]), pile()], [pile(), pile(), pile()]]},
+				{id : 0},
+				false
+			], true),
+			fnEqTest(CN._validateMove, [{card : "3H", side : 0, col : 0, pos : 2},
+				{setup : false, caravans : [[pile("D", -1, [card("4H"), card("6D", ["QD"])]), pile("C", 1, [card("4D"), card("6C")]), pile()], [pile(), pile(), pile()]]},
+				{id : 0},
+				false
+			], true),
+			fnEqTest(CN._validateMove, [{card : "8D", side : 1, col : 0, pos : 2},
+				{setup : false, caravans : [[pile(), pile(), pile()], [pile("D", -1, [card("4H"), card("6S", ["QD"])]), pile("C", 1, [card("4D"), card("6C")]), pile()]]},
+				{id : 1},
+				false
+			], true),
+			fnEqTest(CN._validateMove, [{card : "TS", side : 1, col : 2, pos : 1},
+				{setup : false, caravans : [[pile(), pile(), pile()], [pile(), pile(), pile("H", 0, [card("4H")])]]},
+				{id : 1},
+				false
+			], true),
+			fnEqTest(CN._validateMove, [{card : "4S", side : 1, col : 2, pos : 1},
+				{setup : false, caravans : [[pile(), pile(), pile()], [pile(), pile(), pile("H", 0, [card("4H")])]]},
+				{id : 0},
+				false
+			], false),
+			fnEqTest(CN._validateMove, [{card : "5S", side : 1, col : 2, pos : 2},
+				{setup : false, caravans : [[pile(), pile(), pile()], [pile(), pile(), pile("H", 1, [card("4H"), card("6H")])]]},
+				{id : 0},
+				false
+			], false),
+			fnEqTest(CN._validateMove, [{card : "TS", side : 1, col : 2, pos : 0},
+				{setup : false, caravans : [[pile(), pile(), pile()], [pile(), pile(), pile("H", 0, [card("4H")])]]},
+				{id : 1},
+				false
+			], false),
+			fnEqTest(CN._validateMove, [{card : "TS", side : 1, col : 2, pos : 2},
+				{setup : false, caravans : [[pile(), pile(), pile()], [pile(), pile(), pile("H", 0, [card("4H")])]]},
+				{id : 1},
+				false
+			], false),
+			fnEqTest(CN._validateMove, [{card : "TS", side : 0, col : 2, pos : 1},
+				{setup : false, caravans : [[pile(), pile(), pile()], [pile(), pile(), pile("H", 0, [card("4H")])]]},
+				{id : 1},
+				false
+			], false)
+		],
+		"CN.validateMove non-specials unit test"
+	);
+	completedTests += runUnitTest(
+		[
+			fnEqTest(CN._validateMove, [
+				{card : "QS", side : 0, col : 0, pos : 2}, 
+				{setup : false, caravans : [
+					[
+						pile("S", 1, [card("3H"), card("5S"), card("9S")]),
+						pile(),
+						pile()
+					], 
+					[
+						pile("H", 0, [card("2H")]),
+						pile(),
+						pile()
+					]
+				]},
+				{id : 1},
+				true
+			], true),
+			fnEqTest(CN._validateMove, [
+				{card : "QS", side : 0, col : 0, pos : 1}, 
+				{setup : false, caravans : [
+					[
+						pile("S", 1, [card("3H"), card("5S"), card("9S")]),
+						pile(),
+						pile()
+					], 
+					[
+						pile("H", 0, [card("2H")]),
+						pile(),
+						pile()
+					]
+				]},
+				{id : 1},
+				true
+			], false),
+			fnEqTest(CN._validateMove, [
+				{card : "KS", side : 1, col : 0, pos : 0}, 
+				{setup : false, caravans : [
+					[
+						pile("D", -1, [card("3H"), card("5D"), card("4D")]),
+						pile(),
+						pile()
+					], 
+					[
+						pile("H", 0, [card("2H")]),
+						pile(),
+						pile()
+					]
+				]},
+				{id : 1},
+				true
+			], true),
+			fnEqTest(CN._validateMove, [
+				{card : "YR", side : 0, col : 1, pos : 0}, 
+				{setup : false, caravans : [
+					[
+						pile("S", -1, [card("3H"), card("5S"), card("3S")]),
+						pile(),
+						pile()
+					], 
+					[
+						pile("C", 0 [card("2C")]),
+						pile(),
+						pile()
+					]
+				]},
+				{id : 1},
+				true
+			], false)
+		],
+		"CN.validateMove specials unit test"
+	);
+	return completedTests;
+};
+
 const testOut = console.log;
 let totalTests = 0;
 
@@ -826,6 +1053,7 @@ const tests = {
 		let completedTests = 0;
 		totalTests = 0;
 		completedTests += unitTestsT8();
+		completedTests += unitTestsCN();
 		completedTests += await lobbyValid();
 		completedTests += await joinLobbyInvalid();
 		completedTests += await inLobbyInvalid();
