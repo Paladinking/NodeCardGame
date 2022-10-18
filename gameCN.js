@@ -93,7 +93,7 @@ const validateMove = (data, game, player, isSpecial) => {
 };
 
 
-const placeSpecial = (data, game, pile) => {
+const placeSpecial = (data, caravans, pile) => {
 	const targetCard = pile.cards[data.pos];
 	switch (data.card[0]) {
 		case "J":
@@ -111,17 +111,17 @@ const placeSpecial = (data, game, pile) => {
 			targetCard.specials.push(data.card);
 			break;
 		case "Y":
-			const ace = targetCard[0] == "A";
-			for (let i = 0; i < game.caravans.length; i++) {
-				const side = game.caravans[i];
+			const ace = targetCard.card[0] == "A";
+			for (let i = 0; i < caravans.length; i++) {
+				const side = caravans[i];
 				for (let j = 0; j < side.length; j++) {
 					const pile = side[j];
 					for (let k = 0; k < pile.cards.length; k++) {
-						if (i == data.side && j == data.col && k == pata.pos) {
+						if (i == data.side && j == data.col && k == data.pos) {
 							continue;
 						}
-						const card = pile.cards[k].card;
-						if ((ace && card[1] == targetCard[1]) || (!ace && card[0] == targetCard[0])) {
+						const card = pile.cards[k];
+						if ((ace && card.card[1] == targetCard.card[1]) || (!ace && card.card[0] == targetCard.card[0])) {
 							pile.value -= getValue(card);
 							pile.cards.splice(k, 1);
 							k--;
@@ -135,11 +135,11 @@ const placeSpecial = (data, game, pile) => {
 	}	
 };
 
-const getWinner = (game, player) => {
+const getWinner = (caravans) => {
 	let p0Wins = 0, p1Wins = 0;
 	for (let i = 0; i < 3; i++) {
-		const s0 = game.caravans[0][i].value;
-		const s1 = game.caravans[1][i].value;
+		const s0 = caravans[0][i].value;
+		const s1 = caravans[1][i].value;
 		s0 = s0 >= 21 && s0 <= 26 ? s0 : 0;
 		s1 = s1 >= 21 && s1 <= 26 ? s1 : 0;
 		if (s0 > s1) p0Wins += 1;
@@ -182,14 +182,14 @@ const handlePlace = (data, game, player) => {
 	}
 	const pile = game.caravans[data.side][data.col];
 	if (isSpecial) {
-		placeSpecial(data, game, pile);
+		placeSpecial(data, game.caravans, pile);
 	} else {
 		pile.cards.push({card : data.card, specials : []});
 		pile.value += getNumber(data.card); // New card wont have kings, so no need for getValue.
 		updatePile(pile);
 	}
 	player.hand.splice(player.hand.indexOf(data.card), 1);
-	const winner = getWinner();
+	const winner = getWinner(game.caravans);
 	let newCard = undefined;
 	if (player.deck.length > 0 && !game.setup) {
 		newCard = player.deck.pop();
@@ -261,7 +261,7 @@ const handleDismissLane = (data, game, player) => {
 	pile.cards.length = 0;
 	pile.value = 0;
 	updatePile(pile);
-	const winner = getWinner();
+	const winner = getWinner(game.caravans);
 	for (const player of game.players) {
 		player.send(`{"event" : "dismissLane", "col" : ${data.col}}`);
 		if (winner != -1) {
@@ -325,7 +325,7 @@ const CN = {
 	handleInit : handleCNInit,
 	handleMessage : handleCNMessage,
 	handleClose : handleCNClose,
-	
+
 	_getNumber : getNumber,
 	_getValue : getValue,
 	_updatePile : updatePile,
