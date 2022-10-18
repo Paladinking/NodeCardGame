@@ -742,7 +742,9 @@ const stateEqTest = (f, args, expected) => {
 		try {
 			f(...args);
 			args.forEach((arg, i) => {
-				assertJsonEq(arg, expected[i]);
+				if (expected[i] != undefined) {
+					assertJsonEq(arg, expected[i]);
+				}
 			});
 		} catch (err) {
 			testOut("Test failed,", err + ",", msg);
@@ -1040,6 +1042,122 @@ const unitTestsCN = () => {
 			], false)
 		],
 		"CN.validateMove specials unit test"
+	);
+	completedTests += runUnitTest(
+		[
+			stateEqTest(CN._placeSpecial, 
+				[{card : "QC", side : 1, col : 2, pos : 0}, ...(() => {
+					const p1 = pile("D", 0, [card("5D")], 5);
+					return [[[pile(), pile(), pile()], [pile(), pile(), p1]], p1];
+					
+				})()], 
+				[undefined, [[pile(), pile(), pile()], [pile(), pile(), pile("C", 0, [card("5D", ["QC"])], 5)]], pile("C", 0, [card("5D", ["QC"])], 5)]
+			),
+			stateEqTest(CN._placeSpecial,
+				[{card : "QD", side : 0, col : 1, pos : 2}, ...(() => {
+					const p1 = pile("C", 1, [card("5D"), card("9S", ["YR"]), card("TC")], 24);
+					return [[[pile("D", 0, [card("6D")], 6), p1, pile()], [pile(), pile("S", 1, [card("TD"), card("4S"), card("6S")], 20), pile()]], p1];
+				})()],
+				[undefined, [
+					[pile("D", 0, [card("6D")], 6), pile("D", -1, [card("5D"), card("9S", ["YR"]), card("TC", ["QD"])], 24), pile()],
+					[pile(), pile("S", 1, [card("TD"), card("4S"), card("6S")], 20), pile()]
+				], pile("D", -1, [card("5D"), card("9S", ["YR"]), card("TC", ["QD"])], 24)]
+			),
+			stateEqTest(CN._placeSpecial,
+				[{card : "QC", side : 0, col : 1, pos : 2}, ...(() => {
+					const p1 = pile("D", -1, [card("5D"), card("9S", ["YR"]), card("TC", ["QD"])], 24);
+					return [[[pile("D", 0, [card("6D")], 6), p1, pile()], [pile(), pile("S", 1, [card("TD"), card("4S"), card("6S")], 20), pile()]], p1];
+				})()],
+				[undefined, [
+					[pile("D", 0, [card("6D")], 6), pile("C", 1, [card("5D"), card("9S", ["YR"]), card("TC", ["QD", "QC"])], 24), pile()],
+					[pile(), pile("S", 1, [card("TD"), card("4S"), card("6S")], 20), pile()]
+				], pile("C", 1, [card("5D"), card("9S", ["YR"]), card("TC", ["QD", "QC"])], 24)]
+			)
+		],
+		"CN.placeSpecial queen unit test"
+	);
+	completedTests += runUnitTest(
+		[
+			stateEqTest(CN._placeSpecial, 
+				[{card : "KC", side : 1, col : 2, pos : 0}, ...(() => {
+					const p1 = pile("D", 0, [card("5D")], 5);
+					return [[[pile(), pile(), pile()], [pile(), pile(), p1]], p1];
+					
+				})()], 
+				[undefined, [[pile(), pile(), pile()], [pile(), pile(), pile("D", 0, [card("5D", ["KC"])], 10)]], pile("D", 0, [card("5D", ["KC"])], 10)]
+			),
+			stateEqTest(CN._placeSpecial,
+				[{card : "KD", side : 0, col : 1, pos : 1}, ...(() => {
+					const p1 = pile("C", 1, [card("5D"), card("9S", ["YR"]), card("TC")], 24);
+					return [[[pile("D", 0, [card("6D")], 6), p1, pile()], [pile(), pile("S", 1, [card("TD"), card("4S"), card("6S")], 20), pile()]], p1];
+				})()],
+				[undefined, [
+					[pile("D", 0, [card("6D")], 6), pile("C", 1, [card("5D"), card("9S", ["YR", "KD"]), card("TC")], 33), pile()],
+					[pile(), pile("S", 1, [card("TD"), card("4S"), card("6S")], 20), pile()]
+				], pile("C", 1, [card("5D"), card("9S", ["YR", "KD"]), card("TC")], 33)]
+			),
+			stateEqTest(CN._placeSpecial,
+				[{card : "KC", side : 0, col : 1, pos : 2}, ...(() => {
+					const p1 = pile("C", 1, [card("5D"), card("9S", ["YR"]), card("TC", ["KD"])], 34);
+					return [[[pile("D", 0, [card("6D")], 6), p1, pile()], [pile(), pile("S", 1, [card("TD"), card("4S"), card("6S")], 20), pile()]], p1];
+				})()],
+				[undefined, [
+					[pile("D", 0, [card("6D")], 6), pile("C", 1, [card("5D"), card("9S", ["YR"]), card("TC", ["KD", "KC"])], 54), pile()],
+					[pile(), pile("S", 1, [card("TD"), card("4S"), card("6S")], 20), pile()]
+				], pile("C", 1, [card("5D"), card("9S", ["YR"]), card("TC", ["KD", "KC"])], 54)]
+			)
+		],
+		"CN.placeSpecial king unit test"
+	);
+	completedTests += runUnitTest(
+		[
+			stateEqTest(CN._placeSpecial, 
+				[{card : "JC", side : 1, col : 2, pos : 0}, ...(() => {
+					const p1 = pile("D", 0, [card("5D")], 5);
+					return [[[pile(), pile(), pile()], [pile(), pile(), p1]], p1];
+					
+				})()], 
+				[undefined, [[pile(), pile(), pile()], [pile(), pile(), pile()]], pile()]
+			),
+			stateEqTest(CN._placeSpecial,
+				[{card : "JD", side : 0, col : 1, pos : 1}, ...(() => {
+					const p1 = pile("C", 1, [card("5D"), card("9S", ["YR"]), card("TC")], 24);
+					return [[[pile("D", 0, [card("6D")], 6), p1, pile()], [pile(), pile("S", 1, [card("TD"), card("4S"), card("6S")], 20), pile()]], p1];
+				})()],
+				[undefined, [
+					[pile("D", 0, [card("6D")], 6), pile("C", 1, [card("5D"), card("TC")], 15), pile()],
+					[pile(), pile("S", 1, [card("TD"), card("4S"), card("6S")], 20), pile()]
+				], pile("C", 1, [card("5D"), card("TC")], 15)]
+			),
+			stateEqTest(CN._placeSpecial,
+				[{card : "JD", side : 0, col : 1, pos : 2}, ...(() => {
+					const p1 = pile("C", 1, [card("TS"), card("9C", ["YR"]), card("TC", ["KD"])], 34);
+					return [[[pile("D", 0, [card("6D")], 6), p1, pile()], [pile(), pile("S", 1, [card("TD"), card("4S"), card("6S")], 20), pile()]], p1];
+				})()],
+				[undefined, [
+					[pile("D", 0, [card("6D")], 6), pile("C", -1, [card("TS"), card("9C", ["YR"])], 14), pile()],
+					[pile(), pile("S", 1, [card("TD"), card("4S"), card("6S")], 20), pile()]
+				], pile("C", -1, [card("TS"), card("9C", ["YR"])], 14)]
+			)
+		],
+		"CN.placeSpecial jack unit test"
+	);
+	completedTests += runUnitTest(
+		[
+			stateEqTest(CN._placeSpecial,
+				[{card : "YR", side : 0, col : 1, pos : 2}, ...(() => {
+					const p1 = pile("C", 1, [card("5S"), card("6D"), card("7C"), card("8C")], 26);
+					return [
+						[[pile("D", 0, [card("7D")], 7), p1, pile("D", -1, [card("7S"), card("5D")], 12)],
+						[pile("S", 0, [card("5D", ["QH"]), card("7H", ["QS"])], 12), pile(), pile()]
+					], p1];
+				})()],
+				[undefined, [[pile(), pile("C", 1, [card("5S"), card("6D"), card("7C", ["YR"]), card("8C")], 26), pile("D", 0, [card("5D")], 5)], 
+				[pile("H", 0, [card("5D", ["QH"])], 5), pile(), pile()]], 
+				pile("C", 1, [card("5S"), card("6D"), card("7C", ["YR"]), card("8C")], 26)]
+			)
+		],
+		"CN.placeSpecial joker unit test"
 	);
 	return completedTests;
 };
