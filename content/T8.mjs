@@ -10,7 +10,7 @@ const sortHand = (hand) =>
     {
         for (let j = i + 1; j < hand.length; j++)
         {
-            if (hand[i].name[0] == hand[j].name[0])
+            if (hand[i].name[0] === hand[j].name[0])
             {
                 if (CARD_COLORS.indexOf(hand[i].name[1]) > CARD_COLORS.indexOf(hand[j].name[1]))
                 {
@@ -54,15 +54,15 @@ const updateHand = (hand) =>
     {
         const card = hand[i].element;
         card.classList.add('hoverable-card');
-        const percentage = hand.length == 1 ? 0.5 : i / (hand.length - 1);
-        const degrees = hand.length == 2 ? 20 : 38;
+        const percentage = hand.length === 1 ? 0.5 : i / (hand.length - 1);
+        const degrees = hand.length === 2 ? 20 : 38;
         const rotation = (percentage * degrees * 2) - degrees;
         card.style.transform = `rotate(${rotation}deg)`;
         const top = Math.abs(percentage * 100 - 50);
         card.style.top = `${top}px`;
         const left = percentage * width - width / 2 - card.offsetWidth / 2;
         card.style.left = `${left}px`;
-        card.style.zIndex = i + 10;
+        card.style.zIndex = `${i + 10}`;
     }
 };
 
@@ -82,7 +82,7 @@ const createHand = (hand) =>
 
 const isClicked = (clickTarget, parentElement) =>
 {
-    return clickTarget == parentElement || parentElement.contains(clickTarget);
+    return clickTarget === parentElement || parentElement.contains(clickTarget);
 };
 
 const drawDeck = (round) =>
@@ -94,7 +94,7 @@ const drawDeck = (round) =>
 
 const makeTableCard = (card, zIndex) =>
 {
-    const rotation = Math.floor(Math.random() * 25) * (Math.round(Math.random()) == 0 ? -1 : 1);
+    const rotation = Math.floor(Math.random() * 25) * (Math.round(Math.random()) === 0 ? -1 : 1);
     card.style.transform = `rotate(${rotation}deg)`;
     card.style.top = null;//`${smallScreen ? -200 : -400}px`;
     card.classList.add('table-card');
@@ -106,7 +106,7 @@ const makeTableCard = (card, zIndex) =>
 
 const validPlacement = (cardName, cardName2) =>
 {
-    return cardName[0] == cardName2[0] || cardName[1] == cardName2[1];
+    return cardName[0] === cardName2[0] || cardName[1] === cardName2[1];
 };
 
 const getValidMoves = (round, placedCards) => 
@@ -116,12 +116,12 @@ const getValidMoves = (round, placedCards) =>
     const topCard = round.tableCards[round.tableCards.length - 1].name;
     for (const card of round.hand)
     {
-        if (card.name[0] != 8)//card is not an eight
+        if (card.name[0] !== 8)//card is not an eight
         {
-            if (((placedCards.length == 0 && validPlacement(topCard, card.name))  //card can either be placed on the top card or on a previusly placed card
-                || (placedCards.length > 0 && placedCards[0].name[0] == card.name[0]))
-                && (card.name[0] != 'A' //card is not last card or card is not an ace
-                    || round.hand.length != 1))
+            if (((placedCards.length === 0 && validPlacement(topCard, card.name))  //card can either be placed on the top card or on a previusly placed card
+                || (placedCards.length > 0 && placedCards[0].name[0] === card.name[0]))
+                && (card.name[0] !== 'A' //card is not last card or card is not an ace
+                    || round.hand.length !== 1))
             {
                 moves.push(card);
             }
@@ -133,7 +133,7 @@ const getValidMoves = (round, placedCards) =>
 
     }
 
-    if (moves.length == 0 /*this is against the rules but the server needs to cooperate*/ && placedCards.length == 0 && round.hand.length != 1)
+    if (moves.length === 0 /*this is against the rules but the server needs to cooperate*/ && placedCards.length === 0 && round.hand.length !== 1)
     {
         moves.push(...eights);
     }
@@ -176,7 +176,7 @@ const makeTurn = (round) =>
                 }
             }
         }
-        else if (placedCards.length == 0 && round.draws < 3)
+        else if (placedCards.length === 0 && round.draws < 3)
         {
             if (isClicked(e.target, round.deckElement))
             {
@@ -197,7 +197,7 @@ const makeTurn = (round) =>
                     returnedCard.element.classList.remove('table-card');
                     round.hand.push(returnedCard);
                     updateHand(round.hand);
-                    if (placedCards.length == 0)
+                    if (placedCards.length === 0)
                     {
                         round.confirmButton.style.display = "none";
                     }
@@ -231,7 +231,7 @@ const initGraphics = async (round) =>
 
     round.colorIndicator.classList.add('color-indicator');
     round.colorIndicator.src = "/cards/C.svg";
-    round.colorIndicator.width = "40";
+    round.colorIndicator.width = 40;
     round.colorIndicator.style.display = "none";
     round.centerElement.append(round.colorIndicator);
 
@@ -266,7 +266,7 @@ const imageLoad = (image) =>
 {
     return new Promise((resolve) =>
     {
-        if (image.naturalWidth == 0 || !image.complete)
+        if (image.naturalWidth === 0 || !image.complete)
         {
             const load = () =>
             {
@@ -492,7 +492,7 @@ const handleMessage = async (msg, round) =>
             {
                 round.colorIndicator.style.display = "none";
                 const currentTurnPlayer = round.players[round.currentTurn];
-                changePlayerCards(round, currentTurnPlayer, -msg.cards.length);
+                await changePlayerCards(round, currentTurnPlayer, -msg.cards.length);
                 if (!currentTurnPlayer.isPlayer)
                 {
                     for (const cardName of msg.cards)
@@ -509,7 +509,7 @@ const handleMessage = async (msg, round) =>
                 }
 
                 const cardNr = msg.cards[0][0];
-                if (cardNr == '8')
+                if (cardNr === '8')
                 {
                     if (currentTurnPlayer.isPlayer)
                     {
@@ -520,11 +520,11 @@ const handleMessage = async (msg, round) =>
                 }
                 else
                 {
-                    if (cardNr == 'A')
+                    if (cardNr === 'A')
                     {
                         for (const player of round.players)
                         {
-                            if (player != currentTurnPlayer && !round.finishedPlayers.includes(player))
+                            if (player !== currentTurnPlayer && !round.finishedPlayers.includes(player))
                             {
                                 if (!player.isPlayer)
                                 {
@@ -537,7 +537,7 @@ const handleMessage = async (msg, round) =>
                             }
                         }
 
-                        if (!(currentTurnPlayer.isPlayer || round.hand.length == 0))
+                        if (!(currentTurnPlayer.isPlayer || round.hand.length === 0))
                         {
                             await drawSelf(round, msg.newCards);
                         }
@@ -573,7 +573,7 @@ const handleMessage = async (msg, round) =>
             {
                 await drawSelf(round, [msg.card]);
                 await changePlayerCards(round, round.players[round.currentTurn], 1);
-                if (round.draws == 3 && getValidMoves(round, []).length == 0)
+                if (round.draws === 3 && getValidMoves(round, []).length === 0)
                 {
                     document.removeEventListener('click', turnClick);
                     nextTurn(round);
@@ -601,11 +601,11 @@ const handleMessage = async (msg, round) =>
             {
                 round.players[msg.id].playerDiv.remove();
                 round.players.splice(msg.id, 1);
-                if (round.players.length == 1)
+                if (round.players.length === 1)
                 {
                     toVictory(round);
                 }
-                else if (round.currentTurn == msg.id)
+                else if (round.currentTurn === msg.id)
                 {
                     nextTurn(round);
                     if (round.players[round.currentTurn].isPlayer)
