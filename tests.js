@@ -147,9 +147,9 @@ const runWsTest = async (socketData, actions, name) => {
 	});
 };
 
-
-const lobbyValid = async () => {
-	return runWsTest(
+const wsLobbyTest = async () => {
+	let completedTests = 0;
+	completedTests += await runWsTest(
 		[
 			{
 				toReceive : [
@@ -195,10 +195,6 @@ const lobbyValid = async () => {
 		],
 		"Lobby valid"
 	);
-};
-
-const joinLobbyInvalid = async () => {
-	let completedTests = 0;
 	completedTests += await runWsTest(
 		[{toReceive : [], closeStep : 0, closeReason : "TMI"}],
 		[{id : 0, toSend : {gameId : "T8", name : "abcdefghijklmnopqrstuww"}}, undefined],
@@ -214,11 +210,6 @@ const joinLobbyInvalid = async () => {
 		[{id : 0, toSend : "Hello world"}],
 		"Bad data"
 	);
-	return completedTests;
-};
-
-const inLobbyInvalid = async () => {
-	let completedTests = 0;
 	completedTests += await runWsTest(
 		[{toReceive : [{event : "joined", players : []}], closeStep : 1}],
 		[
@@ -300,11 +291,13 @@ const testingDeck = [
 	'KC', '4S', 'KD', '4C', '5D', '3H'
   ];
   
-const playStandardT8 = async () => {
+const wsTestT8 = async () => {
 	tests.handleInit = (game) => {
-		game.handleInit(game, testingDeck.slice())
+		game.deck = testingDeck.slice();
+		game.handleInit(game)
 	}
-	return await runWsTest(
+	let completedTests = 0;
+	completedTests += await runWsTest(
 		[{
 			toReceive : [
 				{event : "joined", players : []}, {event : "join", name : "Beta", id : 1},
@@ -365,14 +358,11 @@ const playStandardT8 = async () => {
 			{id : 0, toSend : {action : "Place", cards : ["5D"]}},
 		],
 		"Valid T8 Game"
-	)
-};
-
-const invalidT8Playes = async () => {
+	);
 	tests.handleInit = (game) => {
-		game.handleInit(game, testingDeck.slice());
-	}
-	let completedTests = 0;
+		game.deck = testingDeck.slice();
+		game.handleInit(game);
+	};
 	completedTests += await runWsTest(
 		[
 			{
@@ -417,14 +407,9 @@ const invalidT8Playes = async () => {
 			
 		],
 		"Play on not your turn + play not in hand"
-	)
-	return completedTests;
-};
-
-
-const aceT8Plays = async () => {
+	);
 	tests.handleInit = (game) => {
-		game.handleInit(game, [
+		game.deck = [
 			'KC', '2C', '8D', '2D', 'JD', 'KH',
 			'KD', '9H', '6C', '8H', '9D', '9C',
 		 	'QC', '2H', '5H', '4S', '8S', '7C',
@@ -433,10 +418,10 @@ const aceT8Plays = async () => {
 			'AC', '6H', 'AD', '5S', '6S', '4H',
 			'6D', 'JC', '2S', '4D', '9S', 'JS',
 			'AS', 'JH', '3S', '3D', '3C', '3H'
-		]);
+		];
+		game.handleInit(game);
 	};
-	let completedTests = 0;
-	completedTests = await runWsTest(
+	completedTests += await runWsTest(
 		[
 			{
 				toReceive : [
@@ -512,19 +497,20 @@ const aceT8Plays = async () => {
 			{id : 0, toSend : {action : "Draw"}},
 			{id : 0, toSend : {action : "Place", cards : ["7S"]}},
 		], 
-		"Ace draw Play");
+		"Ace draw Play"
+	);
 	tests.handleInit = (game) => {
-		game.handleInit(game, 
-			[
-				'AC', '2S', '2D', '8D', 'QD', '7H',
-				'KD', '3S', '9D', 'QH', '3C', '4S',
-				'6D', 'QC', '4C', '3H', 'AD', '2C',
-				'6S', 'JD', '9S', '8S', 'JH', '9C',
-				'JC', 'KC', 'AH', '4H', '9H', '7D',
-				'4D', '6C', '6H', '5C', 'KS', 'KH',
-				'8H', '5D', 'AS', '7S', '7C', 'JS',
-				'8C', '5S', '2H', '3D', 'QS', '5H'
-			]);
+		game.deck = [
+			'AC', '2S', '2D', '8D', 'QD', '7H',
+			'KD', '3S', '9D', 'QH', '3C', '4S',
+			'6D', 'QC', '4C', '3H', 'AD', '2C',
+			'6S', 'JD', '9S', '8S', 'JH', '9C',
+			'JC', 'KC', 'AH', '4H', '9H', '7D',
+			'4D', '6C', '6H', '5C', 'KS', 'KH',
+			'8H', '5D', 'AS', '7S', '7C', 'JS',
+			'8C', '5S', '2H', '3D', 'QS', '5H'
+		];
+		game.handleInit(game);
 	};
 	completedTests += await runWsTest(
 		[
@@ -705,8 +691,134 @@ const aceT8Plays = async () => {
 			{id : 1, toSend: { action: 'Draw' }}
 		],
 		"Long ace draw test"
+	);
+	return completedTests;
+};
 
-	)
+const wsTestCN = async () => {
+	let completedTests = 0;
+	tests.handleInit = (game) => {
+		game.players[0].deck = [
+			'AC', '2S', '2D', '8D', 'QD', '7H',
+			'KD', '3S', '9D', 'QH', '3C', '4S', 'YR',
+			'8H', 'QC', '4C', '3H', 'AD', '2C',
+			'6C', 'JD', '9S', '8S', 'JH', '9C',
+			'JC', 'KC', 'AH',' YD', '4H', '9H', '7D',
+			'4D', '6S', '6H', '5C', 'KS', 'KH',
+			'6D', '5D', 'AS', '7S', '7C', 'JS',
+			'8C', '5S', '2H', '3D', 'QS', '5H'
+		];
+		game.players[1].deck = [
+			'4H', '2C', '8D', '2D', 'JD', 'KH', 'YR',
+			'KD', '9H', '6C', '8H', '9D', '9C',
+		 	'QC', '2H', '5H', '4S', '8S', '7C',
+			'5C', '7H', '7D', '7S', '4C', 'QD', 
+			'AH', 'QS', '5D', 'QH', 'KS', '8C',
+			'AC', '6H', 'AD', '5S', '6S', 'KC',
+			'6D', 'JC', '2S', 'YD', '4D', '9S', 'JS',
+			'AS', 'JH', '3S', '3D', '3C', '3H'
+		];
+		game.handleInit(game);
+	}
+	completedTests += await runWsTest(
+		[{
+			toReceive : [
+				{event : "joined", players : []},
+				{event : "join", name : "Beta", id : 1},
+				{event : "start", hand : ["5H", "QS", "3D", "2H", "5S", "8C", "JS", "7C"]},
+				{event : "place", card : "5H", side : 0, col : 0, pos : 0},
+				{event : "place", card : "3S", side : 1, col : 0, pos : 0},
+				{event : "place", card : "3D", side : 0, col : 1, pos : 0},
+				{event : "place", card : "3D", side : 1, col : 1, pos : 0},
+				{event : "place", card : "2H", side : 0, col : 2, pos : 0},
+				{event : "place", card : "3C", side : 1, col : 2, pos : 0},
+				{event : "place", card : "7C", newCard : "7S", side : 0, col : 0, pos : 1},
+				{event : "place", card : "JH", side : 0, col : 1, pos : 0},
+				{event : "place", card : "8C", newCard : "AS", side : 0, col : 0, pos : 2},
+				{event : "place", card : "AS", side : 1, col : 2, pos : 1},
+				{event : "place", card : "QS", newCard : "5D", side : 0, col : 0, pos : 2},
+				{event : "place", card : "YD", side : 1, col : 1, pos : 0},
+				{event : "place", card : "AS", newCard : "6D", side : 0, col : 0, pos : 3},
+				{event : "place", card : "4D", side : 1, col : 0, pos : 0},
+				{event : "place", card : "6D", newCard : "KH", side : 0, col : 1, pos : 0},
+				{event : "dismissCard"},
+				{event : "place", card : "KH", newCard : "KS", side : 0, col : 1, pos : 0},
+				{event : "dismissLane", col : 1},
+				{event : "place", card : "KS", newCard : "5C", side : 0, col : 1, pos : 0},
+				{event : "place", card : "6D", side : 1, col : 1, pos : 0},
+				{event : "place", card : "5C", newCard : "6H", side : 0, col : 2, pos : 1},
+				{event : "place", card : "KC", side : 0, col : 2, pos : 1},
+				{event : "place", card : "7S", newCard : "6S", side : 0, col : 2, pos : 2},
+				{event : "place", card : "9S", side : 1, col : 1, pos : 1},
+				{event : "place", card : "6S", newCard : "4D", side : 0, col : 2, pos : 3}
+			],
+			closeStep : 27,
+			closeReason : "Game is over"
+		}, {
+			toReceive : [
+				{event : "joined", players : ["Alpha"]},
+				{event : "start", hand : ["3H", "3C", "3D", "3S", "JH", "AS", "JS", "9S"]},
+				{event : "place", card : "5H", side : 0, col : 0, pos : 0},
+				{event : "place", card : "3S", side : 1, col : 0, pos : 0},
+				{event : "place", card : "3D", side : 0, col : 1, pos : 0},
+				{event : "place", card : "3D", side : 1, col : 1, pos : 0},
+				{event : "place", card : "2H", side : 0, col : 2, pos : 0},
+				{event : "place", card : "3C", side : 1, col : 2, pos : 0},
+				{event : "place", card : "7C", side : 0, col : 0, pos : 1},
+				{event : "place", card : "JH", newCard : "4D", side : 0, col : 1, pos : 0},
+				{event : "place", card : "8C", side : 0, col : 0, pos : 2},
+				{event : "place", card : "AS", newCard : "YD", side : 1, col : 2, pos : 1},
+				{event : "place", card : "QS", side : 0, col : 0, pos : 2},
+				{event : "place", card : "YD", newCard : "2S", side : 1, col : 1, pos : 0},
+				{event : "place", card : "AS", side : 0, col : 0, pos : 3},
+				{event : "place", card : "4D", newCard : "JC", side : 1, col : 0, pos : 0},
+				{event : "place", card : "6D", side : 0, col : 1, pos : 0},
+				{event : "dismissCard", newCard : "6D"},
+				{event : "place", card : "KH", side : 0, col : 1, pos : 0},
+				{event : "dismissLane", col : 1},
+				{event : "place", card : "KS", side : 0, col : 1, pos : 0},
+				{event : "place", card : "6D", newCard : "KC", side : 1, col : 1, pos : 0},
+				{event : "place", card : "5C", side : 0, col : 2, pos : 1},
+				{event : "place", card : "KC", newCard : "6S", side : 0, col : 2, pos : 1},
+				{event : "place", card : "7S", side : 0, col : 2, pos : 2},
+				{event : "place", card : "9S", newCard : "5S", side : 1, col : 1, pos : 1},
+				{event : "place", card : "6S", side : 0, col : 2, pos : 3}
+			],
+			closeStep : 27,
+			closeReason : "Game is over"
+		}],
+		[
+			{id : 0, toSend : {gameId : "CN", name : "Alpha"}},
+			{id : 1, toSend : {gameId : "CN", name : "Beta"}},
+			{id : 1, toSend : {action : "Start"}},
+			{id : 0, toSend : {action : "Place", card : "5H", side : 0, col : 0, pos : 0}},
+			{id : 1, toSend : {action : "Place", card : "3S", side : 1, col : 0, pos : 0}},
+			{id : 0, toSend : {action : "Place", card : "3D", side : 0, col : 1, pos : 0}},
+			{id : 1, toSend : {action : "Place", card : "3D", side : 1, col : 1, pos : 0}},
+			{id : 0, toSend : {action : "Place", card : "2H", side : 0, col : 2, pos : 0}},
+			{id : 1, toSend : {action : "Place", card : "3C", side : 1, col : 2, pos : 0}},
+			{id : 0, toSend : {action : "Place", card : "7C", side : 0, col : 0, pos : 1}},
+			{id : 1, toSend : {action : "Place", card : "JH", side : 0, col : 1, pos : 0}},
+			{id : 0, toSend : {action : "Place", card : "8C", side : 0, col : 0, pos : 2}},
+			{id : 1, toSend : {action : "Place", card : "AS", side : 1, col : 2, pos : 1}},
+			{id : 0, toSend : {action : "Place", card : "QS", side : 0, col : 0, pos : 2}},
+			{id : 1, toSend : {action : "Place", card : "YD", side : 1, col : 1, pos : 0}},
+			{id : 0, toSend : {action : "Place", card : "AS", side : 0, col : 0, pos : 3}},
+			{id : 1, toSend : {action : "Place", card : "4D", side : 1, col : 0, pos : 0}},
+			{id : 0, toSend : {action : "Place", card : "6D", side : 0, col : 1, pos : 0}},
+			{id : 1, toSend : {action : "DismissCard", card : "2S"}},
+			{id : 0, toSend : {action : "Place", card : "KH", side : 0, col : 1, pos : 0}},
+			{id : 1, toSend : {action : "DismissLane", col : 1}},
+			{id : 0, toSend : {action : "Place", card : "KS", side : 0, col : 1, pos : 0}},
+			{id : 1, toSend : {action : "Place", card : "6D", side : 1, col : 1, pos : 0}},
+			{id : 0, toSend : {action : "Place", card : "5C", side : 0, col : 2, pos : 1}},
+			{id : 1, toSend : {action : "Place", card : "KC", side : 0, col : 2, pos : 1}},
+			{id : 0, toSend : {action : "Place", card : "7S", side : 0, col : 2, pos : 2}},
+			{id : 1, toSend : {action : "Place", card : "9S", side : 1, col : 1, pos : 1}},
+			{id : 0, toSend : {action : "Place", card : "6S", side : 0, col : 2, pos : 3}}
+		],
+		"Valid CN game"
+	);
 	return completedTests;
 }
 
@@ -1159,6 +1271,23 @@ const unitTestsCN = () => {
 		],
 		"CN.placeSpecial joker unit test"
 	);
+	completedTests += runUnitTest(
+		[
+			fnEqTest(CN._getWinner, 
+				[[[{value : 5}, {value : 3}, {value : 20}], [{value : 21}, {value : 27}, {value : 20}]]], -1
+			),
+			fnEqTest(CN._getWinner,
+				[[[{value : 26}, {value : 26}, {value : 26}], [{value : 19}, {value : 20}, {value : 20}]]], 0
+			),
+			fnEqTest(CN._getWinner, 
+				[[[{value : 22}, {value : 23}, {value : 24}], [{value : 25}, {value : 26}, {value : 27}]]], 1
+			),	
+			fnEqTest(CN._getWinner, 
+				[[[{value : 26}, {value : 26}, {value : 22}], [{value : 19}, {value : 20}, {value : 22}]]], -1
+			)
+		],
+		"CN.getWinner unit test"
+	);
 	return completedTests;
 };
 
@@ -1172,12 +1301,9 @@ const tests = {
 		totalTests = 0;
 		completedTests += unitTestsT8();
 		completedTests += unitTestsCN();
-		completedTests += await lobbyValid();
-		completedTests += await joinLobbyInvalid();
-		completedTests += await inLobbyInvalid();
-		completedTests += await playStandardT8();
-		completedTests += await invalidT8Playes();
-		completedTests += await aceT8Plays();
+		completedTests += await wsLobbyTest();
+		completedTests += await wsTestT8();
+		completedTests += await wsTestCN();
 		testOut(`Passed ${completedTests} tests out of ${totalTests}`);
 		console.log = testOut;
 	},
