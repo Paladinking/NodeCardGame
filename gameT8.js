@@ -187,12 +187,11 @@ const handleT8Message = (data, game, player) => {
 
 };
 
-let handleT8Init = (game, deck) => {
-	if (deck == undefined) {
-		deck = gameModule.createDeck();
+let handleT8Init = (game) => {
+	if (!game.deck) {
+		game.deck = gameModule.createDeck();
 		gameModule.shuffleDeck(deck);
 	}
-	game.deck = deck;
 	game.turn = 0;
 	let index = 0;
 	while (game.deck[index][0] == 'A' || game.deck[index][0] == '8') {

@@ -138,15 +138,15 @@ const placeSpecial = (data, caravans, pile) => {
 const getWinner = (caravans) => {
 	let p0Wins = 0, p1Wins = 0;
 	for (let i = 0; i < 3; i++) {
-		const s0 = caravans[0][i].value;
-		const s1 = caravans[1][i].value;
+		let s0 = caravans[0][i].value;
+		let s1 = caravans[1][i].value;
 		s0 = s0 >= 21 && s0 <= 26 ? s0 : 0;
 		s1 = s1 >= 21 && s1 <= 26 ? s1 : 0;
 		if (s0 > s1) p0Wins += 1;
 		else if (s1 > s0) p1Wins += 1;
 	}
-	if (p1Wins + p2Wins == 3) {
-		if (p1Wins > p2Wins) return 0;
+	if (p0Wins + p1Wins == 3) {
+		if (p0Wins > p1Wins) return 0;
 		else return 1;
 	} else {
 		return -1;
@@ -159,7 +159,7 @@ const handlePlace = (data, game, player) => {
 		return;
 	}
 	if (
-		Object.keys(data) != 4 ||
+		Object.keys(data).length != 5 ||
 		typeof data.card != "string" ||
 		!Number.isInteger(data.side) || 
 		!Number.isInteger(data.col) || 
@@ -198,14 +198,14 @@ const handlePlace = (data, game, player) => {
 		winnder = (player.id + 1) % 2;
 		return;
 	}
-	game.players.forEach((player, id) => {
+	game.players.forEach((p, id) => {
 		if (id == player.id && newCard) {
-			player.send(`{"event" : "place", "card" : "${data.card}", "newCard" : "${newCard}"}`);
+			p.send(`{"event" : "place", "card" : "${data.card}", "newCard" : "${newCard}", "side" : ${data.side}, "col" : ${data.col}, "pos" : ${data.pos}}`);
 		} else {
-			player.send(`{"event" : "place", "card" : "${data.card}"}`);
+			p.send(`{"event" : "place", "card" : "${data.card}", "side" : ${data.side}, "col" : ${data.col}, "pos" : ${data.pos}}`);
 		}
 		if (winner != -1) {
-			player.close(1000, "Game is over");
+			p.close(1000, "Game is over");
 		}
 	});
 	if (game.turn == 1) {
@@ -222,7 +222,7 @@ const handlePlace = (data, game, player) => {
 }
 
 const handleDismissCard = (data, game, player) => {
-	if (Object.keys(data) != 2 || typeof data.card != 'string') {
+	if (Object.keys(data).length != 2 || typeof data.card != 'string') {
 		player.close(1000, "Bad message");
 		return;
 	}
@@ -249,7 +249,7 @@ const handleDismissCard = (data, game, player) => {
 };
 
 const handleDismissLane = (data, game, player) => {
-	if (Object.keys(data) != 2 || !Number.isInteger(data.col) || data.col < 0 || data.col > 2) {
+	if (Object.keys(data).length != 2 || !Number.isInteger(data.col) || data.col < 0 || data.col > 2) {
 		player.close(1000, "Bad message");
 		return;
 	}
@@ -261,6 +261,7 @@ const handleDismissLane = (data, game, player) => {
 	pile.cards.length = 0;
 	pile.value = 0;
 	updatePile(pile);
+	game.turn = (game.turn + 1) % 2;
 	const winner = getWinner(game.caravans);
 	for (const player of game.players) {
 		player.send(`{"event" : "dismissLane", "col" : ${data.col}}`);
@@ -309,8 +310,10 @@ const handleCNInit = (game) => {
 	game.setup = true;
 	game.setupStep = 0;
 	game.players.forEach((player) => {
-		player.deck = gameModule.createDeck(true);
-		gameModule.shuffleDeck(player.deck);
+		if (!player.deck) {
+			player.deck = gameModule.createDeck(true);
+			gameModule.shuffleDeck(player.deck);
+		}
 		player.playing = true;
 		player.hand = [];
 		for (let i = 0; i < 8; i++) {
