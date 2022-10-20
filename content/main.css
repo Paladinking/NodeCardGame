@@ -13,13 +13,15 @@ body
 
 .header
 {
-    border-width: 0px 0px 1px 0px;
+    border-width: 0 0 1px 0;
     border-color: grey;
     border-style: solid;
     width: 100%;
     height: fit-content;
     padding-bottom: 1rem;
     position: relative;
+    flex: 0 1 auto;
+    min-width: 45rem;
 }
 
 .main-title
@@ -113,18 +115,13 @@ body
 
 .description-container:hover>.description
 {
-    margin-top: 0rem;
+    margin-top: 0;
 }
 
 .box
 {
     display: flex;
     flex-flow: column;
-}
-
-.box .header
-{
-    flex: 0 1 auto;
 }
 
 .content
@@ -138,6 +135,7 @@ body
 {
     width: 100%;
     height: 100%;
+    min-width: 25rem;
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -176,7 +174,7 @@ body
     position: relative;
     transition-property: height, width, left, right, top, bottom, transform;
     transition-duration: 0.3s;
-    top: 0px;
+    top: 0;
 }
 
 .hoverable-card:hover>img
@@ -204,7 +202,7 @@ body
     height: 100%;
     font-size: 20px;
     border-bottom: 1px solid black;
-    margin-left: 0rem;
+    margin-left: 0;
 }
 
 .player-box
@@ -256,7 +254,7 @@ body
 
     to
     {
-        margin-left: 0rem;
+        margin-left: 0;
     }
 }
 
@@ -333,7 +331,7 @@ body
     overflow: hidden;
     padding: 1rem;
     z-index: 53;
-    box-shadow: 0px 0px 20px;
+    box-shadow: 0 0 20px;
 }
 
 .color-pick-container img
@@ -383,7 +381,7 @@ body
         from
         {
             opacity: 0;
-            left: 0px;
+            left: 0;
         }
     }
 
@@ -398,7 +396,7 @@ body
 {
     /*background-color: #6fce6f;*/
     left: -20vw;
-    box-shadow: -4px 2px 0px 0px rgb(0 0 0), -7px 4px 0px 0px rgb(255 255 255), -11px 7px 0px 0px rgb(0 0 0);
+    box-shadow: -4px 2px 0 0 rgb(0 0 0), -7px 4px 0 0 rgb(255 255 255), -11px 7px 0 0 rgb(0 0 0);
 }
 
 .player-sidebar
@@ -535,7 +533,7 @@ body
 .restart-button
 {
     position: absolute;
-    top: 0px;
+    top: 0;
     width: 12rem;
     height: 4rem;
     background-color: #b9e9ff;
@@ -554,11 +552,92 @@ body
 
 }
 
+.chat
+{
+    position: absolute;
+    top: 10rem;
+    left: 22rem;
+    height: 5rem;
+    width: 5rem;
+    border-radius: 2.5rem;
+    background-color: #78e078;
+    cursor: pointer;
+    text-align: center;
+}
+
+.chat::after
+{
+    content: "";
+    position: absolute;
+    left: 83%;
+    top: 40px;
+    border-left: 26px solid #78e078;
+    border-top: 23px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-bottom-left-radius: 4px;
+    border-top-left-radius: 8px;
+}
+
+.chat-option
+{
+    z-index: 1000;
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    border-radius: inherit;
+    background-color: #7092ff;
+    animation: move-out 0.3s;
+    transition: transform 0.3s;
+}
+
+@keyframes move-out
+{
+    from
+    {
+        top: 0;
+        left: 0;
+    }
+}
+
+.chat-option:nth-child(1)
+{
+    top: 10rem;
+}
+
+.chat-option:nth-child(2)
+{
+    left: 9.5rem;
+    top: 3.1rem;
+}
+
+.chat-option:nth-child(3)
+{
+    left: 5.9rem;
+    top: -8.1rem;
+}
+
+.chat-option:nth-child(4)
+{
+    left: -5.9rem;
+    top: -8.1rem;
+}
+
+.chat-option:nth-child(5)
+{
+    left: -9.5rem;
+    top: 3.1rem;
+}
+
+.chat-option:hover
+{
+    transform: scale(1.2);
+}
+
 @keyframes popup
 {
     from
     {
-        height: 0rem;
+        height: 0;
     }
 }
 

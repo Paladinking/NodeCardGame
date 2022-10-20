@@ -48,7 +48,7 @@ const adjustTurn = (game) => {
 		}
 		game.turn = (game.turn + 1) % game.players.length;
 	}
-	console.err("Nobody left playing...");
+	console.error("Nobody left playing...");
 }
 
 const game = {

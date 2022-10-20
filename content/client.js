@@ -21,13 +21,23 @@ const showErrorMessage = (error, longError, reason) =>
     </div>`;
 };
 
+const setUpChat = () =>
+{
+    const chat = {};
+    chat.element = document.querySelector('#chat');
+    chat.handleMessage = () =>
+    {
+
+    };
+    return chat;
+};
+
 const init = (name) =>
 {
     const players = [];
     const ul = document.querySelector('#playlist');
     ul.innerHTML = "";
     const playersSpan = document.querySelector('#players');
-
 
     const createPlayer = (name, newPlayer = true) =>
     {
@@ -45,9 +55,22 @@ const init = (name) =>
         return player;
     };
 
+    const cover = document.createElement('div');
+    cover.classList.add('error-wrap');
+    setTimeout(() => //covers screen if connection takes more than 200ms, just to show that something is happening
+    {
+        if (gameState !== LOBBY)
+        {
+            document.body.append(cover);
+        }
+    }, 200);
+
+
     let wsckt = new WebSocket("ws://" + window.location.href.split('//')[1].split('?')[0]);
     wsckt.addEventListener('open', () =>
     {
+        const chat = setUpChat();
+        cover.remove();
         noLeaveWarning = false;
         gameState = LOBBY;
         wsckt.send(JSON.stringify({ "gameId": gameId, "name": name }));
@@ -56,7 +79,11 @@ const init = (name) =>
             console.log(e.data);
             const msg = JSON.parse(e.data);
             console.log(msg);
-            if (gameState == LOBBY)
+            if (msg.event === 'chat')
+            {
+                chat.handleMessage(msg);
+            }
+            else if (gameState === LOBBY)
             {
                 switch (msg.event)
                 {
@@ -90,7 +117,7 @@ const init = (name) =>
                                         .catch(() =>
                                         {
                                             const close = new CloseEvent("close", { code: 1000, reason: 'Could not load new game' });
-                                            round.wsckt.dispatchEvent(close);
+                                            wsckt.dispatchEvent(close);
                                         }
                                         ))
                                         .text(), 'text/html')
@@ -104,7 +131,7 @@ const init = (name) =>
                         }
                 }
             }
-            else if (gameState = IN_GAME)
+            else if (gameState === IN_GAME)
             {
                 game.handleMessage(msg);
             }
@@ -113,9 +140,9 @@ const init = (name) =>
         wsckt.addEventListener('close', (event) =>
         {
             noLeaveWarning = true;
-            if (event.reason != "Game is over")
+            if (event.reason !== "Game is over")
             {
-                showErrorMessage("Connection closed", "The connection to the server was closed unexpectedly", `${event.reason.length != 0 ? `Reason: ${event.reason}` : "Thats all we know."}`);
+                showErrorMessage("Connection closed", "The connection to the server was closed unexpectedly", `${event.reason.length !== 0 ? `Reason: ${event.reason}` : "Thats all we know."}`);
             }
         });
         document.querySelector('#start-button').setAttribute('available', "true");
@@ -129,14 +156,6 @@ const init = (name) =>
             else
             {
                 document.querySelector('#start-button').animate([{ left: "0px" }, { left: "7px" }, { left: "0px" }, { left: "-7px" }, { left: "0px" }], 150);
-            }
-        });
-        window.addEventListener('beforeunload', (e) =>
-        {
-            if (!noLeaveWarning)
-            {
-                e.preventDefault();
-                return e.returnValue = "Are you sure you want to exit?";
             }
         });
     });
@@ -156,14 +175,14 @@ const startBackgroundCards = (stopOnGameState = LOBBY) =>
         main.prepend(card);
         const animate = () =>
         {
-            if (gameState != stopOnGameState)
+            if (gameState !== stopOnGameState)
             {
                 const timing = 2000 + Math.floor(Math.random() * 10000);
                 const x = Math.floor(Math.random() * main.offsetWidth + 200) - 400;
                 const y = -200;
-                const xOffset = (50 + Math.floor(Math.random() * 100)) * (Math.round(Math.random()) == 0 ? -1 : 1);
+                const xOffset = (50 + Math.floor(Math.random() * 100)) * (Math.round(Math.random()) === 0 ? -1 : 1);
                 const yOffset = (main.offsetHeight + 200);
-                const rotation = Math.floor(Math.random() * 180) * (Math.round(Math.random()) == 0 ? -1 : 1);
+                const rotation = Math.floor(Math.random() * 180) * (Math.round(Math.random()) === 0 ? -1 : 1);
                 card.style.transform = `rotate(${rotation}deg)`;
                 card.animate(
                     [{
@@ -191,6 +210,14 @@ document.querySelector('#join-button').addEventListener('click', () =>
     const name = document.querySelector('#join-input').value;
     if (name && name.length < 21)
     {
+        window.addEventListener('beforeunload', (e) =>
+        {
+            if (!noLeaveWarning)
+            {
+                e.preventDefault();
+                return e.returnValue = "Are you sure you want to exit?";
+            }
+        });
         init(name);
     }
 });
