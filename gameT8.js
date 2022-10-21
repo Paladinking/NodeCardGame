@@ -190,7 +190,7 @@ const handleT8Message = (data, game, player) => {
 let handleT8Init = (game) => {
 	if (!game.deck) {
 		game.deck = gameModule.createDeck();
-		gameModule.shuffleDeck(deck);
+		gameModule.shuffleDeck(game.deck);
 	}
 	game.turn = 0;
 	let index = 0;
