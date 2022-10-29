@@ -443,7 +443,7 @@ const animateShuffle = (round) =>
                 top: `${-window.innerHeight}px`
             }],
             {
-                duration: 700, easing: "ease", direction: "alternate"
+                duration: 700, easing: "ease", direction: "alternate", iterations: 2
             });
         setTimeout(() =>
         {
