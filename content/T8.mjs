@@ -420,11 +420,11 @@ const animateShuffle = (round) =>
 {
     return new Promise((resolve) =>
     {
-        const cardsToRemove = round.tableCards.splice(0, round.tableCards.length);
-        const animations = [];
+        const cardsToRemove = round.tableCards.splice(0, round.tableCards.length-1);
+        const topCard = round.tableCards[0];
         for (const card of cardsToRemove)
         {
-            animations.push(card.element.animate([
+            card.element.animate([
                 {
 
                 },
@@ -433,27 +433,21 @@ const animateShuffle = (round) =>
                 }],
                 {
                     duration: 700, easing: "ease", fill: "forwards"
-                }));
+                });
         }
+        topCard.animate([
+            {
+                
+            },
+            {
+                top: `${-window.innerHeight}px`
+            }],
+            {
+                duration: 700, easing: "ease", direction: "alternate"
+            });
         setTimeout(() =>
         {
-            const topCard = cardsToRemove.pop();
-            round.tableCards.push(topCard);
             topCard.element.style.zIndex = "0";
-            for (const animation of animations)
-            {
-                animation.cancel();
-            }
-            topCard.element.animate([
-                {
-                    top: `${-window.innerHeight}px`
-                },
-                {
-                    top: `${window.innerHeight < 1200 ? "-200px" : "-400px"}`
-                }],
-                {
-                    duration: 700, easing: "ease"
-                });
             cardsToRemove.forEach((card) =>
             {
                 card.element.remove();
@@ -462,7 +456,7 @@ const animateShuffle = (round) =>
             {
                 resolve();
             }, 750);
-        }, 750);
+        }, 700);
     });
 };
 
