@@ -738,6 +738,7 @@ body
     overflow-y: auto;
     background: white;
     height: 70vh;
+	width: calc(100% - 2rem - 2px);
     border: 1px solid grey;
     border-radius: 0 0 10px 10px;
     border-top: none;
