@@ -33,6 +33,17 @@
                 </button>
             </main>
         </div>
+        <div class = "rules-wrapper">
+            <aside class = "rules">
+                <%
+                    return {
+                        "Vändåtta" : require('./T8rules.html.ejs')(),
+                        "Caravan" : require('./CNrules.html.ejs')()
+                    }[gameName];
+                %>
+            </aside>
+            <button class = "rules-button" id = "rules">Regler</button>
+        </div>
         <div class = "chat" id = "chat" style="display: none;">
             <div class = "chat-option"></div>
             <div class = "chat-option"></div>

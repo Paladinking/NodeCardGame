@@ -2,7 +2,7 @@
 
 const createDeck = (jokers = false) => {
 	let deck = [];
-	for (const number of "A23456789JQK") {
+	for (const number of "A23456789TJQK") {
 		for (const color of "SCDH") {
 			deck.push(number + color);
 		}

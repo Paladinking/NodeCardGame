@@ -1,5 +1,5 @@
 "use strict";
-const CARD_NUMBERS = "A23456789JQK";
+const CARD_NUMBERS = "A23456789TJQK";
 const CARD_COLORS = "SCDH";
 const LOBBY = 0, IN_GAME = 1;
 const gameId = window.location.pathname.substring(1, 3);
@@ -21,13 +21,11 @@ const showErrorMessage = (error, longError, reason) =>
     </div>`;
 };
 
-const setUpChat = () =>
+const setUpChat = (wsckt) =>
 {
-    const chat = {};
-    chat.element = document.querySelector('#chat');
-    chat.handleMessage = () =>
-    {
-
+    const chat = {
+        element: document.querySelector('#chat'),
+        send: (msg) => { wsckt.send(`{"action": "Chat", "msg": "${msg}"}`); }
     };
     return chat;
 };
@@ -62,6 +60,7 @@ const init = (name) =>
         if (gameState !== LOBBY)
         {
             document.body.append(cover);
+            cover.animate([{ opacity: 0 }, {}], 200);
         }
     }, 200);
 
@@ -69,7 +68,7 @@ const init = (name) =>
     let wsckt = new WebSocket("ws://" + window.location.href.split('//')[1].split('?')[0]);
     wsckt.addEventListener('open', () =>
     {
-        const chat = setUpChat();
+        const chat = setUpChat(wsckt);
         cover.remove();
         noLeaveWarning = false;
         gameState = LOBBY;
@@ -79,11 +78,7 @@ const init = (name) =>
             console.log(e.data);
             const msg = JSON.parse(e.data);
             console.log(msg);
-            if (msg.event === 'chat')
-            {
-                chat.handleMessage(msg);
-            }
-            else if (gameState === LOBBY)
+            if (gameState === LOBBY)
             {
                 switch (msg.event)
                 {
@@ -108,6 +103,11 @@ const init = (name) =>
                             playersSpan.innerText = players.length;
                             break;
                         }
+                    case 'chat':
+                        {
+                            const li = ul.querySelectorAll('li')[msg.id];
+                            break;
+                        }
                     case 'start':
                         {
                             game.startGame(wsckt, msg, players, startBackgroundCards, async () => 
@@ -125,7 +125,7 @@ const init = (name) =>
                                 init(name);
                                 gameState = undefined;
                                 startBackgroundCards(IN_GAME);
-                            });
+                            }, chat);
                             gameState = IN_GAME;
                             break;
                         }
@@ -221,4 +221,16 @@ document.querySelector('#join-button').addEventListener('click', () =>
         init(name);
     }
 });
+
+let rulesOpen = false
+const rulesWrapper = document.querySelector('#rules').parentElement
+document.querySelector('#rules').addEventListener('click', ()=>
+{
+    rulesOpen = !rulesOpen;
+    rulesWrapper.style.top = rulesOpen ? "0" : null;
+})
+
+
+
+
 startBackgroundCards(IN_GAME);

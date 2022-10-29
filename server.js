@@ -69,7 +69,7 @@ let folderContent = {
 };
 
 
-for (const number of "A23456789JQK") {
+for (const number of "A23456789TJQK") {
 	for (const color of "SCDH") {
 		folderContent[`/cards/${number}${color}.svg`] = contentTypes.svg;
 	}
