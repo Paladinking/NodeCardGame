@@ -185,6 +185,7 @@ const makeTurn = (round) =>
             {
                 round.draws++;
                 round.wsckt.send(`{"action":"Draw"}`);
+                document.removeEventListener('click', turnClick);
                 return;
             }
         }
@@ -583,6 +584,10 @@ const handleMessage = async (msg, round) =>
                 {
                     document.removeEventListener('click', turnClick);
                     nextTurn(round);
+                }
+                else
+                {
+                    makeTurn(round);
                 }
                 break;
             }
