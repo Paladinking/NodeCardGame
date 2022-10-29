@@ -239,6 +239,7 @@ body
 {
     position: absolute;
     top: -200rem;
+    user-select: none;
 }
 
 .playing-card
@@ -388,6 +389,7 @@ body
     position: absolute;
     left: 17rem;
     z-index: 1;
+    user-select: none;
 }
 
 .confirm-button:hover
@@ -431,6 +433,7 @@ body
     padding: 10px;
     animation: show-up 0.3s;
     z-index: 1;
+    user-select: none;
 }
 
 .table-card
