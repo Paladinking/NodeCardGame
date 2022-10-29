@@ -222,13 +222,24 @@ document.querySelector('#join-button').addEventListener('click', () =>
     }
 });
 
-let rulesOpen = false
-const rulesWrapper = document.querySelector('#rules').parentElement
-document.querySelector('#rules').addEventListener('click', ()=>
+let rulesOpen = false;
+const rulesWrapper = document.querySelector('#rules');
+document.querySelector('#rules').addEventListener('click', (e) =>
 {
-    rulesOpen = !rulesOpen;
-    rulesWrapper.style.top = rulesOpen ? "0" : null;
-})
+    if (!rulesOpen)
+    {
+        rulesOpen = true;
+        rulesWrapper.style.top = "0";
+    }
+    else
+    {
+        if(e.target.id==="rules-button")
+        {
+            rulesOpen = false;
+            rulesWrapper.style.top = null;
+        }
+    }
+});
 
 
 

@@ -5,10 +5,18 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+:root
+{
+    --minor-button-color: #c6e4f8;
+    --minor-button-color-hover: #acd4f8;
+}
+
 html,
 body
 {
     height: 100%;
+    background-color: #eaf8ff;
+
 }
 
 .header
@@ -22,6 +30,7 @@ body
     position: relative;
     flex: 0 1 auto;
     min-width: 45rem;
+    background-color: white;
 }
 
 .main-title
@@ -56,20 +65,90 @@ body
     position: relative;
     overflow: hidden;
     transition-property: transform, width, height;
-    transition-duration: 0.3s;
+    transition-duration: 2s, 0.3s, 0.3s;
     color: black;
     text-decoration: none;
+    background-color: white;
 }
 
 .game-container:hover
 {
-    transform: scale(1.09);
+    transform: scale(1.1);
+}
+
+.game-icon-background-wrapper
+{
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    display: none;
+    opacity: 0.9;
+}
+
+.game-container:hover .game-icon-background-wrapper
+{
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    justify-content: space-around;
+    align-items: center;
+    row-gap: 1rem;
+
+}
+
+.game-icon-background-wrapper img
+{
+    animation-name: wobble;
+    animation-timing-function: ease;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+.game-icon-background-wrapper img:nth-child(1)
+{
+    transform: rotate3d(2, 2, 1, 317deg);
+    animation-delay: 0s;
+    animation-duration: 2.3s;
+}
+.game-icon-background-wrapper img:nth-child(2)
+{
+    transform: rotate3d(1, 2, 1,186deg);
+    animation-delay: 0.3s;
+    animation-duration: 3.3s;
+}
+.game-icon-background-wrapper img:nth-child(3)
+{
+    transform: rotate3d(2, 2, 1, 127deg);
+    animation-delay: 1.5s;
+    animation-duration: 3s;
+}
+.game-icon-background-wrapper img:nth-child(4)
+{
+    transform: rotate3d(2, 3, 1, 97deg);
+    animation-delay: 0.8s;
+    animation-duration: 3.5s;
+}
+
+@keyframes wobble 
+{
+    50%
+    {
+        transform: rotate3d(0, 0, 0, 0);
+    }
+    100%
+    {
+        transform: rotate3d(1, 1, 1, 45deg);
+    }    
 }
 
 .game-title
 {
     text-align: center;
     font-size: 100px;
+}
+
+.game-container:hover .game-title
+{
+    display: none;
 }
 
 .center
@@ -84,7 +163,7 @@ body
 {
     width: 100%;
     height: 17rem;
-    background-color: #dbdbdb;
+    background-color: var(--minor-button-color);
     position: absolute;
     top: 17rem;
     display: flex;
@@ -96,7 +175,7 @@ body
 
 .description-container:hover
 {
-    top: 3rem;
+    top: 6rem;
 }
 
 
@@ -149,7 +228,7 @@ body
 {
     font-size: 40px;
     position: relative;
-    background-color: #a8cefa;
+    background-color: var(--minor-button-color);
     border-radius: 3rem;
     width: 18rem;
     text-align: center;
@@ -187,7 +266,7 @@ body
     width: 20rem;
     min-width: 20rem;
     height: 100%;
-    background-color: #c6e4f8;
+    background-color: var(--minor-button-color);
 }
 
 .playlist
@@ -536,7 +615,7 @@ body
     top: 0;
     width: 12rem;
     height: 4rem;
-    background-color: #b9e9ff;
+    background-color: var(--minor-button-color);
     text-align: center;
     font-size: 40px;
     font-weight: 300;
@@ -548,7 +627,7 @@ body
 
 .restart-button:hover
 {
-    background-color: #9adcfa;
+    background-color: var(--minor-button-color-hover);
 
 }
 
@@ -644,6 +723,13 @@ body
     flex-direction: column;
     align-items: center;
     top: calc(-70vh - 2rem - 2px);
+    cursor: pointer;
+}
+
+.rules-wrapper:hover
+{
+    top: calc(-70vh - 1rem);
+
 }
 
 .rules
@@ -668,7 +754,7 @@ body
     border-bottom: 1px solid white;
 }
 
-.rules > h4
+.rules>h4
 {
     margin-top: 10px;
 }
@@ -712,6 +798,11 @@ body
         font-size: 70px;
     }
 
+    .game-icon-background-wrapper img
+    {
+        width: 90px;
+    }
+
     .description-container
     {
         top: 12rem;
@@ -727,6 +818,7 @@ body
     {
         font-size: 0.8em;
     }
+    
 }
 
 @media screen and (max-width: 500px)
