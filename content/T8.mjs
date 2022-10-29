@@ -116,7 +116,7 @@ const getValidMoves = (round, placedCards) =>
     const topCard = round.tableCards[round.tableCards.length - 1].name;
     for (const card of round.hand)
     {
-        if (card.name[0] !== 8)//card is not an eight
+        if (card.name[0] !== "8")//card is not an eight
         {
             if (((placedCards.length === 0 && validPlacement(topCard, card.name))  //card can either be placed on the top card or on a previusly placed card
                 || (placedCards.length > 0 && placedCards[0].name[0] === card.name[0]))
