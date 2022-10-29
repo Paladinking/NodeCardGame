@@ -230,13 +230,14 @@ document.querySelector('#rules').addEventListener('click', (e) =>
     {
         rulesOpen = true;
         rulesWrapper.style.top = "0";
+		rulesWrapper.style.cursor = "initial";
     }
     else
     {
         if(e.target.id==="rules-button")
         {
             rulesOpen = false;
-            rulesWrapper.style.top = null;
+            rulesWrapper.style = null;
         }
     }
 });
