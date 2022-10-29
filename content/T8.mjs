@@ -1,5 +1,5 @@
 "use strict";
-const CARD_NUMBERS = "23456789JQKA";
+const CARD_NUMBERS = "23456789TJQKA";
 const CARD_COLORS = "SCDH";
 let smallScreen = window.innerWidth < 1700 || window.innerHeight < 1200;
 let onResize;
