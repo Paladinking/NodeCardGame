@@ -28,7 +28,7 @@ const sortHand = (hand) =>
         for (let j = i + 1; j < hand.length; j++)
         {
             if (hand[i].name[0] === hand[j].name[0])
-            { f
+            {
                 if (CARD_COLORS.indexOf(hand[i].name[1]) > CARD_COLORS.indexOf(hand[j].name[1]))
                 {
                     const card = hand[i];
