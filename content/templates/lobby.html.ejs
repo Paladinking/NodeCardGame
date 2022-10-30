@@ -37,10 +37,7 @@
             <aside class = "rules">
                 <div class = "inner-rules">
                     <%
-                        return {
-                            "Vändåtta" : require('./T8rules.html.ejs')(),
-                            "Caravan" : require('./CNrules.html.ejs')()
-                        }[gameName];
+                        return require(`./${rulesFile}`)();
                     %>
                 </div>
             </aside>

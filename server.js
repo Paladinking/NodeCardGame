@@ -54,8 +54,8 @@ let folderContent = {
 	"/main.css" : contentTypes.css,
 	"/index.js" : contentTypes.js,
 	"/favicon.ico" : contentTypes.icon,
-	"/T8" : templateContent(contentTypes.html, "/lobby.html.ejs", {jsFile : "T8.mjs", gameName : "Vändåtta", minPlayers: 2}),
-	"/CN" : templateContent(contentTypes.html, "/lobby.html.ejs", {jsFile : "CN.mjs", gameName : "Caravan", minPlayers: 2}),
+	"/T8" : templateContent(contentTypes.html, "/lobby.html.ejs", {jsFile : "T8.mjs", rulesFile: "T8rules.html.ejs", gameName : "Vändåtta", minPlayers: 2}),
+	"/CN" : templateContent(contentTypes.html, "/lobby.html.ejs", {jsFile : "CN.mjs", rulesFile: "CNrules.html.ejs", gameName : "Caravan", minPlayers: 2}),
 	"/client.js" : contentTypes.js,
 	"/T8.mjs" : contentTypes.js,
 	"/CN.mjs" : contentTypes.js,
@@ -102,7 +102,7 @@ const handleGet = (req, res) => {
 	if (resObj.status == 200) {
 		if (resObj.template) {
 			res.writeHead(200, {'Content-Type' : resObj.contentType});
-			res.write(renderFile("./content" + resObj.templateFile, resObj.args));
+			res.write(renderFile("./content/templates" + resObj.templateFile, resObj.args));
 			res.end();
 		} else if (resObj.plain) {
 			fs.readFile("./content" + resObj.url, "utf8", (err, data) => {
