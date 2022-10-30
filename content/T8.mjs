@@ -1,12 +1,25 @@
 "use strict";
 const CARD_NUMBERS = "23456789TJQKA";
 const CARD_COLORS = "SCDH";
+
 const SMALL_WIDTH = 1700, SMALL_HEIGHT = 1200, SHORT_HEIGHT = 700, PLAYER_DIV_SMALL = 130;
 let smallScreen = window.innerWidth < SMALL_WIDTH || window.innerHeight < SMALL_HEIGHT;
 let shortHeight = window.innerHeight < SHORT_HEIGHT;
 
-
 let onResize;
+const toAnimate = [];
+let animating = false;
+
+const startAnimationQueue = async () =>
+{
+    animating = true;
+    while (toAnimate.length > 0)
+    {
+        const [animation] = toAnimate.splice(0, 1);
+        await animation();
+    }
+    animating = false;
+};
 
 const sortHand = (hand) =>
 {
@@ -311,6 +324,7 @@ const toVictory = (round) =>
 const nextTurn = (round, toAnimate) => //does not start the next round for the relevant player
 {
     const prevTurn = round.currentTurn;
+    const currentTurn = (round.currentTurn + 1) % round.players.length;
     toAnimate.push(async () => 
     {
         if (round.players[prevTurn])
@@ -340,16 +354,16 @@ const nextTurn = (round, toAnimate) => //does not start the next round for the r
             }
         }
 
-        if (!round.players[round.currentTurn].isPlayer)
+        if (!round.players[currentTurn].isPlayer)
         {
-            round.players[round.currentTurn].playerDiv.classList.add('current-round');
+            round.players[currentTurn].playerDiv.classList.add('current-round');
         }
         else
         {
-            yourTurnAnimate(round);
+            await yourTurnAnimate(round);
         }
     });
-    round.currentTurn = (round.currentTurn + 1) % round.players.length;
+    round.currentTurn = currentTurn;
     round.draws = 0;
     if (round.finishedPlayers.includes(round.players[round.currentTurn]))
     {
@@ -423,7 +437,7 @@ const shuffle = (round) =>
         const cardsToRemove = round.tableCards.splice(0, round.tableCards.length - 1);
         const topCard = round.tableCards[0];
         const sumOfHands = round.players.reduce((sum, cur) => sum + cur.cards, 0);
-        round.totalCards = 51 - sumOfHands + round.totalCards;
+        round.deckCards = 51 - sumOfHands + round.deckCards;
         for (const card of cardsToRemove)
         {
             card.element.animate([
@@ -458,7 +472,7 @@ const shuffle = (round) =>
     });
 };
 
-const yourTurnAnimate = (round) =>
+const yourTurnAnimate = async (round) =>
 {
     const msg = document.createElement('div');
     msg.classList.add('your-turn-message', 'turn-message');
@@ -471,7 +485,7 @@ const changePlayerCards = (round, player, amount) =>
 {
     if (amount > 0)
     {
-        round.totalCards -= amount;
+        round.deckCards -= amount;
     }
     player.cards += amount;
     if (!player.isPlayer)
@@ -616,7 +630,6 @@ const handlePlace = (msg, round, toAnimate) =>
 
 const handleMessage = async (msg, round) =>
 {
-    const toAnimate = [];
     switch (msg.event)
     {
         case 'place':
@@ -687,7 +700,10 @@ const handleMessage = async (msg, round) =>
                 round.players.splice(msg.id, 1);
                 if (round.players.length === 1)
                 {
-                    toVictory(round);
+                    toAnimate.push(async () =>
+                    {
+                        toVictory(round);
+                    });
                 }
                 else if (round.currentTurn === msg.id)
                 {
@@ -703,27 +719,45 @@ const handleMessage = async (msg, round) =>
                 }
             }
     }
-    for (const animation of toAnimate) 
+    if (round.deckCards <= 0)
     {
-        await animation();
+        toAnimate.push(async () =>
+        {
+            await shuffle(round);
+        });
     }
-    if (round.totalCards <= 0)
+    if (!animating)
     {
-        await shuffle(round);
+        startAnimationQueue();
     }
 };
 
 const initPlayers = async (round) =>
 {
     const sidebar = document.querySelector('#sidebar');
-    for (const player of round.players)
+    const playerIndex = round.players.findIndex((player) => player.isPlayer);
+    const playerBasedOrder = [round.players[playerIndex]];
+    for (let i = playerIndex + 1; i < round.players.length; i++)
+    {
+        playerBasedOrder.push(round.players[i]);
+    }
+    for (let i = 0; i < playerIndex; i++)
+    {
+        playerBasedOrder.push(round.players[i]);
+    }
+
+    playerBasedOrder.forEach((player, i) =>
     {
         if (!player.isPlayer)
         {
             const playerDiv = document.createElement('div');
             playerDiv.classList.add('player-div');
             playerDiv.innerHTML = `<h2></h2> <h3>${player.cards}</h3> ${player.isPlayer ? `` : `<div class = "other-hand-wrapper"></div>`}`;
-            playerDiv.firstElementChild.innerText = `${player.name}${player.isPlayer ? ' (Du)' : ""}`;
+            playerDiv.firstElementChild.innerText = player.name;
+            if (playerIndex < i)
+            {
+
+            }
             sidebar.append(playerDiv);
             player.hand = createHand(new Array(player.cards).fill("Card_back"), false);
             playerDiv.hand = playerDiv.lastElementChild;
@@ -745,8 +779,8 @@ const initPlayers = async (round) =>
             }
             player.playerDiv = playerDiv;
         }
+    });
 
-    };
     if (!round.players[round.currentTurn].isPlayer)
     {
         round.players[round.currentTurn].playerDiv.classList.add('current-round');
@@ -820,7 +854,7 @@ export const game =
             colorIndicator: document.createElement('img'),
             finishedPlayers: [],
             restart: onRestart,
-            totalCards: 51 - 7 * players.length,
+            deckCards: 51 - 7 * players.length,
             startVictoryCards: onGameEnd
         };
         onResize = async () =>
