@@ -1,7 +1,11 @@
 "use strict";
 const CARD_NUMBERS = "23456789TJQKA";
 const CARD_COLORS = "SCDH";
-let smallScreen = window.innerWidth < 1700 || window.innerHeight < 1200;
+const SMALL_WIDTH = 1700, SMALL_HEIGHT = 1200, SHORT_HEIGHT = 700, PLAYER_DIV_SMALL = 130;
+let smallScreen = window.innerWidth < SMALL_WIDTH || window.innerHeight < SMALL_HEIGHT;
+let shortHeight = window.innerHeight < SHORT_HEIGHT;
+
+
 let onResize;
 
 const sortHand = (hand) =>
@@ -42,23 +46,28 @@ const createCardElement = (cardName) =>
     card.classList.add('playing-card', 'card-wrapper');
     const width = smallScreen ? 120 : 160;
     card.innerHTML = `<img src = "/cards/${cardName}.svg" draggable = "false" width = ${width}>`;
-    card.style.top = "initial";
     return card;
 };
 
-const updateHand = (hand) =>
+const updateHand = (hand, width, height = 100, hoverable = true) =>
 {
     hand = sortHand(hand);
-    const width = hand.length <= 2 ? 150 : 350;
+    if (!width)
+    {
+        width = hand.length <= 2 ? 150 : 350;
+    }
     for (let i = 0; i < hand.length; i++)
     {
         const card = hand[i].element;
-        card.classList.add('hoverable-card');
+        if (hoverable)
+        {
+            card.classList.add('hoverable-card');
+        }
         const percentage = hand.length === 1 ? 0.5 : i / (hand.length - 1);
         const degrees = hand.length === 2 ? 20 : 38;
         const rotation = (percentage * degrees * 2) - degrees;
         card.style.transform = `rotate(${rotation}deg)`;
-        const top = Math.abs(percentage * 100 - 50);
+        const top = Math.abs(percentage * height - height / 2);
         card.style.top = `${top}px`;
         const left = percentage * width - width / 2 - card.firstElementChild.width / 2;
         card.style.left = `${left}px`;
@@ -77,7 +86,6 @@ const createHand = (hand, append = false) =>
         {
             document.querySelector('#center-div').append(card);
         }
-
         cards.push({ element: card, name: cardName });
     }
     return cards;
@@ -86,13 +94,6 @@ const createHand = (hand, append = false) =>
 const isClicked = (clickTarget, parentElement) =>
 {
     return clickTarget === parentElement || parentElement.contains(clickTarget);
-};
-
-const drawDeck = (round) =>
-{
-    round.deckElement.classList.add('deck');
-    round.centerElement.append(round.deckElement);
-    round.deckElement.style.top = `${window.innerHeight < 1200 ? -200 : -400}px`;
 };
 
 const makeTableCard = (card, zIndex) =>
@@ -191,7 +192,7 @@ const makeTurn = (round) =>
                 {
                     const returnedCard = placedCards.pop();
                     round.tableCards.pop();
-                    returnedCard.element.style.top = `${window.innerHeight < 1200 ? -200 : -400}px`;
+                    returnedCard.element.style.top = `${window.innerHeight < SMALL_HEIGHT ? -200 : -400}px`;
                     returnedCard.element.classList.remove('table-card');
                     round.hand.push(returnedCard);
                     updateHand(round.hand);
@@ -214,50 +215,6 @@ const makeTurn = (round) =>
         }
     };
     document.addEventListener('click', turnClick);
-};
-
-const initGraphics = (round) =>
-{
-    drawDeck(round);
-    updateHand(round.hand);
-    round.confirmButton.classList.add('confirm-button');
-    round.centerElement.append(round.confirmButton);
-    round.centerElement.append(round.tableCards[0].element);
-    round.tableCards[0].element.style.left = `${-1 * round.tableCards[0].element.firstElementChild.width / 2}px`;
-    round.confirmButton.style.display = "none";
-    round.confirmButton.innerText = "OK";
-
-    round.colorIndicator.classList.add('color-indicator');
-    round.colorIndicator.src = "/cards/C.svg";
-    round.colorIndicator.width = 40;
-    round.colorIndicator.style.display = "none";
-    round.centerElement.append(round.colorIndicator);
-
-    const sidebar = document.querySelector('#sidebar');
-    for (const player of round.players)
-    {
-        const playerDiv = document.createElement('div');
-        playerDiv.classList.add('player-div');
-        let isPlayerString = "";
-        if (player.isPlayer)
-        {
-            isPlayerString = " (Du)";
-        }
-        playerDiv.innerHTML = `<h2>${player.name}${isPlayerString}</h2><br><h3>7<h3>`;
-        sidebar.append(playerDiv);
-        player.playerDiv = playerDiv;
-    }
-    round.players[round.currentTurn].playerDiv.classList.add('current-round');
-};
-
-const initGame = async (round) =>
-{
-    initGraphics(round);
-
-    if (round.players[round.currentTurn].isPlayer)
-    {
-        makeTurn(round);
-    }
 };
 
 const imageLoad = (image) =>
@@ -351,15 +308,33 @@ const toVictory = (round) =>
 
 };
 
-const nextTurn = (round) => //does not start the next round for the relevant player
+const nextTurn = (round, toAnimate) => //does not start the next round for the relevant player
 {
-    round.players[round.currentTurn].playerDiv.classList.remove('current-round');
+    const prevTurn = round.currentTurn;
+    toAnimate.push(async () => 
+    {
+        if (round.players[prevTurn] && !round.players[prevTurn].isPlayer)
+        {
+            round.players[prevTurn].playerDiv.classList.remove('current-round');
+        }
+
+        if (!round.players[round.currentTurn].isPlayer)
+        {
+            round.players[round.currentTurn].playerDiv.classList.add('current-round');
+        }
+        else
+        {
+            toAnimate.push(async () =>
+            {
+                yourTurnAnimate(round);
+            });
+        }
+    });
     round.currentTurn = (round.currentTurn + 1) % round.players.length;
-    round.players[round.currentTurn].playerDiv.classList.add('current-round');
     round.draws = 0;
     if (round.finishedPlayers.includes(round.players[round.currentTurn]))
     {
-        nextTurn(round);
+        nextTurn(round, toAnimate);
     }
 
 };
@@ -374,33 +349,49 @@ const drawSelf = (round, newCardNames, toAnimate) =>
         toAnimate.push(async () =>
         {
             await imageLoad(newCard.element.firstElementChild);
-            animateCard(newCard.element, { top: round.deckElement.style.top, left: "-20rem" }, 300);
+            animateCard(newCard.element, { top: `${window.innerHeight < SMALL_HEIGHT ? -200 : -400}px`, left: "-20rem" }, 300);
             round.centerElement.append(newCard.element);
+            await wait(300);
         });
     }
 };
 
-const drawOtherAnimate = async (round, player) =>
+const drawOtherAnimate = async (player) =>
 {
     return new Promise(async (resolve) =>
     {
-        const animatedCard = createCardElement('Card_back');
-        await imageLoad(animatedCard.firstElementChild);
-        const top = player.playerDiv.offsetTop + animatedCard.offsetHeight / 2;
-        animatedCard.animate([
+        const [card] = createHand(["Card_back"], false);
+        player.hand.push(card);
+        card.element.firstElementChild.width = shortHeight ? 45 : 70;
+        const sidebar = document.querySelector('#sidebar');
+        updateHand(player.hand, sidebar.offsetWidth / (shortHeight ? 3 : 2), (shortHeight ? 30 : 40), false);
+        await imageLoad(card.element.firstElementChild);
+        const top = (window.innerHeight < SMALL_HEIGHT ? -200 : -400) + (sidebar.offsetHeight / 2 - (player.playerDiv.offsetTop + player.playerDiv.hand.offsetTop + 40));
+        card.element.animate([
             {
-                top: round.deckElement.style.top, left: "-20vw", zIndex: 100
+                top: `${top}px`,
+                left: "calc(-70vw + 7.5rem)",
+                zIndex: 100,
             },
             {
-                top: `${top - round.centerElement.parentElement.offsetHeight / 2}px`, left: `${window.innerWidth / 2 + 200}px`, zIndex: 100
+                zIndex: 100
             }],
             {
-                duration: 700, easing: "ease", fill: "forwards"
+                duration: 300, easing: "ease"
             });
-        round.centerElement.append(animatedCard);
+        card.element.firstElementChild.animate([
+            {
+                width: `${smallScreen ? 120 : 160}px`
+            },
+            {
+
+            }],
+            {
+                duration: 300, easing: "ease"
+            });
+        player.playerDiv.hand.append(card.element);
         setTimeout(() =>
         {
-            animatedCard.remove();
             resolve();
         }, 750);
     });
@@ -417,9 +408,7 @@ const shuffle = (round) =>
         for (const card of cardsToRemove)
         {
             card.element.animate([
-                {
-
-                },
+                {},
                 {
                     top: `${-window.innerHeight}px`
                 }],
@@ -428,9 +417,7 @@ const shuffle = (round) =>
                 });
         }
         topCard.element.animate([
-            {
-
-            },
+            {},
             {
                 top: `${-window.innerHeight}px`
             }],
@@ -452,6 +439,22 @@ const shuffle = (round) =>
     });
 };
 
+const yourTurnAnimate = (round) =>
+{
+    const msg = document.createElement('div');
+    msg.classList.add('turn-message');
+    msg.innerText = "Din tur!";
+    round.centerElement.parentElement.append(msg);
+    setTimeout(() =>
+    {
+        msg.animate([{}, { top: "-4rem" }], { duration: 300, easing: "ease", fill: "forwards" });
+        setTimeout(() =>
+        {
+            msg.remove();
+        }, 300);
+    }, 1000);
+};
+
 const changePlayerCards = (round, player, amount) =>
 {
     if (amount > 0)
@@ -459,11 +462,143 @@ const changePlayerCards = (round, player, amount) =>
         round.totalCards -= amount;
     }
     player.cards += amount;
-    player.playerDiv.querySelector('h3').innerText = player.cards;
+    if (!player.isPlayer)
+    {
+        player.playerDiv.querySelector('h3').innerText = player.cards;
+    }
     if (player.cards <= 0)
     {
         round.finishedPlayers.push(player);
-        player.playerDiv.classList.add('won');
+        if (player.playerDiv)
+        {
+            player.playerDiv.classList.add('won');
+        }
+    }
+};
+
+const placeCardAnimate = (round, player, card) =>
+{
+    return new Promise(async (resolve) =>
+    {
+        if (player && player.playerDiv)
+        {
+            const cardToMove = player.hand.pop();
+            const sidebar = document.querySelector('#sidebar');
+            updateHand(player.hand, sidebar.offsetWidth / (shortHeight ? 3 : 2), (shortHeight ? 30 : 40), false);
+            await imageLoad(card.element.firstElementChild);
+            const top = -(sidebar.offsetHeight / 2 - (player.playerDiv.offsetTop + player.playerDiv.hand.offsetTop + 40));
+            card.element.animate([
+                {
+                    top: `${top}px`,
+                    left: `calc(50vw - 7.5rem + ${cardToMove.element.style.left})`,
+                    transform: cardToMove.element.style.transform,
+                    zIndex: 100,
+                },
+                {
+                    zIndex: 100
+                }],
+                {
+                    duration: 300, easing: "ease"
+                });
+            card.element.firstElementChild.animate([
+                {
+                    width: `${shortHeight ? 45 : 70}px`
+                },
+                {
+
+                }],
+                {
+                    duration: 300, easing: "ease"
+                });
+            cardToMove.element.remove();
+        }
+        round.centerElement.append(card.element);
+        setTimeout(() =>
+        {
+            resolve();
+        }, 750);
+    });
+};
+
+const handlePlace = (msg, round, toAnimate) =>
+{
+    round.colorIndicator.style.display = "none";
+    const prevTurn = round.currentTurn;
+    const currentTurnPlayer = round.players[round.currentTurn];
+    changePlayerCards(round, currentTurnPlayer, -msg.cards.length);
+    const remainingPlayers = round.players.reduce((sum, cur) => sum + (round.finishedPlayers.includes(cur) ? 0 : 1), 0);
+    if (!currentTurnPlayer.isPlayer)
+    {
+        for (const cardName of msg.cards)
+        {
+            const card = createCardElement(cardName);
+            card.style.top = null;
+            makeTableCard(card, round.tableCards.length);
+            round.tableCards.push({ element: card, name: cardName });
+            toAnimate.push(async () =>
+            {
+                await placeCardAnimate(round, round.players[prevTurn], { element: card, name: cardName });
+                await wait(300);
+            });
+        }
+    }
+
+    const cardNr = msg.cards[0][0];
+    if (cardNr === '8')
+    {
+        if (currentTurnPlayer.isPlayer)
+        {
+            chooseColorPopup(round);
+        }
+    }
+    else
+    {
+        if (cardNr === 'A')
+        {
+            for (const player of round.players)
+            {
+                if (player !== currentTurnPlayer && !round.finishedPlayers.includes(player))
+                {
+                    if (!player.isPlayer)
+                    {
+                        for (let i = 0; i < msg.cards.length; i++)
+                        {
+                            toAnimate.push(async () =>
+                            {
+                                await drawOtherAnimate(player);
+                                await wait(300);
+                            });
+                        }
+                    }
+                    changePlayerCards(round, player, msg.cards.length);
+                }
+            }
+
+            if (!(currentTurnPlayer.isPlayer || round.hand.length === 0))
+            {
+                drawSelf(round, msg.newCards, toAnimate);
+            }
+            round.draws = 0;
+        }
+        else
+        {
+            if (remainingPlayers <= 1)
+            {
+                toAnimate.push(async () =>
+                {
+                    toVictory(round);
+                });
+            }
+            else
+            {
+                nextTurn(round, toAnimate);
+            }
+        }
+        if (round.players[round.currentTurn].isPlayer && remainingPlayers > 1)
+        {
+            makeTurn(round);
+        }
+
     }
 };
 
@@ -474,85 +609,7 @@ const handleMessage = async (msg, round) =>
     {
         case 'place':
             {
-                round.colorIndicator.style.display = "none";
-                const currentTurnPlayer = round.players[round.currentTurn];
-                changePlayerCards(round, currentTurnPlayer, -msg.cards.length);
-                const remainingPlayers = round.players.reduce((sum, cur) => sum + (round.finishedPlayers.includes(cur) ? 0 : 1), 0);
-                console.log(remainingPlayers);
-                if (!currentTurnPlayer.isPlayer)
-                {
-                    for (const cardName of msg.cards)
-                    {
-                        const card = createCardElement(cardName);
-                        card.style.top = null;
-                        makeTableCard(card, round.tableCards.length);
-                        round.tableCards.push({ element: card, name: cardName });
-                        toAnimate.push(async () =>
-                        {
-                            await imageLoad(card.firstElementChild);
-                            animateCard(card, { top: `${window.innerHeight < 1200 ? -400 : -600}px` }, 300);
-                            round.centerElement.append(card);
-                            await wait(500);
-                        });
-                    }
-                }
-
-                const cardNr = msg.cards[0][0];
-                if (cardNr === '8')
-                {
-                    if (currentTurnPlayer.isPlayer)
-                    {
-                        chooseColorPopup(round);
-                    }
-                }
-                else
-                {
-                    if (cardNr === 'A')
-                    {
-                        for (const player of round.players)
-                        {
-                            if (player !== currentTurnPlayer && !round.finishedPlayers.includes(player))
-                            {
-                                if (!player.isPlayer)
-                                {
-                                    for (let i = 0; i < msg.cards.length; i++)
-                                    {
-                                        toAnimate.push(async () =>
-                                        {
-                                            await drawOtherAnimate(round, player);
-                                        });
-                                    }
-                                }
-                                changePlayerCards(round, player, msg.cards.length);
-                            }
-                        }
-
-                        if (!(currentTurnPlayer.isPlayer || round.hand.length === 0))
-                        {
-                            drawSelf(round, msg.newCards, toAnimate);
-                        }
-                        round.draws = 0;
-                    }
-                    else
-                    {
-                        if (remainingPlayers <= 1)
-                        {
-                            toAnimate.push(async () =>
-                            {
-                                toVictory(round);
-                            });
-                        }
-                        else
-                        {
-                            nextTurn(round);
-                        }
-                    }
-                    if (round.players[round.currentTurn].isPlayer && remainingPlayers > 1)
-                    {
-                        makeTurn(round);
-                    }
-
-                }
+                handlePlace(msg, round, toAnimate);
                 break;
             }
         case 'chooseColor':
@@ -565,7 +622,7 @@ const handleMessage = async (msg, round) =>
                     await imageLoad(round.colorIndicator);
                     round.colorIndicator.style.display = null;
                 });
-                nextTurn(round);
+                nextTurn(round, toAnimate);
                 if (round.players[round.currentTurn].isPlayer)
                 {
                     makeTurn(round);
@@ -579,7 +636,7 @@ const handleMessage = async (msg, round) =>
                 changePlayerCards(round, round.players[round.currentTurn], 1);
                 if (round.draws === 3 && getValidMoves(round, []).length === 0)
                 {
-                    nextTurn(round);
+                    nextTurn(round, toAnimate);
                 }
                 else
                 {
@@ -590,15 +647,16 @@ const handleMessage = async (msg, round) =>
         case 'drawOther':
             {
                 round.draws++;
+                const currentTurnPlayer = round.players[round.currentTurn];
                 toAnimate.push(async () =>
                 {
-                    await drawOtherAnimate(round, round.players[round.currentTurn]);
+                    await drawOtherAnimate(currentTurnPlayer);
                 });
                 changePlayerCards(round, round.players[round.currentTurn], 1);
                 if (msg.passed)
                 {
                     round.draws = 0;
-                    nextTurn(round);
+                    nextTurn(round, toAnimate);
                     if (round.players[round.currentTurn].isPlayer)
                     {
                         makeTurn(round);
@@ -609,7 +667,11 @@ const handleMessage = async (msg, round) =>
             }
         case 'leave':
             {
-                round.players[msg.id].playerDiv.remove();
+                const playerDiv = round.players[msg.id].playerDiv;
+                toAnimate.push(async () =>
+                {
+                    playerDiv.remove();
+                });
                 round.players.splice(msg.id, 1);
                 if (round.players.length === 1)
                 {
@@ -617,7 +679,7 @@ const handleMessage = async (msg, round) =>
                 }
                 else if (round.currentTurn === msg.id)
                 {
-                    nextTurn(round);
+                    nextTurn(round, toAnimate);
                     if (round.players[round.currentTurn].isPlayer)
                     {
                         makeTurn(round);
@@ -636,6 +698,81 @@ const handleMessage = async (msg, round) =>
     if (round.totalCards <= 0)
     {
         await shuffle(round);
+    }
+};
+
+const initPlayers = async (round) =>
+{
+    const sidebar = document.querySelector('#sidebar');
+    for (const player of round.players)
+    {
+        if (!player.isPlayer)
+        {
+            const playerDiv = document.createElement('div');
+            playerDiv.classList.add('player-div');
+            playerDiv.innerHTML = `<h2></h2> <h3>${player.cards}</h3> ${player.isPlayer ? `` : `<div class = "other-hand-wrapper"></div>`}`;
+            playerDiv.firstElementChild.innerText = `${player.name}${player.isPlayer ? ' (Du)' : ""}`;
+            sidebar.append(playerDiv);
+            player.hand = createHand(new Array(player.cards).fill("Card_back"), false);
+            playerDiv.hand = playerDiv.lastElementChild;
+
+            for (const card of player.hand)
+            {
+                card.element.firstElementChild.width = shortHeight ? 45 : 70;
+                playerDiv.hand.append(card.element);
+            }
+            updateHand(player.hand, sidebar.offsetWidth / (shortHeight ? 3 : 2), (shortHeight ? 30 : 40), false);
+            const noOtherHand = playerDiv.offsetHeight < PLAYER_DIV_SMALL;
+            if (noOtherHand)
+            {
+                playerDiv.hand.style.display = "none";
+            }
+            else
+            {
+                playerDiv.querySelector('h3').style.display = "none";
+            }
+            player.playerDiv = playerDiv;
+        }
+
+    };
+    if (!round.players[round.currentTurn].isPlayer)
+    {
+        round.players[round.currentTurn].playerDiv.classList.add('current-round');
+    }
+};
+
+const initGraphics = (round) =>
+{
+    round.deckElement.classList.add('deck');
+    round.centerElement.append(round.deckElement);
+
+    updateHand(round.hand);
+
+    round.confirmButton.classList.add('confirm-button');
+    round.confirmButton.style.display = "none";
+    round.confirmButton.innerText = "OK";
+    round.centerElement.append(round.confirmButton);
+
+    round.tableCards[0].element.style.left = `${-1 * round.tableCards[0].element.firstElementChild.width / 2}px`;
+    round.centerElement.append(round.tableCards[0].element);
+
+    round.colorIndicator.classList.add('color-indicator');
+    round.colorIndicator.src = "/cards/C.svg";
+    round.colorIndicator.width = 40;
+    round.colorIndicator.style.display = "none";
+    round.centerElement.append(round.colorIndicator);
+
+    initPlayers(round);
+};
+
+const initGame = async (round) =>
+{
+    initGraphics(round);
+
+    if (round.players[round.currentTurn].isPlayer)
+    {
+        makeTurn(round);
+        yourTurnAnimate(round);
     }
 };
 
@@ -668,13 +805,31 @@ export const game =
         };
         onResize = async () =>
         {
-            smallScreen = window.innerWidth < 1700 || window.innerHeight < 1200;
-            const allCardsElements = document.querySelectorAll('.card-wrapper');
-            allCardsElements.forEach((card) =>
+            smallScreen = window.innerWidth < SMALL_WIDTH || window.innerHeight < SMALL_HEIGHT;
+            shortHeight = window.innerHeight < SHORT_HEIGHT;
+            const playingCardElements = round.centerElement.querySelectorAll('.card-wrapper');
+            playingCardElements.forEach((card) =>
             {
                 card.firstElementChild.width = smallScreen ? 120 : 160;
             });
-            round.deckElement.style.top = `${window.innerHeight < 1200 ? -200 : -400}px`;
+            updateHand(round.hand);
+
+            const sideBarCardElements = document.querySelector('#sidebar').querySelectorAll('.card-wrapper');
+            sideBarCardElements.forEach((card) =>
+            {
+                card.firstElementChild.width = shortHeight ? 45 : 70;
+            });
+            const sidebar = document.querySelector('#sidebar');
+            round.players.forEach((player) =>
+            {
+                if (!player.isPlayer)
+                {
+                    const noOtherHand = player.playerDiv.offsetHeight < PLAYER_DIV_SMALL;
+                    updateHand(player.hand, sidebar.offsetWidth / (shortHeight ? 3 : 2), (shortHeight ? 30 : 40), false);
+                    player.playerDiv.hand.style.display = noOtherHand ? "none" : null;
+                    player.playerDiv.querySelector('h3').style.display = noOtherHand ? null : "none";
+                }
+            });
         };
         window.addEventListener('resize', onResize);
         game.handleMessage = (msg) =>
@@ -683,8 +838,8 @@ export const game =
         };
         game.statusDump = () =>
         {
-            console.log(round)
-        }
+            console.log(round);
+        };
         initGame(round);
     },
     maxPlayers: 5,

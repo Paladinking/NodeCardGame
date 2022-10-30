@@ -109,18 +109,21 @@ body
     animation-delay: 0s;
     animation-duration: 2.3s;
 }
+
 .game-icon-background-wrapper img:nth-child(2)
 {
-    transform: rotate3d(1, 2, 1,186deg);
+    transform: rotate3d(1, 2, 1, 186deg);
     animation-delay: 0.3s;
     animation-duration: 3.3s;
 }
+
 .game-icon-background-wrapper img:nth-child(3)
 {
     transform: rotate3d(2, 2, 1, 127deg);
     animation-delay: 1.5s;
     animation-duration: 3s;
 }
+
 .game-icon-background-wrapper img:nth-child(4)
 {
     transform: rotate3d(2, 3, 1, 97deg);
@@ -128,16 +131,17 @@ body
     animation-duration: 3.5s;
 }
 
-@keyframes wobble 
+@keyframes wobble
 {
     50%
     {
         transform: rotate3d(0, 0, 0, 0);
     }
+
     100%
     {
         transform: rotate3d(1, 1, 1, 45deg);
-    }    
+    }
 }
 
 .game-title
@@ -238,7 +242,6 @@ body
 .card-wrapper
 {
     position: absolute;
-    top: -200rem;
     user-select: none;
 }
 
@@ -450,12 +453,25 @@ body
     }
 }
 
+.deck
+{
+    top: -25rem;
+    left: -20vw;
+    box-shadow: -4px 2px 0 0 rgb(0 0 0), -7px 4px 0 0 rgb(255 255 255), -11px 7px 0 0 rgb(0 0 0);
+}
+
+
 @media screen and (max-height: 1200px)
 {
     .color-indicator
     {
         top: -200px;
         left: 100px;
+    }
+
+    .deck
+    {
+        top: -12.5rem;
     }
 
     @keyframes show-up
@@ -473,14 +489,6 @@ body
     }
 }
 
-
-.deck
-{
-    /*background-color: #6fce6f;*/
-    left: -20vw;
-    box-shadow: -4px 2px 0 0 rgb(0 0 0), -7px 4px 0 0 rgb(255 255 255), -11px 7px 0 0 rgb(0 0 0);
-}
-
 .player-sidebar
 {
     right: 0;
@@ -490,8 +498,11 @@ body
     background: #ffffff;
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    box-sizing: border-box;
 }
 
 .player-div
@@ -518,6 +529,35 @@ body
 {
     font-size: 0.81em;
     color: gray;
+}
+
+.other-hand-wrapper
+{
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 5rem;
+}
+
+.turn-message
+{
+    animation: from-top 0.3s forwards;
+    position: absolute;
+    top:2rem;
+    background-color: var(--minor-button-color);
+    z-index: 999;
+    font-size: 1.5em;
+    padding: 1rem;
+    border-radius: 1.5rem;
+}
+
+@keyframes from-top 
+{
+    from
+    {
+        top: -4rem;
+    }    
 }
 
 .error-wrap
@@ -740,7 +780,7 @@ body
 {
     top: 0;
     cursor: initial;
-    
+
 }
 
 .rules
@@ -749,7 +789,7 @@ body
     overflow-y: hidden;
     background: white;
     height: calc(70vh + 2rem);
-	width: calc(100% - 2rem - 2px);
+    width: calc(100% - 2rem - 2px);
     border: 1px solid grey;
     border-radius: 0 0 10px 10px;
     border-top: none;
@@ -762,7 +802,8 @@ body
     width: inherit;
     overflow-y: hidden;
 }
-.inner-rules > *:last-child
+
+.inner-rules>*:last-child
 {
     padding-bottom: 1rem;
 }
@@ -772,7 +813,7 @@ body
     overflow-y: initial;
 }
 
-.rules-wrapper[open="true"] > .rules
+.rules-wrapper[open="true"]>.rules
 {
     overflow-y: auto;
     height: 70vh;
@@ -844,16 +885,6 @@ body
         height: 12rem;
     }
 
-    .player-sidebar
-    {
-        width: 7rem;
-    }
-
-    .player-div
-    {
-        font-size: 0.8em;
-    }
-    
 }
 
 @media screen and (max-width: 500px)

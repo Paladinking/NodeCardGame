@@ -112,7 +112,7 @@ const init = (name) =>
                         {
                             game.startGame(wsckt, msg, players, startBackgroundCards, async () => 
                             {
-                                const rawFetch = await fetch(`/${gameId}`).catch(() => {});
+                                const rawFetch = await fetch(`/${gameId}`).catch(() => { });
                                 if (rawFetch && rawFetch.ok)
                                 {
                                     const parsed = new DOMParser().parseFromString(await rawFetch.text(), 'text/html');
@@ -192,7 +192,11 @@ const startBackgroundCards = (stopOnGameState = LOBBY) =>
                     {
                         left: `${x + xOffset}px`,
                         top: `${y + yOffset}px`
-                    }], timing);
+                    }],
+                    {
+                        duration: timing,
+                        fill: "forwards"
+                    });
                 setTimeout((animate), timing);
             }
             else
@@ -247,4 +251,4 @@ startBackgroundCards(IN_GAME);
 const statusDump = () =>
 {
     game.statusDump();
-}
+};
