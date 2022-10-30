@@ -128,6 +128,9 @@ const handleGet = (req, res) => {
 };
 
 const isValidMsg = (msg, requiredKeys) => {
+	if (Object.hasOwn(msg, "__proto__") || Object.hasOwn(msg, "constructor") || Object.hasOwn(msg, "prototype")) {
+		return false;
+	}
 	for (const key of requiredKeys) {
 		if (msg[key] == undefined) return false;
 	}
@@ -177,7 +180,7 @@ socketServer.on("connection", (socket, req) => {
 		}
 		console.log(data);
 		if (socket.player.status == UNIDENTIFIED) {
-			if (!isValidMsg(data, ["gameId", "name"])) {
+			if (!isValidMsg(data, ["gameId", "name"]) || !Object.keys(data).length == 2) {
 				socket.close(1000, "Invalid message");
 				return;
 			}
