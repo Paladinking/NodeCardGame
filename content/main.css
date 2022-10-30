@@ -544,12 +544,28 @@ body
 {
     animation: from-top 0.3s forwards;
     position: absolute;
-    top:2rem;
+    top: 0;
     background-color: var(--minor-button-color);
     z-index: 999;
+}
+
+.your-turn-message
+{
+    left:0rem;
+    font-size: 2em;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    border-radius: 0 0 3rem 0;
+}
+
+.start-turn-message
+{
     font-size: 1.5em;
     padding: 1rem;
     border-radius: 1.5rem;
+    margin-top: 1rem;
 }
 
 @keyframes from-top 

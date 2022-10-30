@@ -313,9 +313,31 @@ const nextTurn = (round, toAnimate) => //does not start the next round for the r
     const prevTurn = round.currentTurn;
     toAnimate.push(async () => 
     {
-        if (round.players[prevTurn] && !round.players[prevTurn].isPlayer)
+        if (round.players[prevTurn])
         {
-            round.players[prevTurn].playerDiv.classList.remove('current-round');
+            if (round.players[prevTurn].isPlayer)
+            {
+                const msg = document.querySelector('#turn-msg');
+                msg.animate([{}, { top: "-4rem" }], { duration: 300, easing: "ease", fill: "forwards" });
+                setTimeout(() =>
+                {
+                    msg.remove();
+                }, 300);
+
+            }
+            else
+            {
+                round.players[prevTurn].playerDiv.classList.remove('current-round');
+                const msg = document.querySelector('#start-turn-msg');
+                if (msg)
+                {
+                    msg.animate([{}, { top: "-4rem" }], { duration: 300, easing: "ease", fill: "forwards" });
+                    setTimeout(() =>
+                    {
+                        msg.remove();
+                    }, 300);
+                }
+            }
         }
 
         if (!round.players[round.currentTurn].isPlayer)
@@ -324,10 +346,7 @@ const nextTurn = (round, toAnimate) => //does not start the next round for the r
         }
         else
         {
-            toAnimate.push(async () =>
-            {
-                yourTurnAnimate(round);
-            });
+            yourTurnAnimate(round);
         }
     });
     round.currentTurn = (round.currentTurn + 1) % round.players.length;
@@ -377,7 +396,7 @@ const drawOtherAnimate = async (player) =>
                 zIndex: 100
             }],
             {
-                duration: 300, easing: "ease"
+                duration: 500, easing: "ease"
             });
         card.element.firstElementChild.animate([
             {
@@ -387,7 +406,7 @@ const drawOtherAnimate = async (player) =>
 
             }],
             {
-                duration: 300, easing: "ease"
+                duration: 500, easing: "ease"
             });
         player.playerDiv.hand.append(card.element);
         setTimeout(() =>
@@ -442,17 +461,10 @@ const shuffle = (round) =>
 const yourTurnAnimate = (round) =>
 {
     const msg = document.createElement('div');
-    msg.classList.add('turn-message');
+    msg.classList.add('your-turn-message', 'turn-message');
+    msg.id = "turn-msg";
     msg.innerText = "Din tur!";
     round.centerElement.parentElement.append(msg);
-    setTimeout(() =>
-    {
-        msg.animate([{}, { top: "-4rem" }], { duration: 300, easing: "ease", fill: "forwards" });
-        setTimeout(() =>
-        {
-            msg.remove();
-        }, 300);
-    }, 1000);
 };
 
 const changePlayerCards = (round, player, amount) =>
@@ -498,7 +510,7 @@ const placeCardAnimate = (round, player, card) =>
                     zIndex: 100
                 }],
                 {
-                    duration: 300, easing: "ease"
+                    duration: 600, easing: "ease"
                 });
             card.element.firstElementChild.animate([
                 {
@@ -508,7 +520,7 @@ const placeCardAnimate = (round, player, card) =>
 
                 }],
                 {
-                    duration: 300, easing: "ease"
+                    duration: 600, easing: "ease"
                 });
             cardToMove.element.remove();
         }
@@ -773,6 +785,14 @@ const initGame = async (round) =>
     {
         makeTurn(round);
         yourTurnAnimate(round);
+    }
+    else
+    {
+        const msg = document.createElement('div');
+        msg.classList.add('start-turn-message', 'turn-message');
+        msg.id = "start-turn-msg";
+        msg.innerText = `${round.players[round.currentTurn].name} börjar!`;
+        document.querySelector('#sidebar').append(msg);
     }
 };
 
