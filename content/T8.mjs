@@ -28,7 +28,7 @@ const sortHand = (hand) =>
         for (let j = i + 1; j < hand.length; j++)
         {
             if (hand[i].name[0] === hand[j].name[0])
-            {
+            { f
                 if (CARD_COLORS.indexOf(hand[i].name[1]) > CARD_COLORS.indexOf(hand[j].name[1]))
                 {
                     const card = hand[i];
@@ -321,7 +321,7 @@ const toVictory = (round) =>
 
 };
 
-const nextTurn = (round, toAnimate) => //does not start the next round for the relevant player
+const nextTurn = (round) => //does not start the next round for the relevant player
 {
     const prevTurn = round.currentTurn;
     const currentTurn = (round.currentTurn + 1) % round.players.length;
@@ -367,12 +367,12 @@ const nextTurn = (round, toAnimate) => //does not start the next round for the r
     round.draws = 0;
     if (round.finishedPlayers.includes(round.players[round.currentTurn]))
     {
-        nextTurn(round, toAnimate);
+        nextTurn(round);
     }
 
 };
 
-const drawSelf = (round, newCardNames, toAnimate) =>
+const drawSelf = (round, newCardNames) =>
 {
     const newCards = createHand(newCardNames);
     round.hand.push(...newCards);
@@ -546,7 +546,7 @@ const placeCardAnimate = (round, player, card) =>
     });
 };
 
-const handlePlace = (msg, round, toAnimate) =>
+const handlePlace = (msg, round) =>
 {
     round.colorIndicator.style.display = "none";
     const prevTurn = round.currentTurn;
@@ -602,7 +602,7 @@ const handlePlace = (msg, round, toAnimate) =>
 
             if (!(currentTurnPlayer.isPlayer || round.hand.length === 0))
             {
-                drawSelf(round, msg.newCards, toAnimate);
+                drawSelf(round, msg.newCards);
             }
             round.draws = 0;
         }
@@ -617,7 +617,7 @@ const handlePlace = (msg, round, toAnimate) =>
             }
             else
             {
-                nextTurn(round, toAnimate);
+                nextTurn(round);
             }
         }
         if (round.players[round.currentTurn].isPlayer && remainingPlayers > 1)
@@ -634,7 +634,7 @@ const handleMessage = async (msg, round) =>
     {
         case 'place':
             {
-                handlePlace(msg, round, toAnimate);
+                handlePlace(msg, round);
                 break;
             }
         case 'chooseColor':
@@ -647,7 +647,7 @@ const handleMessage = async (msg, round) =>
                     await imageLoad(round.colorIndicator);
                     round.colorIndicator.style.display = null;
                 });
-                nextTurn(round, toAnimate);
+                nextTurn(round);
                 if (round.players[round.currentTurn].isPlayer)
                 {
                     makeTurn(round);
@@ -657,11 +657,11 @@ const handleMessage = async (msg, round) =>
             }
         case 'drawSelf':
             {
-                drawSelf(round, [msg.card], toAnimate);
+                drawSelf(round, [msg.card]);
                 changePlayerCards(round, round.players[round.currentTurn], 1);
                 if (round.draws === 3 && getValidMoves(round, []).length === 0)
                 {
-                    nextTurn(round, toAnimate);
+                    nextTurn(round);
                 }
                 else
                 {
@@ -681,7 +681,7 @@ const handleMessage = async (msg, round) =>
                 if (msg.passed)
                 {
                     round.draws = 0;
-                    nextTurn(round, toAnimate);
+                    nextTurn(round);
                     if (round.players[round.currentTurn].isPlayer)
                     {
                         makeTurn(round);
@@ -707,7 +707,7 @@ const handleMessage = async (msg, round) =>
                 }
                 else if (round.currentTurn === msg.id)
                 {
-                    nextTurn(round, toAnimate);
+                    nextTurn(round);
                     if (round.players[round.currentTurn].isPlayer)
                     {
                         makeTurn(round);
