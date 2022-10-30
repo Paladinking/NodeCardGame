@@ -727,6 +727,7 @@ body
     align-items: center;
     top: calc(-70vh - 4rem - 2px);
     cursor: pointer;
+    z-index: 1000;
 }
 
 .rules-wrapper:hover

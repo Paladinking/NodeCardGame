@@ -113,7 +113,7 @@ const init = (name) =>
                             game.startGame(wsckt, msg, players, startBackgroundCards, async () => 
                             {
                                 const rawFetch = await fetch(`/${gameId}`).catch(() => {});
-                                if (rawFetch && rawFetch.ok === 200)
+                                if (rawFetch && rawFetch.ok)
                                 {
                                     const parsed = new DOMParser().parseFromString(await rawFetch.text(), 'text/html');
                                     document.querySelector('#content').innerHTML = parsed.querySelector('#content').innerHTML;
