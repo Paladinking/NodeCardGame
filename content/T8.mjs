@@ -151,16 +151,10 @@ const wait = (time) =>
     });
 };
 
-let turnClick;
-
 const makeTurn = (round) =>
 {
-    if (round.finishedPlayers.length >= round.players.length - 1)
-    {
-        return;
-    }
     const placedCards = [];
-    turnClick = (e) =>
+    const turnClick = (e) =>
     {
         const validMoves = getValidMoves(round, placedCards);
         if (validMoves.length > 0)
@@ -363,11 +357,7 @@ const nextTurn = (round) => //does not start the next round for the relevant pla
     round.currentTurn = (round.currentTurn + 1) % round.players.length;
     round.players[round.currentTurn].playerDiv.classList.add('current-round');
     round.draws = 0;
-    if (round.finishedPlayers.length >= round.players.length - 1)
-    {
-        toVictory(round);
-    }
-    else if (round.finishedPlayers.includes(round.players[round.currentTurn]))
+    if (round.finishedPlayers.includes(round.players[round.currentTurn]))
     {
         nextTurn(round);
     }
@@ -416,12 +406,14 @@ const drawOtherAnimate = async (round, player) =>
     });
 };
 
-const animateShuffle = (round) =>
+const shuffle = (round) =>
 {
     return new Promise((resolve) =>
     {
-        const cardsToRemove = round.tableCards.splice(0, round.tableCards.length-1);
+        const cardsToRemove = round.tableCards.splice(0, round.tableCards.length - 1);
         const topCard = round.tableCards[0];
+        const sumOfHands = round.players.reduce((sum, cur) => sum + cur.cards, 0);
+        round.totalCards = 51 - sumOfHands + round.totalCards;
         for (const card of cardsToRemove)
         {
             card.element.animate([
@@ -435,9 +427,9 @@ const animateShuffle = (round) =>
                     duration: 700, easing: "ease", fill: "forwards"
                 });
         }
-        topCard.animate([
+        topCard.element.animate([
             {
-                
+
             },
             {
                 top: `${-window.innerHeight}px`
@@ -478,7 +470,6 @@ const changePlayerCards = (round, player, amount) =>
 const handleMessage = async (msg, round) =>
 {
     const toAnimate = [];
-
     switch (msg.event)
     {
         case 'place':
@@ -486,6 +477,8 @@ const handleMessage = async (msg, round) =>
                 round.colorIndicator.style.display = "none";
                 const currentTurnPlayer = round.players[round.currentTurn];
                 changePlayerCards(round, currentTurnPlayer, -msg.cards.length);
+                const remainingPlayers = round.players.reduce((sum, cur) => sum + (round.finishedPlayers.includes(cur) ? 0 : 1), 0);
+                console.log(remainingPlayers);
                 if (!currentTurnPlayer.isPlayer)
                 {
                     for (const cardName of msg.cards)
@@ -542,9 +535,19 @@ const handleMessage = async (msg, round) =>
                     }
                     else
                     {
-                        nextTurn(round);
+                        if (remainingPlayers <= 1)
+                        {
+                            toAnimate.push(async () =>
+                            {
+                                toVictory(round);
+                            });
+                        }
+                        else
+                        {
+                            nextTurn(round);
+                        }
                     }
-                    if (round.players[round.currentTurn].isPlayer)
+                    if (round.players[round.currentTurn].isPlayer && remainingPlayers > 1)
                     {
                         makeTurn(round);
                     }
@@ -576,7 +579,6 @@ const handleMessage = async (msg, round) =>
                 changePlayerCards(round, round.players[round.currentTurn], 1);
                 if (round.draws === 3 && getValidMoves(round, []).length === 0)
                 {
-                    document.removeEventListener('click', turnClick);
                     nextTurn(round);
                 }
                 else
@@ -633,16 +635,14 @@ const handleMessage = async (msg, round) =>
     }
     if (round.totalCards <= 0)
     {
-        await animateShuffle(round);
-        const sumOfHands = round.players.reduce((sum, cur) => sum + cur.cards, 0);
-        round.totalCards = 51 - sumOfHands + round.totalCards;
+        await shuffle(round);
     }
 };
 
 
 export const game =
 {
-    startGame: (wsckt, msg, players, startCards, restart) =>
+    startGame: (wsckt, msg, players, onGameEnd, onRestart) =>
     {
         document.querySelector('#content').innerHTML =
             `<main class = "lobby-main" id = "main">
@@ -662,9 +662,9 @@ export const game =
             centerElement: document.querySelector('#center-div'),
             colorIndicator: document.createElement('img'),
             finishedPlayers: [],
-            restart: restart,
+            restart: onRestart,
             totalCards: 51 - 7 * players.length,
-            startVictoryCards: startCards
+            startVictoryCards: onGameEnd
         };
         onResize = async () =>
         {
@@ -681,6 +681,10 @@ export const game =
         {
             handleMessage(msg, round);
         };
+        game.statusDump = () =>
+        {
+            console.log(round)
+        }
         initGame(round);
     },
     maxPlayers: 5,

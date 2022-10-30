@@ -725,26 +725,56 @@ body
     display: flex;
     flex-direction: column;
     align-items: center;
-    top: calc(-70vh - 2rem - 2px);
+    top: calc(-70vh - 4rem - 2px);
     cursor: pointer;
 }
 
 .rules-wrapper:hover
 {
-    top: calc(-70vh - 1rem);
+    top: calc(-70vh - 2rem);
 
+}
+
+.rules-wrapper[open="true"]
+{
+    top: 0;
+    cursor: initial;
+    
 }
 
 .rules
 {
     padding: 1rem;
-    overflow-y: auto;
+    overflow-y: hidden;
     background: white;
-    height: 70vh;
+    height: calc(70vh + 2rem);
 	width: calc(100% - 2rem - 2px);
     border: 1px solid grey;
     border-radius: 0 0 10px 10px;
     border-top: none;
+    transition: height 0.3s;
+}
+
+.inner-rules
+{
+    height: 70vh;
+    width: inherit;
+    overflow-y: hidden;
+}
+.inner-rules > *:last-child
+{
+    padding-bottom: 1rem;
+}
+
+.rules-wrapper[open="true"] .inner-rules
+{
+    overflow-y: initial;
+}
+
+.rules-wrapper[open="true"] > .rules
+{
+    overflow-y: auto;
+    height: 70vh;
 }
 
 .rules::after

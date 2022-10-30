@@ -35,12 +35,14 @@
         </div>
         <div class = "rules-wrapper"  id = "rules">
             <aside class = "rules">
-                <%
-                    return {
-                        "Vändåtta" : require('./T8rules.html.ejs')(),
-                        "Caravan" : require('./CNrules.html.ejs')()
-                    }[gameName];
-                %>
+                <div class = "inner-rules">
+                    <%
+                        return {
+                            "Vändåtta" : require('./T8rules.html.ejs')(),
+                            "Caravan" : require('./CNrules.html.ejs')()
+                        }[gameName];
+                    %>
+                </div>
             </aside>
             <button class = "rules-button" id ="rules-button">Regler</button>
         </div>

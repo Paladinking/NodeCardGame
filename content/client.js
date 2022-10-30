@@ -112,19 +112,19 @@ const init = (name) =>
                         {
                             game.startGame(wsckt, msg, players, startBackgroundCards, async () => 
                             {
-                                document.querySelector('#content').innerHTML = new DOMParser()
-                                    .parseFromString(await (await fetch(`/${gameId}`)
-                                        .catch(() =>
-                                        {
-                                            const close = new CloseEvent("close", { code: 1000, reason: 'Could not load new game' });
-                                            wsckt.dispatchEvent(close);
-                                        }
-                                        ))
-                                        .text(), 'text/html')
-                                    .querySelector('#content').innerHTML;
-                                init(name);
-                                gameState = undefined;
-                                startBackgroundCards(IN_GAME);
+                                const rawFetch = await fetch(`/${gameId}`).catch(() => {});
+                                if (rawFetch && rawFetch.ok === 200)
+                                {
+                                    const parsed = new DOMParser().parseFromString(await rawFetch.text(), 'text/html');
+                                    document.querySelector('#content').innerHTML = parsed.querySelector('#content').innerHTML;
+                                    init(name);
+                                    gameState = undefined;
+                                    startBackgroundCards(IN_GAME);
+                                }
+                                else
+                                {
+                                    showErrorMessage("Could not load new game", "Something went wrong while fetching the new lobby", `${rawFetch ? `${rawFetch.status}: ${rawFetch.statusText}` : `No response from server`}`);
+                                }
                             }, chat);
                             gameState = IN_GAME;
                             break;
@@ -224,25 +224,27 @@ document.querySelector('#join-button').addEventListener('click', () =>
 
 let rulesOpen = false;
 const rulesWrapper = document.querySelector('#rules');
+const rules = rulesWrapper.firstElementChild;
 document.querySelector('#rules').addEventListener('click', (e) =>
 {
     if (!rulesOpen)
     {
         rulesOpen = true;
-        rulesWrapper.style.top = "0";
-		rulesWrapper.style.cursor = "initial";
+        rulesWrapper.setAttribute('open', true);
     }
     else
     {
-        if(e.target.id==="rules-button")
+        if (e.target.id === "rules-button")
         {
             rulesOpen = false;
-            rulesWrapper.style = null;
+            rulesWrapper.setAttribute('open', false);
         }
     }
 });
 
-
-
-
 startBackgroundCards(IN_GAME);
+
+const statusDump = () =>
+{
+    game.statusDump();
+}
