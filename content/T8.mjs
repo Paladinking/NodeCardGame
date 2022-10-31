@@ -170,6 +170,10 @@ const makeTurn = (round) =>
     const placedCards = [];
     const turnClick = (e) =>
     {
+        if (animating)
+        {
+            return;
+        }
         const validMoves = getValidMoves(round, placedCards);
         if (validMoves.length > 0)
         {
@@ -382,7 +386,8 @@ const drawSelf = (round, newCardNames, toAnimate) =>
         toAnimate.push(async () =>
         {
             await imageLoad(newCard.element.firstElementChild);
-            animateCard(newCard.element, { top: `${window.innerHeight < SMALL_HEIGHT ? -200 : -400}px`, left: "-20rem" }, 300);
+            const top = `${window.innerHeight < SMALL_HEIGHT ? -200 : -400}px`;
+            animateCard(newCard.element, { top: top, left: "-20rem" }, 300);
             round.centerElement.append(newCard.element);
             await wait(300);
         });
@@ -399,7 +404,8 @@ const drawOtherAnimate = async (player) =>
         const sidebar = document.querySelector('#sidebar');
         updateHand(player.hand, sidebar.offsetWidth / (shortHeight ? 3 : 2), (shortHeight ? 30 : 40), false);
         await imageLoad(card.element.firstElementChild);
-        const top = (window.innerHeight < SMALL_HEIGHT ? -200 : -400) + (sidebar.offsetHeight / 2 - (player.playerDiv.offsetTop + player.playerDiv.hand.offsetTop + 40));
+        const top = (window.innerHeight < SMALL_HEIGHT ? -200 : -400)
+            + (sidebar.offsetHeight / 2 - (player.playerDiv.offsetTop + player.playerDiv.hand.offsetTop + 40));
         card.element.animate([
             {
                 top: `${top}px`,
@@ -412,9 +418,10 @@ const drawOtherAnimate = async (player) =>
             {
                 duration: 500, easing: "ease"
             });
+        const width = `${smallScreen ? 120 : 160}px`;
         card.element.firstElementChild.animate([
             {
-                width: `${smallScreen ? 120 : 160}px`
+                width: width
             },
             {
 
@@ -513,10 +520,11 @@ const placeCardAnimate = (round, player, card) =>
             updateHand(player.hand, sidebar.offsetWidth / (shortHeight ? 3 : 2), (shortHeight ? 30 : 40), false);
             await imageLoad(card.element.firstElementChild);
             const top = -(sidebar.offsetHeight / 2 - (player.playerDiv.offsetTop + player.playerDiv.hand.offsetTop + 40));
+            const left = `calc(50vw - 7.5rem + ${cardToMove.element.style.left})`;
             card.element.animate([
                 {
                     top: `${top}px`,
-                    left: `calc(50vw - 7.5rem + ${cardToMove.element.style.left})`,
+                    left: left,
                     transform: cardToMove.element.style.transform,
                     zIndex: 100,
                 },
@@ -526,9 +534,10 @@ const placeCardAnimate = (round, player, card) =>
                 {
                     duration: 600, easing: "ease"
                 });
+            const width = `${shortHeight ? 45 : 70}px`;
             card.element.firstElementChild.animate([
                 {
-                    width: `${shortHeight ? 45 : 70}px`
+                    width: width
                 },
                 {
 
