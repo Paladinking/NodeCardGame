@@ -84,7 +84,12 @@ for (const key in games) {
 
 
 const joinLobby = (data, socket) => {
-	if (data.gameId.length != 2 || data.name.length > 20) {
+	if (
+		typeof data.gameId != "string" || 
+		typeof data.name != "string" || 
+		data.gameId.length != 2 || 
+		data.name.length > 20
+	) {
 		socket.close(1000, "TMI");
 		return;
 	}
@@ -111,11 +116,13 @@ const joinLobby = (data, socket) => {
 	socket.player.name = data.name;
 	socket.player.status = IN_LOBBY;
 
-	const names = game.players.map(p => `"${p.name}"`);
+	const toSend = JSON.stringify({event : "join", name : socket.player.name, id : socket.player.id});
+	console.log(toSend);
 	game.players.forEach((player) => {
-		player.send(`{"event" : "join", "name" : "${socket.player.name}", "id" : ${socket.player.id}}`);
+		player.send(toSend);
 	});
-	socket.player.send(`{"event" : "joined", "players" : [${names}]}`);
+	const names = game.players.map(p => p.name);
+	socket.player.send(JSON.stringify({event : "joined", "players" : names}));
 	game.players.push(socket.player);
 }
 

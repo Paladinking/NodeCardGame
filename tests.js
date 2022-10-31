@@ -196,6 +196,28 @@ const wsLobbyTest = async () => {
 		"Lobby valid"
 	);
 	completedTests += await runWsTest(
+		[
+			{
+				toReceive : [
+					{event : "joined", players : []},
+					{event : "join", name : '{"name" : "A"}', id : 1},
+				], closeStep : 2, closeReason : "Left game"
+			},
+			{
+				toReceive : [
+					{event : "joined", players : ['""This "is \" a\\']},
+					{event : "leave", id : 0},
+				], closeStep : 3
+			}
+		],
+		[
+			{id : 0, toSend : {gameId : "T8", name : '""This "is \" a\\'}},
+			{id : 1, toSend : {gameId : "T8", name : '{"name" : "A"}'}},
+			{id : 0, toSend : {action : "Leave"}}
+		],
+		"Name with quotes"
+	);
+	completedTests += await runWsTest(
 		[{toReceive : [], closeStep : 0, closeReason : "TMI"}],
 		[{id : 0, toSend : {gameId : "T8", name : "abcdefghijklmnopqrstuww"}}, undefined],
 		"Too long name"
