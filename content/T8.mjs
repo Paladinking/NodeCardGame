@@ -64,7 +64,11 @@ const createCardElement = (cardName) =>
 
 const updateHand = (hand, width, height = 100, hoverable = true) =>
 {
-    hand = sortHand(hand);
+    const autoSortCheck = document.querySelector('#auto-sort');
+    if (!autoSortCheck || autoSortCheck.checked)
+    {
+        hand = sortHand(hand);
+    }
     if (!width)
     {
         width = hand.length <= 2 ? 150 : 350;
@@ -72,19 +76,35 @@ const updateHand = (hand, width, height = 100, hoverable = true) =>
     for (let i = 0; i < hand.length; i++)
     {
         const card = hand[i].element;
-        if (hoverable)
+
+        if (hoverable && hand[i] !== hand.movedCard)
         {
             card.classList.add('hoverable-card');
         }
+        else
+        {
+            card.classList.remove('hoverable-card');
+        }
         const percentage = hand.length === 1 ? 0.5 : i / (hand.length - 1);
+        let left;
+
+
+        if (hand.movedCard)
+        {
+            left = 1.3 * percentage * width - 1.3 * width / 2 - card.firstElementChild.width / 2;
+        }
+        else
+        {
+            left = percentage * width - width / 2 - card.firstElementChild.width / 2;
+        }
+
         const degrees = hand.length === 2 ? 20 : 38;
-        const rotation = (percentage * degrees * 2) - degrees;
+        const rotation = hand[i] === hand.movedCard ? 0 : ((percentage * degrees * 2) - degrees);
         card.style.transform = `rotate(${rotation}deg)`;
         const top = Math.abs(percentage * height - height / 2);
         card.style.top = `${top}px`;
-        const left = percentage * width - width / 2 - card.firstElementChild.width / 2;
         card.style.left = `${left}px`;
-        card.style.zIndex = `${i + 10}`;
+        card.style.zIndex = hand[i] === hand.movedCard ? 80 : `${i + 10}`;
     }
 };
 
@@ -170,7 +190,7 @@ const makeTurn = (round) =>
     const placedCards = [];
     const turnClick = (e) =>
     {
-        if (animating)
+        if (animating || round.blockNextClick)
         {
             return;
         }
@@ -181,8 +201,10 @@ const makeTurn = (round) =>
             {
                 if (isClicked(e.target, movedCard.element))
                 {
-                    round.hand.splice(round.hand.indexOf(movedCard), 1);
+                    const i = round.hand.indexOf(movedCard);
+                    round.hand.splice(i, 1);
                     placedCards.push(movedCard);
+                    movedCard.prevI = i;
                     makeTableCard(movedCard.element, round.tableCards.length);
                     round.tableCards.push(movedCard);
                     updateHand(round.hand);
@@ -211,7 +233,7 @@ const makeTurn = (round) =>
                     round.tableCards.pop();
                     returnedCard.element.style.top = `${window.innerHeight < SMALL_HEIGHT ? -200 : -400}px`;
                     returnedCard.element.classList.remove('table-card');
-                    round.hand.push(returnedCard);
+                    round.hand.splice(returnedCard.prevI, 0, returnedCard);
                     updateHand(round.hand);
                     if (placedCards.length === 0)
                     {
@@ -796,38 +818,134 @@ const initPlayers = async (round) =>
     }
 };
 
-const initGraphics = (round) =>
+const initGraphics = ({ deckElement, centerElement, confirmButton, tableCards, colorIndicator, hand }) =>
 {
-    round.deckElement.classList.add('deck');
-    round.centerElement.append(round.deckElement);
+    deckElement.classList.add('deck');
+    centerElement.append(deckElement);
 
-    updateHand(round.hand);
+    updateHand(hand);
 
-    round.confirmButton.classList.add('confirm-button');
-    round.confirmButton.style.display = "none";
-    round.confirmButton.innerText = "OK";
-    round.centerElement.append(round.confirmButton);
+    confirmButton.classList.add('confirm-button');
+    confirmButton.style.display = "none";
+    confirmButton.innerText = "OK";
+    centerElement.append(confirmButton);
 
-    round.tableCards[0].element.style.left = `${-1 * round.tableCards[0].element.firstElementChild.width / 2}px`;
-    round.centerElement.append(round.tableCards[0].element);
+    tableCards[0].element.style.left = `${-1 * tableCards[0].element.firstElementChild.width / 2}px`;
+    centerElement.append(tableCards[0].element);
 
-    round.colorIndicator.classList.add('color-indicator');
-    round.colorIndicator.src = "/cards/C.svg";
-    round.colorIndicator.width = 40;
-    round.colorIndicator.style.display = "none";
-    round.centerElement.append(round.colorIndicator);
+    colorIndicator.classList.add('color-indicator');
+    colorIndicator.src = "/cards/C.svg";
+    colorIndicator.width = 40;
+    colorIndicator.style.display = "none";
+    centerElement.append(colorIndicator);
 
-    initPlayers(round);
+    const autoSortCheckCont = document.createElement('div');
+    const autoSortCheck = document.createElement('input');
+    autoSortCheck.type = "checkbox";
+    autoSortCheck.checked = true;
+    autoSortCheck.id = "auto-sort";
+    autoSortCheckCont.classList.add('auto-sort');
+    autoSortCheckCont.innerText = "Autosortera?";
+    autoSortCheckCont.append(autoSortCheck);
+    autoSortCheck.addEventListener('click', () =>
+    {
+        if (autoSortCheck.checked)
+        {
+            updateHand(hand);
+        }
+    });
+
+
+    centerElement.parentElement.append(autoSortCheckCont);
+};
+
+const addSortCardsListeners = (round) =>
+{
+    const handleMoveCard = ({ target }) =>
+    {
+        if (document.querySelector('#auto-sort').checked)
+        {
+            return;
+        }
+        for (const card of round.hand)
+        {
+            if (isClicked(target, card.element))
+            {
+                let hasMoved = false;
+                round.hand.movedCard = card;
+                updateHand(round.hand);
+                const onMouseMove = (e) =>
+                {
+                    let x;
+                    if (!e.pageX)
+                    {
+                        x = e.targetTouches[0].pageX;
+                    }
+                    else
+                    {
+                        x = e.pageX;
+                    }
+                    for (let i = 0; i < round.hand.length; i++)
+                    {
+                        const checkCard = round.hand[i];
+                        const xPos = parseInt(checkCard.element.style.left.split('px')[0]) + round.centerElement.parentElement.offsetWidth / 2 + card.element.firstElementChild.width / 2;
+                        if (xPos > x)
+                        {
+                            round.hand.splice(round.hand.indexOf(card), 1);
+                            round.hand.splice(i, 0, card);
+                            updateHand(round.hand);
+                            hasMoved = true;
+                            break;
+                        }
+                    }
+
+                };
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('touchmove', onMouseMove);
+                const onRelease = () =>
+                {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('touchmove', onMouseMove);
+                    document.removeEventListener('mouseup', onRelease);
+                    document.removeEventListener('touchend', onRelease);
+                    round.hand.movedCard = undefined;
+                    round.blockNextClick = hasMoved;
+                    updateHand(round.hand);
+                };
+                document.addEventListener('mouseup', onRelease);
+                document.addEventListener('touchend', onRelease);
+                break;
+            }
+        }
+    };
+
+    round.centerElement.addEventListener('mousedown', handleMoveCard);
+    round.centerElement.addEventListener('touchstart', (e) =>
+    {
+        if (!round.movedCard)
+        {
+            handleMoveCard(e.targetTouches[0]);
+        }
+    });
 };
 
 const initGame = async (round) =>
 {
     initGraphics(round);
+    initPlayers(round);
+    addSortCardsListeners(round);
 
     if (round.players[round.currentTurn].isPlayer)
     {
+        toAnimate.push(async () =>
+        {
+            yourTurnAnimate(round);
+        });
         makeTurn(round);
-        yourTurnAnimate(round);
+        if (!animating)
+        {
+            startAnimationQueue();
+        }
     }
     else
     {

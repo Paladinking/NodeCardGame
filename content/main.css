@@ -551,7 +551,7 @@ body
 
 .your-turn-message
 {
-    left:0rem;
+    left: 0rem;
     font-size: 2em;
     padding-top: 1rem;
     padding-bottom: 1rem;
@@ -568,12 +568,12 @@ body
     margin-top: 1rem;
 }
 
-@keyframes from-top 
+@keyframes from-top
 {
     from
     {
         top: -4rem;
-    }    
+    }
 }
 
 .error-wrap
@@ -867,6 +867,26 @@ body
 {
     background-color: rgb(228, 228, 228);
     cursor: pointer;
+}
+
+.auto-sort
+{
+    left: 0;
+    bottom: 0;
+    position: absolute;
+    background-color: var(--minor-button-color);
+    padding: 1rem;
+    border-radius: 0rem 1rem 0rem 0rem;
+    display: flex;
+    align-items: center;
+    font-size: 1.3em;
+}
+
+.auto-sort>input
+{
+    height: 2rem;
+    width: 2rem;
+    margin-left: 0.8rem;
 }
 
 @keyframes popup
