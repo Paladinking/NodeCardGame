@@ -391,7 +391,7 @@ body
     border-radius: 4rem;
     position: absolute;
     left: 17rem;
-    z-index: 1;
+    z-index: 184;
     user-select: none;
 }
 
@@ -414,7 +414,7 @@ body
     grid-template-columns: 10rem 10rem 10rem 10rem;
     overflow: hidden;
     padding: 1rem;
-    z-index: 53;
+    z-index: 185;
     box-shadow: 0 0 20px;
 }
 

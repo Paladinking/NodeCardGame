@@ -104,7 +104,7 @@ const updateHand = (hand, width, height = 100, hoverable = true) =>
         const top = Math.abs(percentage * height - height / 2);
         card.style.top = `${top}px`;
         card.style.left = `${left}px`;
-        card.style.zIndex = hand[i] === hand.movedCard ? 80 : `${i + 10}`;
+        card.style.zIndex = hand[i] === hand.movedCard ? 80 : `${i + 62}`;
     }
 };
 
@@ -852,6 +852,7 @@ const initGraphics = ({ deckElement, centerElement, confirmButton, tableCards, c
         if (autoSortCheck.checked)
         {
             updateHand(hand);
+            round.blockNextClick = false;
         }
     });
 
@@ -872,10 +873,13 @@ const addSortCardsListeners = (round) =>
             if (isClicked(target, card.element))
             {
                 let hasMoved = false;
-                round.hand.movedCard = card;
-                updateHand(round.hand);
                 const onMouseMove = (e) =>
                 {
+                    if(!round.hand.movedCard)
+                    {
+                        round.hand.movedCard = card;
+                        updateHand(round.hand);
+                    }
                     let x;
                     if (!e.pageX)
                     {
