@@ -192,6 +192,7 @@ const makeTurn = (round) =>
     {
         if (animating || round.blockNextClick)
         {
+            round.blockNextClick = false;
             return;
         }
         const validMoves = getValidMoves(round, placedCards);
@@ -818,26 +819,26 @@ const initPlayers = async (round) =>
     }
 };
 
-const initGraphics = ({ deckElement, centerElement, confirmButton, tableCards, colorIndicator, hand }) =>
+const initGraphics = (round) =>
 {
-    deckElement.classList.add('deck');
-    centerElement.append(deckElement);
+    round.deckElement.classList.add('deck');
+    round.centerElement.append(round.deckElement);
 
-    updateHand(hand);
+    updateHand(round.hand);
 
-    confirmButton.classList.add('confirm-button');
-    confirmButton.style.display = "none";
-    confirmButton.innerText = "OK";
-    centerElement.append(confirmButton);
+    round.confirmButton.classList.add('confirm-button');
+    round.confirmButton.style.display = "none";
+    round.confirmButton.innerText = "OK";
+    round.centerElement.append(round.confirmButton);
 
-    tableCards[0].element.style.left = `${-1 * tableCards[0].element.firstElementChild.width / 2}px`;
-    centerElement.append(tableCards[0].element);
+    round.tableCards[0].element.style.left = `${-1 * round.tableCards[0].element.firstElementChild.width / 2}px`;
+    round.centerElement.append(round.tableCards[0].element);
 
-    colorIndicator.classList.add('color-indicator');
-    colorIndicator.src = "/cards/C.svg";
-    colorIndicator.width = 40;
-    colorIndicator.style.display = "none";
-    centerElement.append(colorIndicator);
+    round.colorIndicator.classList.add('color-indicator');
+    round.colorIndicator.src = "/cards/C.svg";
+    round.colorIndicator.width = 40;
+    round.colorIndicator.style.display = "none";
+    round.centerElement.append(round.colorIndicator);
 
     const autoSortCheckCont = document.createElement('div');
     const autoSortCheck = document.createElement('input');
@@ -851,13 +852,13 @@ const initGraphics = ({ deckElement, centerElement, confirmButton, tableCards, c
     {
         if (autoSortCheck.checked)
         {
-            updateHand(hand);
+            updateHand(round.hand);
             round.blockNextClick = false;
         }
     });
 
 
-    centerElement.parentElement.append(autoSortCheckCont);
+    round.centerElement.parentElement.append(autoSortCheckCont);
 };
 
 const addSortCardsListeners = (round) =>

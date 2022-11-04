@@ -360,7 +360,7 @@ body
 
 .start-button[available="false"]
 {
-    background-color: #929292;
+    opacity: 0;
 }
 
 .back-button
