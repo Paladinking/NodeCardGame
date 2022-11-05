@@ -163,6 +163,14 @@ body
     position: absolute;
 }
 
+.CN-center
+{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
 .description-container
 {
     width: 100%;
@@ -286,6 +294,7 @@ body
     font-size: 20px;
     border-bottom: 1px solid black;
     margin-left: 0;
+    list-style-type: none;
 }
 
 .player-box

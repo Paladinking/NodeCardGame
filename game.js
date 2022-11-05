@@ -23,7 +23,6 @@ const shuffleDeck = (deck) => {
     }
 }
 
-
 const drawCard = (game) => {
 	const c = game.deck.pop();
 	if (game.deck.length == 0) {

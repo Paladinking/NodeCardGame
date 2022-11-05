@@ -3,45 +3,45 @@ const handleMessage = (msg, round) =>
     
 };
 
-const initGame = (round) =>
+const beginGame = (round) =>
+/*The game begins with each player taking eight cards from their deck and placing 
+either one numerical card or ace on each caravan. Players may not discard during this initial round. */
+
 {
-    
+    //if isplayer först i arrayen 
+    if(round.players[0].isPlayer)
+    {
+        //börja
+    }
+    //place my one card
+    //send  message to server
+    //receive message from server
+    //repeat three times
 };
 
 export const game =
 {
-    startGame: (wsckt, msg, players, startCards, restart) =>
+    startGame: (wsckt, msg, players, onGameEnd, onRestart) =>
     {
         document.querySelector('#content').innerHTML =
             `<main class = "lobby-main" id = "main">
-                <div id = "center-div" class = "center"></div>
-                <div id = "sidebar" class = "player-sidebar"></div>
+                <div id = "pov-center-div" class = "CN-center"> <img src="/cards/YB.svg" width="80"/></div>
+                <div id = "other-center-div" class = "CN-center"> <img src="/cards/YR.svg" width="80"/></div>
             </main>`;
         const round =
         {
-            wsckt: wsckt,
             hand: msg.hand,
             players: players,
-            restart: restart,
-            startVictoryCards: startCards
+            restart: onRestart,
+            gameEnd: onGameEnd
         };
-        /*onResize = async () =>
-        {
-            smallScreen = window.innerWidth < 1700 || window.innerHeight < 1200;
-            const allCardsElements = document.querySelectorAll('.card-wrapper');
-            allCardsElements.forEach((card) =>
-            {
-                card.firstElementChild.width = smallScreen ? 120 : 160;
-            });
-            round.deckElement.style.top = `${window.innerHeight < 1200 ? -200 : -400}px`;
-        };
-        window.addEventListener('resize', onResize);*/
         game.handleMessage = (msg) =>
         {
             handleMessage(msg, round);
         };
-        initGame(round);
-    },
+        beginGame(round);
+    
+    },    
     maxPlayers: 2,
     minPlayers: 2
 };

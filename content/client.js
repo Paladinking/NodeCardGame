@@ -43,7 +43,7 @@ const init = (name) =>
         li.classList.add('player-box');
         li.innerText = name;
         ul.append(li);
-        const player = { name: name, cards: 7 };
+        const player = { name: name };
         players.push(player);
         if (newPlayer)
         {
