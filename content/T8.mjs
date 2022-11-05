@@ -780,6 +780,7 @@ const initPlayers = async (round) =>
 
     playerBasedOrder.forEach((player, i) =>
     {
+        player.cards = 7;
         if (!player.isPlayer)
         {
             const playerDiv = document.createElement('div');
