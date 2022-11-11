@@ -195,7 +195,7 @@ const handlePlace = (data, game, player) => {
 		newCard = player.deck.pop();
 		player.hand.push(newCard);
 	} else if (player.hand.length == 0 && winner != player.id) {
-		winnder = (player.id + 1) % 2;
+		winner = (player.id + 1) % 2;
 		return;
 	}
 	game.players.forEach((p, id) => {
