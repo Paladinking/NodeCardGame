@@ -966,7 +966,7 @@ const initGame = async (round) =>
 
 export const game =
 {
-    startGame: (wsckt, msg, players, onGameEnd, onRestart) =>
+    initGame: (wsckt, msg, players, onGameEnd, onRestart) =>
     {
         document.querySelector('#content').innerHTML =
             `<main class = "lobby-main" id = "main">
@@ -1025,7 +1025,7 @@ export const game =
         };
         game.statusDump = () =>
         {
-            console.log(round);
+            return round;
         };
         initGame(round);
     },

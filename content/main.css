@@ -9,6 +9,7 @@
 {
     --minor-button-color: #c6e4f8;
     --minor-button-color-hover: #acd4f8;
+    --CN-card-width: 100px
 }
 
 html,
@@ -169,6 +170,27 @@ body
     justify-content: center;
     align-items: center;
     position: relative;
+    height: 100%;
+}
+
+.CN-center.flipped
+{
+    transform: rotate(180deg) scaleX(-1);
+}
+
+.CN-scoreboard
+{
+    user-select: none;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    grid-row-gap: 1rem;
+    grid-column-gap: 5vw;
+    font-size: 1.2em;
+}
+
+.CN-scoreboard>span>span
+{
+    font-size: 1.4em;
 }
 
 .description-container
@@ -234,6 +256,7 @@ body
     flex-direction: column;
     overflow: hidden;
     background-color: #eaf8ff;
+    user-select: none;
 }
 
 .big-text
@@ -251,6 +274,8 @@ body
 {
     position: absolute;
     user-select: none;
+    display: flex;
+    /*For some reason there is a margin otherwise*/
 }
 
 .playing-card
@@ -268,9 +293,62 @@ body
     top: 0;
 }
 
+/*
+        Note: Card images are 1 x 1.4
+*/
+.CN-responsive,
+.caravan-indicator
+{
+    width: var(--CN-card-width);
+    height: calc(1.4 * var(--CN-card-width));
+}
+
+.CN-bottom-card
+{
+    top: 80%;
+    transform: scale(1.5);
+    z-index: 50;
+}
+
+.caravan-card:hover
+{
+    filter: brightness(80%);
+}
+.caravan-indicator
+{
+    border: 1px solid black;
+    border-radius: 8px;
+    position: relative;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition-duration: 0.3s;
+    transition-property: top, width, height;
+    top: 0;
+}
+
+.CN-indicator-container
+{
+    position: absolute;
+    top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    grid-gap: 4rem;
+    left: calc((-3 * var(--CN-card-width) - 8rem) / 2 - (5 * var(--CN-card-width) / 4));
+}
+
 .hoverable-card:hover>img
 {
-    top: -90px
+    top: -90px;
+}
+
+.hoverable-card:hover>img.CN-responsive
+{
+    top: -50px;
+}
+
+.CN-center.flipped img.CN-responsive
+{
+    transform: scaleX(-1);
 }
 
 .playlist-container
@@ -467,6 +545,37 @@ body
     top: -25rem;
     left: -20vw;
     box-shadow: -4px 2px 0 0 rgb(0 0 0), -7px 4px 0 0 rgb(255 255 255), -11px 7px 0 0 rgb(0 0 0);
+}
+
+@media screen and (max-height: 750px)
+{
+    :root
+    {
+        --CN-card-width: 80px;
+    }
+}
+
+@media screen and (max-width: 930px),
+(max-height: 500px)
+{
+    :root
+    {
+        --CN-card-width: 60px
+    }
+
+    /*
+        Note: Card images are 1 x 1.4
+    */
+    .CN-responsive,
+    .caravan-indicator
+    {
+        border-radius: 4px;
+    }
+
+    .hoverable-card:hover>img.CN-responsive
+    {
+        top: -25px;
+    }
 }
 
 

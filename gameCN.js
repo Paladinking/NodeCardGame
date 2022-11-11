@@ -177,7 +177,7 @@ const handlePlace = (data, game, player) => {
 	const isSpecial = "JQKY".includes(data.card[0]);
 
 	if (!validateMove(data, game, player, isSpecial)) {
-		player.close(1000, "Ilegal move");
+		player.close(1000, "Illegal move");
 		return;
 	}
 	const pile = game.caravans[data.side][data.col];

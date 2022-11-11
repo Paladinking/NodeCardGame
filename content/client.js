@@ -7,7 +7,7 @@ let noLeaveWarning = false;
 let gameState;
 let game;
 
-const showErrorMessage = (error, longError, reason) =>
+const showErrorMessage = (error, longError, reason, swe = false) =>
 {
     document.querySelector('#content').innerHTML +=
         `<div class = "error-wrap">
@@ -16,7 +16,7 @@ const showErrorMessage = (error, longError, reason) =>
             <p>${longError}</p>
             <p>${reason}</p>
             <br>
-            <a href="/">Return to main page<a>
+            <a href="/">${swe ? "Tillbaka till huvudmenyn" : "Return to main page"}<a>
         </div>
     </div>`;
 };
@@ -110,7 +110,7 @@ const init = (name) =>
                         }
                     case 'start':
                         {
-                            game.startGame(wsckt, msg, players, startBackgroundCards, async () => 
+                            game.initGame(wsckt, msg, players, startBackgroundCards, async () => 
                             {
                                 const rawFetch = await fetch(`/${gameId}`).catch(() => { });
                                 if (rawFetch && rawFetch.ok)
@@ -140,10 +140,23 @@ const init = (name) =>
         wsckt.addEventListener('close', (event) =>
         {
             noLeaveWarning = true;
-            if (event.reason !== "Game is over")
+            switch (event.reason)
             {
-                showErrorMessage("Connection closed", "The connection to the server was closed unexpectedly", `${event.reason.length !== 0 ? `Reason: ${event.reason}` : "Thats all we know."}`);
-            }
+                case "Game is over":
+                    {
+                        break;
+                    }
+                case "Lobby is full":
+                    {
+                        showErrorMessage("Lobbyn är full!", `Den här lobbyn har redan ${game.maxPlayers} spelare`, "Försök igen senare!", true);
+                        break;
+                    };
+                default:
+                    {
+                        showErrorMessage("Connection closed", "The connection to the server was closed unexpectedly", `${event.reason.length !== 0 ? `Reason: ${event.reason}` : "Thats all we know."}`);
+                        break;
+                    }
+            };
         });
         document.querySelector('#start-button').setAttribute('available', "true");
         document.querySelector('#start-button').addEventListener('click', () =>
@@ -158,6 +171,11 @@ const init = (name) =>
                 document.querySelector('#start-button').animate([{ left: "0px" }, { left: "7px" }, { left: "0px" }, { left: "-7px" }, { left: "0px" }], 150);
             }
         });
+    });
+    wsckt.addEventListener('error', (e) =>
+    {
+        cover.classList.remove('error-wrap');
+        showErrorMessage('Connection failed', "Failed to connect WebSocket to server", "Check that you are connected to the internet");
     });
 
 };
@@ -250,5 +268,5 @@ startBackgroundCards(IN_GAME);
 
 const statusDump = () =>
 {
-    game.statusDump();
+    return game.statusDump();
 };
