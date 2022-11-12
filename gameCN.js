@@ -112,12 +112,13 @@ const placeSpecial = (data, caravans, pile) => {
 			break;
 		case "Y":
 			const ace = targetCard.card[0] == "A";
+			let pos = data.pos;
 			for (let i = 0; i < caravans.length; i++) {
 				const side = caravans[i];
 				for (let j = 0; j < side.length; j++) {
 					const pile = side[j];
 					for (let k = 0; k < pile.cards.length; k++) {
-						if (i == data.side && j == data.col && k == data.pos) {
+						if (i == data.side && j == data.col && k == pos) {
 							continue;
 						}
 						const card = pile.cards[k];
@@ -125,6 +126,9 @@ const placeSpecial = (data, caravans, pile) => {
 							pile.value -= getValue(card);
 							pile.cards.splice(k, 1);
 							k--;
+							if (i == data.side && j == data.col && k < pos) {
+								pos--;
+							}
 						}
 					}
 					updatePile(pile);
