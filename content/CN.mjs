@@ -14,27 +14,36 @@ export const game =
             `<main class = "lobby-main" id = "main">
                 <div id = "other-center-div" class = "CN-center flipped">
                     <div class = "CN-indicator-container">
-                        <div class="caravan-indicator"></div>
-                        <div class="caravan-indicator"></div>
-                        <div class="caravan-indicator"></div>
+                        <div class="caravan-indicator">                        
+                        </div>
+                        <span class = "CN-score"><span>0</span> BONEYARD</span>
+                        <div class="caravan-indicator">
+                        </div>
+                        <span class = "CN-score"><span>0</span> REDDING</span>
+                        <div class="caravan-indicator">
+                        </div>
+                        <span class = "CN-score"><span>0</span> SHADY SANDS</span>
                     </div>
                 </div>
                 <div class = "CN-scoreboard" id = "scoreboard">
-                    <span class = "CN-score"><span>0</span> BONEYARD</span>
-                    <span class = "CN-score"><span>0</span> REDDING</span>
-                    <span class = "CN-score"><span>0</span> SHADY SANDS</span>
-                    <span class = "CN-score"><span>0</span> DAYGLOW</span>
-                    <span class = "CN-score"><span>0</span> NEW RENO</span>
-                    <span class = "CN-score"><span>0</span> THE HUB</span>
                 </div>
                 <div id = "pov-center-div"  class = "CN-center">
                     <div class = "CN-indicator-container">
-                        <div class="caravan-indicator"></div>
-                        <div class="caravan-indicator"></div>
-                        <div class="caravan-indicator"></div>
+                        <div class="caravan-indicator">
+                        </div>
+                        <span class = "CN-score"><span>0</span> DAYGLOW</span>
+                        <div class="caravan-indicator">   
+                        </div>
+                        <span class = "CN-score"><span>0</span> NEW RENO</span>
+                        <div class="caravan-indicator">
+                        </div>
+                        <span class = "CN-score"><span>0</span> THE HUB</span>
                     </div>
                     <div class = "confirm-button" id = "confirm-button" style = "display: none; top: 10%;">
                         OK
+                    </div>
+                    <div class = "discard-button" id = "discard-button" style = "display: none;">
+                        Släng
                     </div>
                 </div>
             </main>`;
@@ -52,6 +61,7 @@ export const game =
             gameEnd: onGameEnd,
             sides: [[[], [], []], [[], [], []]],
             confirmButton: document.querySelector('#confirm-button'),
+            discardButton: document.querySelector('#discard-button'),
             currentTurn: 0,
             inSetUp: true,
             isFirstPlayer: players[0].isPlayer
@@ -77,6 +87,9 @@ export const game =
     (Which it probably should be but ¯\_(ツ)_/¯)
 */
 let onResize;
+
+const FACE_CARDS = "JQKY";
+const ALLOWED_FIRST_CARDS = "123456789TA";
 
 /*
     Initializes player hands and caravans
@@ -132,9 +145,9 @@ const setUpGame = (round) =>
         side.forEach((caravan, caravanIndex) =>
         {
             caravan.indicator = side.div.querySelectorAll('.caravan-indicator')[caravanIndex];
-            caravan.indicator.innerText = caravanIndex;
             caravan.score = 0;
-            caravan.scoreSpan = document.querySelectorAll(`#scoreboard>span>span`)[sideIndex === 0 ? caravanIndex + 3 : caravanIndex];
+            caravan.scoreSpan = side.div.querySelectorAll(`span>span`)[caravanIndex];
+            caravan.scoreSpan.innerText = caravan.score;
         });
     });
 };
@@ -149,14 +162,14 @@ const setUpGame = (round) =>
     listener which is not removed until 
     the turn is over 
 */
-const ALLOWED_FIRST_CARDS = "123456789TA";
 const makeTurn = (round) =>
 {
     let activeSide;
     let activeCaravan;
     let placedCard;
     let onCard;
-    yourTurnAnimate();
+    let discarding = false;
+    yourTurnAnimate(round);
     const turnClick = (e) =>
     {
         /*
@@ -193,15 +206,87 @@ const makeTurn = (round) =>
                     }
                     else
                     {
-                        placedCard = card;
-                        round.hand.splice(i, 1);
-                        updateHand(round.hand);
-                        animateToBottom(card.element);
+                        if (discarding)
+                        {
+                            const msgObj =
+                            {
+                                action: "DismissCard",
+                                card: card.name
+                            };
+                            discardCardAnimate(round.hand, i);
+                            round.discardButton.style = null;
+                            round.discardButton.style.display = "none";
+                            round.wsckt.send(JSON.stringify(msgObj));
+                            round.removeTurnClick();
+                            return;
+                        }
+                        else
+                        {
+                            placedCard = card;
+                            round.hand.splice(i, 1);
+                            updateHand(round.hand);
+                            animateToBottom(card.element);
+                            round.discardButton.style.display = "none";
+                        }
                     }
 
-                    break;
-
+                    return; /*(!)*/
                 }
+            }
+            if (isClicked(e.target, round.discardButton))
+            {
+                discarding = !discarding;
+                round.discardButton.style.backgroundColor = discarding ? "#a03939" : null;
+                return;
+            }
+            if (discarding)
+            {
+                const side = round.sides[0];
+                for (let j = 0; j < side.length; j++)
+                {
+                    const caravan = side[j];
+                    let discard = false;
+                    if (isClicked(e.target, caravan.indicator))
+                    {
+                        discard = true;
+                    }
+                    else
+                    {
+                        for (let k = 0; k < caravan.length; k++)
+                        {
+                            const card = caravan[k];
+                            if (isClicked(e.target, card.element))
+                            {
+                                discard = true;
+                            }
+                            else
+                            {
+                                for (let l = 0; l < card.faceCards.length; l++)
+                                {
+                                    const faceCard = card.faceCards[l];
+                                    if (isClicked(e.target, faceCard.element))
+                                    {
+                                        discard = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (discard)
+                    {
+                        const msgObj =
+                        {
+                            action: "DismissLane",
+                            col: j
+                        };
+                        round.discardButton.style = null;
+                        round.discardButton.style.display = "none";
+                        round.wsckt.send(JSON.stringify(msgObj));
+                        round.removeTurnClick();
+                        return;
+                    }
+                }
+
             }
         }
         else
@@ -228,12 +313,7 @@ const makeTurn = (round) =>
                                 left: `${pos.left}px`,
                                 top: `${pos.top}px`,
                                 transform: "rotate(0deg)"
-                            },
-                            {}
-                        ],
-                            {
-                                duration: 300, easing: "ease"
-                            });
+                            }, {}], { duration: 300, easing: "ease" });
                     }
                     activeCaravan = undefined;
                     onCard = undefined;
@@ -244,6 +324,10 @@ const makeTurn = (round) =>
                     animateToHand(placedCard.element);
                 }
                 round.confirmButton.style.display = "none";
+                if (!round.inSetUp)
+                {
+                    round.discardButton.style.display = null;
+                }
                 placedCard = undefined;
             }
 
@@ -270,9 +354,13 @@ const makeTurn = (round) =>
                 {
                     makeCaravanCard(placedCard);
                 }
+                else
+                {
+                    makeFaceCard(placedCard);
+                }
                 round.confirmButton.style.display = "none";
                 round.wsckt.send(JSON.stringify(msgObj));
-                document.removeEventListener('click', turnClick);
+                round.removeTurnClick();
             }
             /*
                 A card can be placed
@@ -299,7 +387,7 @@ const makeTurn = (round) =>
                             }
                             else
                             {
-                                break;
+                                return; /*(!)*/;
                             }
                         }
 
@@ -324,7 +412,7 @@ const makeTurn = (round) =>
                                     }
                                     else
                                     {
-                                        break;
+                                        return; /*(!)*/;
                                     }
                                 }
                             }
@@ -345,6 +433,10 @@ const makeTurn = (round) =>
         }
     };
     document.addEventListener('click', turnClick);
+    round.removeTurnClick = () =>
+    {
+        document.removeEventListener('click', turnClick);
+    };
 };
 
 /*
@@ -365,32 +457,18 @@ const placeCard = (round, caravan, placedCard, activeCaravan, side, sideIndex, a
     }
     if ((activeSide ? round.sides.indexOf(activeSide) : 0) !== sideIndex)
     {
-        console.log(round.sides.indexOf(activeSide), sideIndex);
         const pos = getReversePosition(placedCard);
-        side.div.append(placedCard.element);
         toAnimate.push(async () =>
         {
             return new Promise((resolve) =>
             {
+                side.div.append(placedCard.element);
                 addToCaravan(caravan, placedCard, newOnCardIndex);
                 if (!activeCaravanExists)
                 {
                     animateToCaravans(placedCard.element);
                 }
-                placedCard.element.animate([
-                    {
-                        left: `${pos.left}px`,
-                        top: `${pos.top}px`,
-                        zIndex: 100
-                    },
-                    {
-                        zIndex: 100
-                    }
-                ],
-                    {
-                        duration: 300, easing: "ease"
-                    }).addEventListener('finish', resolve);
-
+                placedCard.element.animate([{ left: `${pos.left}px`, top: `${pos.top}px`, zIndex: 100 }, { zIndex: 100 }], { duration: 300, easing: "ease" }).addEventListener('finish', resolve);
             });
         });
     }
@@ -415,6 +493,7 @@ const placeCard = (round, caravan, placedCard, activeCaravan, side, sideIndex, a
     activeCaravan = caravan;
     onCard = newOnCard;
     round.confirmButton.style.display = null;
+    round.discardButton.style.display = "none";
     if (!animating)
     {
         startAnimationQueue();
@@ -433,7 +512,6 @@ const isClicked = (clickTarget, parentElement) =>
     of a given caravan and false if it
     is not allowed
 */
-const FACE_CARDS = "JQKY";
 const validatePlacementCaravan = (card, caravan, sideIndex, round) =>
 {
     if (round.inSetUp)
@@ -465,11 +543,7 @@ const validatePlacementCaravan = (card, caravan, sideIndex, round) =>
     {
         return true;
     }
-    else if (caravan[caravan.length - 1].customColor === card.name[1])
-    {
-        return true;
-    }
-    else if (caravan[caravan.length - 1].name[1] === card.name[1] || followsPlacementDirection(caravan, card))
+    if (colorMatch(caravan[caravan.length - 1], card) || followsPlacementDirection(caravan, card))
     {
         return true;
     }
@@ -602,17 +676,29 @@ const otherPlaceCardAnimate = (caravan, sideId, card, currentTurnPlayer, round) 
                 left: cardToMove.element.style.left,
                 transform: transform,
                 zIndex: 100,
-            },
-            {
-                zIndex: 100
-            }],
-            {
-                duration: 600, easing: "ease"
-            });
+            }, { zIndex: 100 }], { duration: 600, easing: "ease" });
         cardToMove.element.remove();
         round.sides[sideId].div.append(card.element);
         updateCaravan(caravan);
         setTimeout(resolve, 750);
+    });
+};
+
+const discardCardAnimate = (hand, i = -1) =>
+{
+    return new Promise(async (resolve) =>
+    {
+        console.log(i);
+        const cardIndex = i !== -1 ? i : Math.floor(Math.random() * hand.length);
+        console.log(cardIndex);
+        const [cardToMove] = hand.splice(cardIndex, 1);
+        updateHand(hand);
+        cardToMove.element.animate([{}, { top: "55vh" }], { duration: 600, easing: "ease", fill: "forwards" });
+        setTimeout(() =>
+        {
+            cardToMove.element.remove();
+            resolve();
+        }, 750);
     });
 };
 
@@ -634,22 +720,20 @@ const newCardAnimate = async (player, newCard) =>
             left: `${newCard.element.offsetLeft + 100}px`,
             transform: 'rotate(0deg)',
             zIndex: 100,
-        },
-        {
-            zIndex: 100
-        }],
-        {
-            duration: 600, easing: "ease"
-        });
+        }, { zIndex: 100 }], { duration: 600, easing: "ease" });
 };
 
-const yourTurnAnimate = () =>
+const yourTurnAnimate = (round) =>
 {
     const msg = document.createElement('div');
     msg.classList.add('your-turn-message', 'turn-message');
     msg.id = "turn-msg";
     msg.innerText = "Din tur!";
     document.querySelector('#main').append(msg);
+    if (!round.inSetUp)
+    {
+        round.discardButton.style.display = null;
+    }
 };
 
 /*
@@ -691,6 +775,30 @@ const makeCaravanCard = (card) =>
 {
     card.element.classList.add('caravan-card');
     card.faceCards = [];
+    card.element.addEventListener('mouseover', () =>
+    {
+        card.faceCards.forEach((faceCard) =>
+        {
+            faceCard.element.style.opacity = 0.6;
+        });
+    });
+    card.element.addEventListener('mouseleave', () =>
+    {
+        card.faceCards.forEach((faceCard) =>
+        {
+            faceCard.element.style.opacity = null;
+        });
+    });
+};
+
+/*
+    Rotates the face cards slightly
+    to make them stick out
+*/
+const makeFaceCard = (card) =>
+{
+    const rotation = Math.floor(Math.random() * 10) * (Math.round(Math.random()) === 0 ? -1 : 1);
+    card.element.style.transform = `rotate(${rotation}deg)`;
 };
 
 /*
@@ -807,6 +915,7 @@ const handleMessage = (msg, round) =>
             handleLeave(msg, round);
             break;
     }
+    startNextTurn(round);
     if (!animating)
     {
         startAnimationQueue();
@@ -849,9 +958,13 @@ const handlePlace = (msg, round) =>
     {
         const card = { name: msg.card, element: createCardElement(msg.card) };
         addToCaravan(caravan, card, msg.pos);
-        if (msg.pos !== caravan.length)
+        if (!FACE_CARDS.includes(card.name[0]))
         {
             makeCaravanCard(card);
+        }
+        else
+        {
+            makeFaceCard(card);
         }
         toAnimate.push(async () =>
         {
@@ -891,27 +1004,6 @@ const handlePlace = (msg, round) =>
             removeAllOf(0, onCard, round);
         }
     }
-
-    round.currentTurn = (round.currentTurn + 1) % 2;
-    if (round.players[round.currentTurn].isPlayer)
-    {
-        makeTurn(round);
-    }
-    else
-    {
-        toAnimate.push(async () =>
-        {
-            const msg = document.querySelector('#turn-msg');
-            if (msg)
-            {
-                msg.animate([{}, { top: "-4rem" }], { duration: 300, easing: "ease", fill: "forwards" });
-                setTimeout(() =>
-                {
-                    msg.remove();
-                }, 300);
-            }
-        });
-    }
 };
 
 
@@ -923,12 +1015,28 @@ const handlePlace = (msg, round) =>
     msg object contains
     {
         event: 'dismissLane',
-        col: which lane to dismiss, numbered 0 to 2 from left to right
+        col: which lane to dismiss, 
+        numbered 0 to 2 from left to right
     }
 */
 const handleDismissLane = (msg, round) =>
 {
+    const currentTurnPlayer = round.players[round.currentTurn];
+    const caravan = round.sides[currentTurnPlayer.isPlayer ? 0 : 1][msg.col];
+    caravan.forEach((card) =>
+    {
+        card.dead = true;
+        toAnimate.push(async () =>
+        {
+            killCard(card, caravan);
+        });
 
+    });
+    toAnimate.push(async () =>
+    {
+        updateCaravan(caravan);
+    });
+    updateCaravanScore(caravan);
 };
 
 /*
@@ -943,7 +1051,20 @@ const handleDismissLane = (msg, round) =>
 */
 const handleDismissCard = (msg, round) =>
 {
-
+    const currentTurnPlayer = round.players[round.currentTurn];
+    const newCard = createCard(currentTurnPlayer.isPlayer ? msg.newCard : "Card_back");
+    currentTurnPlayer.hand.push(newCard);
+    toAnimate.push(async () =>
+    {
+        await newCardAnimate(currentTurnPlayer, newCard);
+    });
+    if (!currentTurnPlayer.isPlayer)
+    {
+        toAnimate.push(async () =>
+        {
+            await discardCardAnimate(currentTurnPlayer.hand);
+        });
+    }
 };
 
 
@@ -959,6 +1080,105 @@ const handleDismissCard = (msg, round) =>
 */
 const handleLeave = (msg, round) =>
 {
+    toAnimate.push(async ()=>
+    {
+        toVictory(round);
+    })
+};
+
+const startNextTurn = (round) =>
+{
+    const wonColumns = [undefined, undefined, undefined];
+    round.sides.forEach((side, id) =>
+    {
+        side.forEach((caravan, i) =>
+        {
+            if (caravan.score >= 21 && caravan.score <= 26)
+            {
+                caravan.sideId = id;
+                if (wonColumns[i])
+                {
+                    if (wonColumns[i].score === caravan.score)
+                    {
+                        wonColumns[i] = undefined;
+                    }
+                    else
+                    {
+                        wonColumns[i] = wonColumns[i].score > caravan.score ? wonColumns[i] : caravan;
+                    }
+                }
+                else
+                {
+                    wonColumns[i] = caravan;
+                }
+            }
+        });
+    });
+
+    if (!wonColumns.includes(undefined))
+    {
+        toAnimate.push(async () =>
+        {
+            toVictory(round, wonColumns);
+        });
+    }
+    else
+    {
+        round.currentTurn = (round.currentTurn + 1) % 2;
+        if (round.players[round.currentTurn].isPlayer)
+        {
+            makeTurn(round);
+        }
+        else
+        {
+            toAnimate.push(async () =>
+            {
+                const msg = document.querySelector('#turn-msg');
+                if (msg)
+                {
+                    msg.animate([{}, { top: "-4rem" }], { duration: 300, easing: "ease", fill: "forwards" });
+                    setTimeout(() =>
+                    {
+                        msg.remove();
+                    }, 300);
+                }
+            });
+        }
+    }
+};
+
+const toVictory = (round, wonColumns) =>
+{
+    let winnerI;
+    let loserI;
+    if (wonColumns)
+    {
+        console.log(wonColumns);
+        wonColumns = wonColumns.map(value => value.sideId);
+        console.log(wonColumns);
+        const playerWon = wonColumns.reduce((prev, cur) => prev += cur === 0 ? 1 : 0, 0) >= 2;
+        console.log(playerWon);
+        winnerI = playerWon ? (round.isFirstPlayer ? 0 : 1) : (round.isFirstPlayer ? 1 : 0);
+        loserI = playerWon ? (round.isFirstPlayer ? 1 : 0) : (round.isFirstPlayer ? 0 : 1);
+    }
+    else
+    {
+        winnerI = 0;
+    }
+    document.querySelector('#content').innerHTML = '<main class = "lobby-main" id = "background-wrapper"></main>';
+    const main = document.querySelector('#background-wrapper');
+    main.innerHTML =
+        `<div class="win-screen">
+            <div class="winner">
+                ${round.players[winnerI].name}
+            </div>
+            <div class="podium"><div>${round.players[loserI] ? round.players[loserI].name : ""}</div></div>
+        </div>
+        <div class="restart-button" id="restart">Nytt spel</div>`;
+    round.gameEnd();
+    round.removeTurnClick();
+    window.removeEventListener('resize', onResize);
+    document.querySelector('#restart').addEventListener('click', round.restart);
 
 };
 
@@ -1015,10 +1235,18 @@ const getValueOfCard = ({ name, dead }) =>
 const followsPlacementDirection = (caravan, card) =>
 {
     const topCard = caravan[caravan.length - 1];
-    const secondCard = topCard.name[0] === card.name[0] ? caravan[caravan.length - 2] : { name: topCard.killedBefore };
-    const placeDirSign = Math.sign(getValueOfCard(topCard) - getValueOfCard(secondCard));
+    const secondCard = topCard.name[0] !== card.name[0] ? caravan[caravan.length - 2] : { name: topCard.killedBefore };
+    const queenFactor = (-1) ** topCard.faceCards.reduce((prev, cur) => cur.name[0] === 'Q' ? prev + 1 : 0, 0);
+    const placeDirSign = Math.sign((getValueOfCard(topCard) - getValueOfCard(secondCard)) * queenFactor);
     const newDirSign = Math.sign(getValueOfCard(card) - getValueOfCard(topCard));
     return placeDirSign === newDirSign;
+};
+
+/*
+*/
+const colorMatch = (card1, card2) => 
+{
+    return (card1.customColor && card1.customColor === card2.name[1]) || (!card1.customColor && card1.name[1] === card2.name[1]);
 };
 
 /*
@@ -1080,7 +1308,7 @@ const updateCaravanScore = (caravan) =>
     });
     caravan.score = score;
     caravan.scoreSpan.innerText = caravan.score;
-
+    caravan.scoreSpan.style.color = caravan.score >= 21 && caravan.score <= 26 ? "green" : caravan.score > 26 ? "red" : null;
 };
 
 /*
@@ -1146,11 +1374,7 @@ const killCard = (card, caravan) =>
     }
     if (caravan[caravan.indexOf(card)])
         caravan.splice(caravan.indexOf(card), 1);
-    const keyFrames = [
-        {},
-        {
-            top: "calc(50vh + 100px)"
-        }];
+    const keyFrames = [{}, { top: "calc(50vh + 100px)" }];
     const settings = { duration: 600, easing: "ease", fill: "forwards" };
 
     card.element.animate(keyFrames, settings);
