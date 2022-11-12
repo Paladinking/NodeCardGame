@@ -3,6 +3,7 @@
     padding: 0;
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	color: var(--text-color);
 }
 
 :root
@@ -15,9 +16,11 @@
 	--confirm-button-color-hover: #6fce6f;
 	--discard-button-color: #ff4949;
 	--discard-button-color-hover: #d34343;
+	--rules-button-color-hover: #e0e0e0;
 	--page-color: #eaf8ff;
 	--sidebar-color: #ffffff;
-    --CN-card-width: 100px
+	--text-color: #000000;
+    --CN-card-width: 100px;
 }
 
 html,
@@ -438,6 +441,20 @@ body
 {
     cursor: pointer;
     background-color: var(--minor-button-color-hover);
+}
+
+.darkmode-button {
+	position: absolute;
+	top: 1rem;
+	right: 2rem;
+	height: 3rem;
+	width: 3rem;
+	background-color: var(--minor-button-color);
+}
+
+.darkmode-button:hover 
+{
+	background-color: var(--minor-button-color-hover);
 }
 
 .playlist .new
@@ -987,7 +1004,7 @@ body
 {
     padding: 1rem;
     overflow-y: hidden;
-    background: white;
+    background: var(--sidebar-color);
     height: calc(70vh + 2rem);
     width: calc(100% - 2rem - 2px);
     border: 1px solid grey;
@@ -1025,9 +1042,9 @@ body
     position: absolute;
     left: calc(50% - 4rem);
     bottom: 2rem;
-    border-left: 4rem solid white;
-    border-right: 4rem solid white;
-    border-bottom: 1px solid white;
+    border-left: 4rem solid var(--sidebar-color);
+    border-right: 4rem solid var(--sidebar-color);
+    border-bottom: 1px solid var(--sidebar-color);
 }
 
 .rules>h4
@@ -1037,7 +1054,7 @@ body
 
 .rules-button
 {
-    background-color: white;
+    background-color: var(--sidebar-color);
     width: 8rem;
     height: 2rem;
     border-radius: 0 0 10px 10px;
@@ -1049,7 +1066,7 @@ body
 
 .rules-button:hover
 {
-    background-color: rgb(228, 228, 228);
+    background-color: var(--rules-button-color-hover);
     cursor: pointer;
 }
 

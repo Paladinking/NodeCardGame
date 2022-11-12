@@ -4,6 +4,7 @@ const CARD_COLORS = "SCDH";
 const LOBBY = 0, IN_GAME = 1;
 const gameId = window.location.pathname.substring(1, 3);
 let noLeaveWarning = false;
+let darkmode = false;
 let gameState;
 let game;
 
@@ -225,6 +226,40 @@ const startBackgroundCards = (stopOnGameState = LOBBY) =>
         animate();
     }
 };
+
+
+document.querySelector('.darkmode-button').addEventListener('click', () => {
+	const root = document.querySelector(":root");
+	darkmode = !darkmode;
+	if (darkmode) {
+		root.style.setProperty("--minor-button-color", "#313131");
+		root.style.setProperty("--minor-button-color-hover", "#3f3f3f");
+		root.style.setProperty("--start-button-color", "#483838");
+		root.style.setProperty("--start-button-color-hover", "#584848");
+		root.style.setProperty("--confirm-button-color", "#40ae40");
+		root.style.setProperty("--confirm-button-color-hover", "#2f8e2f");
+		root.style.setProperty("--discard-button-color", "#632626");
+		root.style.setProperty("--discard-button-color-hover", "#9D5353");
+		root.style.setProperty("--rules-button-color-hover", "#707070");
+		root.style.setProperty("--page-color", "#525252");
+		root.style.setProperty("--sidebar-color", "#414141");
+		root.style.setProperty("--text-color", "#e0e0e0");
+	} else {
+		root.style.setProperty("--minor-button-color", "#c6e4f8");
+		root.style.setProperty("--minor-button-color-hover", "#acd4f8");
+		root.style.setProperty("--start-button-color", "#92acff");
+		root.style.setProperty("--start-button-color-hover", "#7092ff");
+		root.style.setProperty("--confirm-button-color", "#80ee80");
+		root.style.setProperty("--confirm-button-color-hover", "#6fce6f");
+		root.style.setProperty("--discard-button-color", "#ff4949");
+		root.style.setProperty("--discard-button-color-hover", "#d34343");
+		root.style.setProperty("--rules-button-color-hover", "#e0e0e0");
+		root.style.setProperty("--page-color", "#eaf8ff");
+		root.style.setProperty("--sidebar-color", "#ffffff");
+		root.style.setProperty("--text-color", "#000000");
+	}
+	
+});
 
 
 document.querySelector('#join-button').addEventListener('click', () =>
