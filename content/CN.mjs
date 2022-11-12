@@ -1080,10 +1080,10 @@ const handleDismissCard = (msg, round) =>
 */
 const handleLeave = (msg, round) =>
 {
-    toAnimate.push(async ()=>
+    toAnimate.push(async () =>
     {
         toVictory(round);
-    })
+    });
 };
 
 const startNextTurn = (round) =>
@@ -1294,17 +1294,13 @@ const updateCaravanScore = (caravan) =>
     let score = 0;
     caravan.forEach((card) =>
     {
-        score += getValueOfCard(card);
+        let cardScore = getValueOfCard(card);
         if (card.faceCards)
         {
-            card.faceCards.forEach((faceCard) =>
-            {
-                if (faceCard.name[0] === "K")
-                {
-                    score += getValueOfCard(card);
-                }
-            });
+            const kingCount = card.faceCards.reduce((prev, cur) => prev += cur.name[0] === 'K', 0);
+            cardScore *= 2 ** kingCount;
         }
+        score += cardScore;
     });
     caravan.score = score;
     caravan.scoreSpan.innerText = caravan.score;
