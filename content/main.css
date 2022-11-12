@@ -9,6 +9,14 @@
 {
     --minor-button-color: #c6e4f8;
     --minor-button-color-hover: #acd4f8;
+	--start-button-color: #92acff;
+	--start-button-color-hover: #7092ff;
+	--confirm-button-color: #80ee80;
+	--confirm-button-color-hover: #6fce6f;
+	--discard-button-color: #ff4949;
+	--discard-button-color-hover: #d34343;
+	--page-color: #eaf8ff;
+	--sidebar-color: #ffffff;
     --CN-card-width: 100px
 }
 
@@ -16,7 +24,7 @@ html,
 body
 {
     height: 100%;
-    background-color: #eaf8ff;
+    background-color: var(--page-color);
 
 }
 
@@ -30,7 +38,7 @@ body
     padding-bottom: 1rem;
     position: relative;
     flex: 0 1 auto;
-    background-color: white;
+    background-color: var(--sidebar-color);
 }
 
 .main-title
@@ -244,7 +252,7 @@ body
     position: relative;
     flex-direction: column;
     overflow: hidden;
-    background-color: #eaf8ff;
+    background-color: var(--page-color);
     user-select: none;
 }
 
@@ -429,7 +437,7 @@ body
 .join-button:hover
 {
     cursor: pointer;
-    background-color: #acd4f8;
+    background-color: var(--minor-button-color-hover);
 }
 
 .playlist .new
@@ -452,7 +460,7 @@ body
 
 .start-button
 {
-    background-color: #92acff;
+    background-color: var(--start-button-color);
     border: none;
     border-radius: 2rem;
     width: 13rem;
@@ -463,7 +471,7 @@ body
 
 .start-button[available="true"]:hover
 {
-    background-color: #7092ff;
+    background-color: var(--start-button-color-hover);
     cursor: pointer;
 }
 
@@ -490,7 +498,7 @@ body
 {
     width: 4rem;
     height: 4rem;
-    background-color: #80ee80;
+    background-color: var(--confirm-button-color);
     color: white;
     font-size: 30px;
     text-align: center;
@@ -506,7 +514,7 @@ body
 
 .confirm-button:hover
 {
-    background-color: #6fce6f;
+    background-color: var(--confirm-button-color-hover);
     cursor: pointer;
 }
 
@@ -514,7 +522,7 @@ body
 {
     width: 9rem;
     height: 4rem;
-    background-color: #ff4949;
+    background-color: var(--discard-button-color);
     color: white;
     font-size: 35px;
     text-align: center;
@@ -534,7 +542,7 @@ body
 .discard-button:hover
 {
     cursor: pointer;
-    background-color: #d34343;
+    background-color: var(--discard-button-color-hover);
 
 }
 
@@ -671,7 +679,7 @@ body
     width: 15rem;
     position: absolute;
     height: 100%;
-    background: #ffffff;
+    background: var(--sidebar-color);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
