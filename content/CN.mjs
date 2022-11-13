@@ -140,7 +140,7 @@ const setUpGame = (round) =>
         card.element.classList.add('hoverable-card');
     });
 
-    round.sides.forEach((side, sideIndex) =>
+    round.sides.forEach((side) =>
     {
         side.forEach((caravan, caravanIndex) =>
         {
@@ -181,115 +181,161 @@ const makeTurn = (round) =>
             setup, otherwise it is done when placing on a 
             caravan
         */
-        if (!placedCard)
+        let handClicked = false;
+        for (let i = 0; i < round.hand.length; i++)
         {
-            for (let i = 0; i < round.hand.length; i++)
+            const card = round.hand[i];
+            if (isClicked(e.target, card.element))
             {
-                const card = round.hand[i];
-                if (isClicked(e.target, card.element))
+                if (round.inSetUp)
                 {
-                    if (round.inSetUp)
+                    if (!placedCard && ALLOWED_FIRST_CARDS.includes(card.name[0]))
                     {
-                        if (ALLOWED_FIRST_CARDS.includes(card.name[0]))
-                        {
-                            placedCard = card;
-                            round.hand.splice(i, 1);
-                            updateHand(round.hand);
-                            const caravan = round.sides[0].find((caravan) => caravan.length === 0);
-                            addToCaravan(caravan, card);
-                            card.element.style.transform = null;
-                            card.element.classList.remove('hoverable-card');
-                            activeCaravan = caravan;
-                            activeSide = round.sides[0];
-                            round.confirmButton.style.display = null;
-                        }
+                        placedCard = card;
+                        round.hand.splice(i, 1);
+                        updateHand(round.hand);
+                        const caravan = round.sides[0].find((caravan) => caravan.length === 0);
+                        addToCaravan(caravan, card);
+                        updateCaravan(caravan);
+                        card.element.style.transform = null;
+                        card.element.classList.remove('hoverable-card');
+                        activeCaravan = caravan;
+                        activeSide = round.sides[0];
+                        round.confirmButton.style.display = null;
+                        handClicked = true;
+                        break;
                     }
-                    else
-                    {
-                        if (discarding)
-                        {
-                            const msgObj =
-                            {
-                                action: "DismissCard",
-                                card: card.name
-                            };
-                            discardCardAnimate(round.hand, i);
-                            round.discardButton.style = null;
-                            round.discardButton.style.display = "none";
-                            round.wsckt.send(JSON.stringify(msgObj));
-                            round.removeTurnClick();
-                            return;
-                        }
-                        else
-                        {
-                            placedCard = card;
-                            round.hand.splice(i, 1);
-                            updateHand(round.hand);
-                            animateToBottom(card.element);
-                            round.discardButton.style.display = "none";
-                        }
-                    }
-
-                    return; /*(!)*/
                 }
-            }
-            if (isClicked(e.target, round.discardButton))
-            {
-                discarding = !discarding;
-                round.discardButton.style.backgroundColor = discarding ? "#a03939" : null;
-                return;
-            }
-            if (discarding)
-            {
-                const side = round.sides[0];
-                for (let j = 0; j < side.length; j++)
+                else if (discarding)
                 {
-                    const caravan = side[j];
-                    let discard = false;
-                    if (isClicked(e.target, caravan.indicator))
+                    const msgObj =
                     {
-                        discard = true;
+                        action: "DismissCard",
+                        card: card.name
+                    };
+                    discardCardAnimate(round.hand, i);
+                    round.discardButton.style = null;
+                    round.discardButton.style.display = "none";
+                    round.wsckt.send(JSON.stringify(msgObj));
+                    round.removeTurnClick();
+                    handClicked = true;
+                    break;
+                }
+                if (!activeCaravan && !round.inSetUp)
+                {
+                    round.hand.splice(i, 1);
+                    animateToBottom(card.element);
+                    if (placedCard)
+                    {
+                        round.hand.push(placedCard);
+                        updateHand(round.hand);
+                        round.confirmButton.style.display = "none";
+                        round.discardButton.style.display = null;
+
                     }
-                    else
+                    updateHand(round.hand);
+                    placedCard = card;
+                    round.discardButton.style.display = "none";
+                    handClicked = true;
+                    break;
+                }
+                if (activeCaravan)
+                {
+                    const validReplacement = (validatePlacementCaravan(card, activeCaravan.slice(0, -1), 0) && !onCard)
+                        || (onCard && validatePlacementFaceCard(card, activeCaravan, onCard, onCard.faceCards.slice(0, -1)));
+                    if (validReplacement || !round.inSetUp)
                     {
-                        for (let k = 0; k < caravan.length; k++)
+                        round.hand.splice(i, 1);
+                        returnCardToHand(placedCard, activeCaravan, onCard, activeSide, round);
+                        placedCard = card;
+                        if (validReplacement)
                         {
-                            const card = caravan[k];
-                            if (isClicked(e.target, card.element))
+                            if (onCard)
                             {
-                                discard = true;
+                                placeCard(round, activeCaravan, placedCard, undefined, activeSide, 0, activeSide, onCard, onCard, activeCaravan.indexOf(onCard));
                             }
                             else
                             {
-                                for (let l = 0; l < card.faceCards.length; l++)
+                                placeCard(round, activeCaravan, placedCard, undefined, activeSide, 0, activeSide);
+                                onCard = undefined;
+                            }
+                        }
+                        else
+                        {
+                            updateCaravan(activeCaravan);
+                            animateToBottom(card.element);
+                            activeCaravan = undefined;
+                            activeSide = undefined;
+                            onCard = undefined;
+                            round.confirmButton.style.display = "none";
+                            round.discardButton.style.display = null;
+                        }
+                        updateHand(round.hand);
+                        handClicked = true;
+                        break;
+                    }
+                }
+                handClicked = true;
+                break;
+            }
+        }
+        if (!placedCard && isClicked(e.target, round.discardButton))
+        {
+            discarding = !discarding;
+            round.discardButton.style.backgroundColor = discarding ? "#a03939" : null;
+        }
+        else if (discarding)
+        {
+            const side = round.sides[0];
+            for (let j = 0; j < side.length; j++)
+            {
+                const caravan = side[j];
+                let discard = false;
+                if (isClicked(e.target, caravan.indicator))
+                {
+                    discard = true;
+                }
+                else
+                {
+                    for (let k = 0; k < caravan.length; k++)
+                    {
+                        const card = caravan[k];
+                        if (isClicked(e.target, card.element))
+                        {
+                            discard = true;
+                        }
+                        else
+                        {
+                            for (let l = 0; l < card.faceCards.length; l++)
+                            {
+                                const faceCard = card.faceCards[l];
+                                if (isClicked(e.target, faceCard.element))
                                 {
-                                    const faceCard = card.faceCards[l];
-                                    if (isClicked(e.target, faceCard.element))
-                                    {
-                                        discard = true;
-                                    }
+                                    discard = true;
                                 }
                             }
                         }
                     }
-                    if (discard)
-                    {
-                        const msgObj =
-                        {
-                            action: "DismissLane",
-                            col: j
-                        };
-                        round.discardButton.style = null;
-                        round.discardButton.style.display = "none";
-                        round.wsckt.send(JSON.stringify(msgObj));
-                        round.removeTurnClick();
-                        return;
-                    }
                 }
-
+                if (discard)
+                {
+                    const msgObj =
+                    {
+                        action: "DismissLane",
+                        col: j
+                    };
+                    round.discardButton.style = null;
+                    round.discardButton.style.display = "none";
+                    round.wsckt.send(JSON.stringify(msgObj));
+                    round.removeTurnClick();
+                    handClicked = true;
+                    break;
+                }
             }
+
         }
-        else
+
+        if (placedCard && !handClicked)
         {
             /*
                 Returns card to hand if it is clicked
@@ -297,38 +343,7 @@ const makeTurn = (round) =>
             */
             if (isClicked(e.target, placedCard.element))
             {
-                round.hand.push(placedCard);
-                updateHand(round.hand);
-                if (activeCaravan)
-                {
-                    placedCard.element.classList.add('hoverable-card');
-                    popCaravan(activeCaravan, onCard);
-                    updateCaravan(activeCaravan);
-                    if (round.sides.indexOf(activeSide) === 1)
-                    {
-                        const pos = getReversePosition(placedCard);
-                        round.sides[0].div.append(placedCard.element);
-                        placedCard.element.animate([
-                            {
-                                left: `${pos.left}px`,
-                                top: `${pos.top}px`,
-                                transform: "rotate(0deg)"
-                            }, {}], { duration: 300, easing: "ease" });
-                    }
-                    activeCaravan = undefined;
-                    onCard = undefined;
-                    activeSide = undefined;
-                }
-                else
-                {
-                    animateToHand(placedCard.element);
-                }
-                round.confirmButton.style.display = "none";
-                if (!round.inSetUp)
-                {
-                    round.discardButton.style.display = null;
-                }
-                placedCard = undefined;
+                [placedCard, activeCaravan, onCard, activeSide] = returnCardToHand(placedCard, activeCaravan, onCard, activeSide, round);
             }
 
             /*
@@ -362,75 +377,70 @@ const makeTurn = (round) =>
                 round.wsckt.send(JSON.stringify(msgObj));
                 round.removeTurnClick();
             }
-            /*
-                A card can be placed
-            */
-            else
+            else if (!round.inSetUp)
             {
                 for (const side of round.sides)
                 {
                     for (let i = 0; i < side.length; i++)
                     {
                         const caravan = side[i];
-                        /*
-                            Moves a card to a caravan from the bottom
-                            or from another caravan -- not for 
-                            placing face cards
-                        */
+                        let indicatorClicked = false;
+                        let faceCardClicked = false;
+                        let cardClicked = false;
                         if (isClicked(e.target, caravan.indicator))
                         {
-                            if (validatePlacementCaravan(placedCard, caravan, round.sides.indexOf(side), round))
-                            {
-                                const place = placeCard(round, caravan, placedCard, activeCaravan, side, round.sides.indexOf(side), activeSide);
-                                activeCaravan = place.activeCaravan;
-                                activeSide = side;
-                            }
-                            else
-                            {
-                                return; /*(!)*/;
-                            }
+                            indicatorClicked = true;
                         }
-
                         else
                         {
                             for (let j = 0; j < caravan.length; j++)
                             {
                                 const card = caravan[j];
-                                /*
-                                    Moves a card to a card from
-                                    the bottom or another card
-                                    -- for placing face cards
-                                */
-                                if (isClicked(e.target, card.element))
+                                if (card === placedCard)
                                 {
-                                    if (validatePlacementFaceCard(placedCard, caravan, card))
+                                    continue;
+                                }
+                                card.faceCards.forEach((faceCard) =>
+                                {
+                                    if (isClicked(e.target, faceCard.element))
+                                    {
+                                        faceCardClicked = true;
+                                        return;
+                                    }
+                                });
+                                if (!faceCardClicked && isClicked(e.target, card.element))
+                                {
+                                    cardClicked = true;
+                                }
+                                if (faceCardClicked || cardClicked)
+                                {
+                                    if (validatePlacementFaceCard(placedCard, caravan, card, card.faceCards))
                                     {
                                         const place = placeCard(round, caravan, placedCard, activeCaravan, side, round.sides.indexOf(side), activeSide, onCard, card, j);
                                         activeCaravan = place.activeCaravan;
                                         onCard = place.onCard;
                                         activeSide = side;
-                                    }
-                                    else
-                                    {
-                                        return; /*(!)*/;
+                                        break;
                                     }
                                 }
                             }
                         }
-                    }
-
-                    /*
-                        Prevents players from placing on each 
-                        other's sides when in setup by only 
-                        looping through the first side in round.sides
-                    */
-                    if (round.inSetUp)
-                    {
-                        break;
+                        if ((indicatorClicked || cardClicked || faceCardClicked) && validatePlacementCaravan(placedCard, caravan, round.sides.indexOf(side)))
+                        {
+                            const place = placeCard(round, caravan, placedCard, activeCaravan, side, round.sides.indexOf(side), activeSide);
+                            activeCaravan = place.activeCaravan;
+                            activeSide = side;
+                            break;
+                        }
                     }
                 }
             }
         }
+        if (!animating)
+        {
+            startAnimationQueue();
+        }
+
     };
     document.addEventListener('click', turnClick);
     round.removeTurnClick = () =>
@@ -439,12 +449,43 @@ const makeTurn = (round) =>
     };
 };
 
+const returnCardToHand = (placedCard, activeCaravan, onCard, activeSide, round) =>
+{
+    round.hand.push(placedCard);
+    updateHand(round.hand);
+    if (activeCaravan)
+    {
+        placedCard.element.classList.add('hoverable-card');
+        popCaravan(activeCaravan, onCard);
+        updateCaravan(activeCaravan);
+        if (round.sides.indexOf(activeSide) === 1)
+        {
+            const pos = getReversePosition(placedCard);
+            round.sides[0].div.append(placedCard.element);
+            placedCard.element.animate([
+                {
+                    left: `${pos.left}px`,
+                    top: `${pos.top}px`,
+                    transform: "rotate(0deg)"
+                }, {}], { duration: 300, easing: "ease" });
+        }
+        activeCaravan = undefined;
+        onCard = undefined;
+        activeSide = undefined;
+    }
+    round.confirmButton.style.display = "none";
+    if (!round.inSetUp)
+    {
+        round.discardButton.style.display = null;
+    }
+    placedCard = undefined;
+    return [placedCard, activeCaravan, onCard, activeSide];
+};
+
 /*
     Does the actual moving of cards that 
     are placed after setup, both in regard
-    to animation and game data. Starts animation
-    queue at the end to queue up otherwise glitchy
-    animations 
+    to animation and game data.
 */
 const placeCard = (round, caravan, placedCard, activeCaravan, side, sideIndex, activeSide, onCard, newOnCard, newOnCardIndex) =>
 {
@@ -458,35 +499,35 @@ const placeCard = (round, caravan, placedCard, activeCaravan, side, sideIndex, a
     if ((activeSide ? round.sides.indexOf(activeSide) : 0) !== sideIndex)
     {
         const pos = getReversePosition(placedCard);
+        addToCaravan(caravan, placedCard, newOnCardIndex);
         toAnimate.push(async () =>
         {
             return new Promise((resolve) =>
             {
                 side.div.append(placedCard.element);
-                addToCaravan(caravan, placedCard, newOnCardIndex);
+                updateCaravan(caravan);
                 if (!activeCaravanExists)
                 {
                     animateToCaravans(placedCard.element);
                 }
-                placedCard.element.animate([{ left: `${pos.left}px`, top: `${pos.top}px`, zIndex: 100 }, { zIndex: 100 }], { duration: 300, easing: "ease" }).addEventListener('finish', resolve);
+                placedCard.element.animate([{ left: `${pos.left}px`, top: `${pos.top}px`, transform: `rotate(${pos.angle}deg)` }, {transform: `rotate(0deg)`}], { duration: 300, easing: "ease" }).addEventListener('finish', resolve);
             });
         });
     }
     else 
     {
+        addToCaravan(caravan, placedCard, newOnCardIndex);
         toAnimate.push(async () =>
         {
             return new Promise((resolve) =>
             {
-                addToCaravan(caravan, placedCard, newOnCardIndex);
+                updateCaravan(caravan);
                 if (!activeCaravanExists)
                 {
-                    animateToCaravans(placedCard.element).addEventListener('finish', resolve);
+                    animateToCaravans(placedCard.element);
                 }
-                else
-                {
-                    resolve();
-                }
+                resolve();
+
             });
         });
     }
@@ -494,10 +535,6 @@ const placeCard = (round, caravan, placedCard, activeCaravan, side, sideIndex, a
     onCard = newOnCard;
     round.confirmButton.style.display = null;
     round.discardButton.style.display = "none";
-    if (!animating)
-    {
-        startAnimationQueue();
-    }
     return { activeCaravan: activeCaravan, onCard: onCard };
 };
 
@@ -512,13 +549,8 @@ const isClicked = (clickTarget, parentElement) =>
     of a given caravan and false if it
     is not allowed
 */
-const validatePlacementCaravan = (card, caravan, sideIndex, round) =>
+const validatePlacementCaravan = (card, caravan, sideIndex) =>
 {
-    if (round.inSetUp)
-    {
-        return false;
-    }
-
     if (sideIndex === 1)
     {
         return false;
@@ -557,7 +589,7 @@ const validatePlacementCaravan = (card, caravan, sideIndex, round) =>
     another given card and false
     if it is not allowed 
 */
-const validatePlacementFaceCard = (card, caravan, onCard) =>
+const validatePlacementFaceCard = (card, caravan, onCard, faceCards) =>
 {
     if (!FACE_CARDS.includes(card.name[0]))
     {
@@ -569,7 +601,7 @@ const validatePlacementFaceCard = (card, caravan, onCard) =>
         return false;
     }
 
-    if (onCard.faceCards.length == 3)
+    if (faceCards.length == 3)
     {
         return false;
     }
@@ -584,48 +616,13 @@ const validatePlacementFaceCard = (card, caravan, onCard) =>
 
 /*
     Moves a card to the bottom of the screen with an animation
-    (!)Uses a CSS class for positioning and resets all JS styling(!)
 */
 const animateToBottom = (cardElement) =>
 {
-    cardElement.classList.add('CN-bottom-card');
-    const left = cardElement.style.left;
-    const top = cardElement.style.top;
-    const transform = cardElement.style.transform;
-    const zIndex = cardElement.style.zIndex;
-    cardElement.style = null;
-    cardElement.animate([
-        {
-            left: left,
-            top: top,
-            transform: transform,
-            zIndex: zIndex
-        },
-        {
-            left: `-${cardElement.offsetWidth / 2}px`,
-            zIndex: zIndex
-        }
-    ],
-        {
-            duration: 300, easing: "ease"
-        });
-};
-
-/*
-    Animates a card from the bottom of the screen to the hand
-*/
-const animateToHand = (cardElement) =>
-{
-    cardElement.classList.remove('CN-bottom-card');
-    cardElement.animate([
-        {
-            left: `-${cardElement.offsetWidth / 2}px`,
-        },
-        {}
-    ],
-        {
-            duration: 300, easing: "ease"
-        });
+    cardElement.style.top = "80%";
+    cardElement.style.transform = "scale(1.6)";
+    cardElement.style.zIndex = 50;
+    cardElement.style.left = `-${cardElement.offsetWidth / 2}px`;
 };
 
 /*
@@ -633,16 +630,8 @@ const animateToHand = (cardElement) =>
 */
 const animateToCaravans = (cardElement) =>
 {
-    cardElement.classList.remove('CN-bottom-card', 'hoverable-card');
-    return cardElement.animate([
-        {
-            left: `-${cardElement.offsetWidth / 2}px`,
-        },
-        {}
-    ],
-        {
-            duration: 300, easing: "ease"
-        });
+    cardElement.classList.remove('hoverable-card');
+    cardElement.style.transform = null;
 };
 
 /*
@@ -666,9 +655,9 @@ const otherPlaceCardAnimate = (caravan, sideId, card, currentTurnPlayer, round) 
         }
         else
         {
-            top = `${getReversePosition(cardToMove).top}px`;
-            const angle = cardToMove.element.style.transform.split('rotate(')[1].split('deg)')[0];
-            transform = `rotate(${-angle}deg)`;
+            const pos = getReversePosition(cardToMove);
+            top = `${pos.top}px`;
+            transform = `rotate(${pos.angle}deg)`;
         }
         card.element.animate([
             {
@@ -688,9 +677,7 @@ const discardCardAnimate = (hand, i = -1) =>
 {
     return new Promise(async (resolve) =>
     {
-        console.log(i);
         const cardIndex = i !== -1 ? i : Math.floor(Math.random() * hand.length);
-        console.log(cardIndex);
         const [cardToMove] = hand.splice(cardIndex, 1);
         updateHand(hand);
         cardToMove.element.animate([{}, { top: "55vh" }], { duration: 600, easing: "ease", fill: "forwards" });
@@ -774,6 +761,7 @@ const createCard = (cardName, parent) =>
 const makeCaravanCard = (card) =>
 {
     card.element.classList.add('caravan-card');
+    card.element.style.transform = `rotate(0deg)`;
     card.faceCards = [];
     card.element.addEventListener('mouseover', () =>
     {
@@ -797,7 +785,7 @@ const makeCaravanCard = (card) =>
 */
 const makeFaceCard = (card) =>
 {
-    const rotation = Math.floor(Math.random() * 10) * (Math.round(Math.random()) === 0 ? -1 : 1);
+    const rotation = Math.floor(Math.random() * 5) * (Math.round(Math.random()) === 0 ? -1 : 1);
     card.element.style.transform = `rotate(${rotation}deg)`;
 };
 
@@ -868,7 +856,6 @@ const updateCaravan = (caravan) =>
     caravan.forEach((card) =>
     {
         card.element.style.top = `calc(1rem + ${pos}px)`;
-        pos += card.element.offsetHeight / 5;
         const left = caravan.indicator.offsetLeft + caravan.indicator.parentElement.offsetLeft;
         card.element.style.left = `${left}px`;
         card.element.style.zIndex = zIndex;
@@ -876,16 +863,18 @@ const updateCaravan = (caravan) =>
 
         if (card.faceCards)
         {
+            let leftPos = card.element.offsetWidth / 5;
             card.faceCards.forEach((faceCard) =>
             {
-                faceCard.element.style.top = `calc(1rem + ${pos}px)`;
-                pos += faceCard.element.offsetHeight / 5;
-                const left = caravan.indicator.offsetLeft + caravan.indicator.parentElement.offsetLeft;
+                faceCard.element.style.top = `calc(1.1rem + ${pos}px)`;
+                const left = caravan.indicator.offsetLeft + caravan.indicator.parentElement.offsetLeft + leftPos;
+                leftPos += card.element.offsetWidth / 5;
                 faceCard.element.style.left = `${left}px`;
                 faceCard.element.style.zIndex = zIndex;
                 zIndex += 1;
             });
         }
+        pos += card.element.offsetHeight / 5;
     });
     caravan.indicator.style.top = `${pos}px`;
 };
@@ -968,6 +957,7 @@ const handlePlace = (msg, round) =>
         }
         toAnimate.push(async () =>
         {
+            updateCaravan(caravan);
             await otherPlaceCardAnimate(caravan, msg.side, card, currentTurnPlayer, round);
         });
     }
@@ -1153,17 +1143,15 @@ const toVictory = (round, wonColumns) =>
     let loserI;
     if (wonColumns)
     {
-        console.log(wonColumns);
         wonColumns = wonColumns.map(value => value.sideId);
-        console.log(wonColumns);
         const playerWon = wonColumns.reduce((prev, cur) => prev += cur === 0 ? 1 : 0, 0) >= 2;
-        console.log(playerWon);
         winnerI = playerWon ? (round.isFirstPlayer ? 0 : 1) : (round.isFirstPlayer ? 1 : 0);
         loserI = playerWon ? (round.isFirstPlayer ? 1 : 0) : (round.isFirstPlayer ? 0 : 1);
     }
     else
     {
-        winnerI = 0;
+        winnerI = (round.isFirstPlayer ? 0 : 1);
+        loserI = (round.isFirstPlayer ? 1 : 0);
     }
     document.querySelector('#content').innerHTML = '<main class = "lobby-main" id = "background-wrapper"></main>';
     const main = document.querySelector('#background-wrapper');
@@ -1172,7 +1160,7 @@ const toVictory = (round, wonColumns) =>
             <div class="winner">
                 ${round.players[winnerI].name}
             </div>
-            <div class="podium"><div>${round.players[loserI] ? round.players[loserI].name : ""}</div></div>
+            <div class="podium"><div>${round.players[loserI].name}</div></div>
         </div>
         <div class="restart-button" id="restart">Nytt spel</div>`;
     round.gameEnd();
@@ -1266,7 +1254,6 @@ const addToCaravan = (caravan, card, pos = caravan.length) =>
         caravan.push(card);
     }
     updateCaravanScore(caravan);
-    updateCaravan(caravan);
 };
 
 /*
@@ -1317,7 +1304,9 @@ const getReversePosition = ({ element }) =>
 {
     const top = -element.offsetTop - document.querySelector('#scoreboard').offsetHeight - element.offsetHeight;
     const left = element.offsetLeft;
-    return { top: top, left: left };
+    const angleExists = element.style.transform && element.style.transform.includes('rotates')
+    const angle = angleExists ? -(element.style.transform.split('rotate(')[1].split('deg)')[0]) : 0;
+    return { top: top, left: left, angle: angle };
 };
 
 /*

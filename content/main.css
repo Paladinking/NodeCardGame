@@ -304,13 +304,6 @@ body
     height: calc(1.4 * var(--CN-card-width));
 }
 
-.CN-bottom-card
-{
-    top: 80%;
-    transform: scale(1.5);
-    z-index: 50;
-}
-
 .caravan-card:hover
 {
     filter: brightness(90%);
@@ -634,7 +627,7 @@ body
 {
     :root
     {
-        --CN-card-width: 75px;
+        --CN-card-width: 72px;
     }
 }
 
