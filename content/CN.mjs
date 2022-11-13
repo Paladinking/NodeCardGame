@@ -1216,19 +1216,17 @@ const getValueOfCard = ({ name, dead }) =>
     Returns whether a card would follow the
     placement direction of a given caravan
 
-    If a card has been removed so that no
-    apparent direction exists, the function
-    will return the direction as if the
-    card was not removed
+    Returns true if a card has been removed so that no
+    apparent direction exists
 */
 const followsPlacementDirection = (caravan, card) =>
 {
     const topCard = caravan[caravan.length - 1];
-    const secondCard = topCard.name[0] !== caravan[caravan.length - 2].name[0] ? caravan[caravan.length - 2] : { name: topCard.killedBefore };
+    const secondCard = caravan[caravan.length - 2];
     const queenFactor = (-1) ** topCard.faceCards.reduce((prev, cur) => cur.name[0] === 'Q' ? prev + 1 : 0, 0);
     const placeDirSign = Math.sign((getValueOfCard(topCard) - getValueOfCard(secondCard)) * queenFactor);
     const newDirSign = Math.sign(getValueOfCard(card) - getValueOfCard(topCard));
-    return placeDirSign === newDirSign;
+    return placeDirSign === newDirSign || secondCard.name[0] === topCard.name[0];
 };
 
 /*
@@ -1346,20 +1344,10 @@ const removeAllOf = (type, ofCard, round) =>
 /*
     Removes a card from the board by lifting 
     it out of frame
-    
-    Marks the card after the removed card in 
-    the caravan so that placement direction
-    can be preserved
 */
 const killCard = (card, caravan) =>
 {
-    const nextCard = caravan[caravan.indexOf(card) + 1];
-    if (nextCard)
-    {
-        nextCard.killedBefore = card.name;
-    }
-    if (caravan[caravan.indexOf(card)])
-        caravan.splice(caravan.indexOf(card), 1);
+    caravan.splice(caravan.indexOf(card), 1);
     const keyFrames = [{}, { top: "calc(50vh + 100px)" }];
     const settings = { duration: 600, easing: "ease", fill: "forwards" };
 
