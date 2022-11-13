@@ -71,6 +71,9 @@ const validateMove = (data, game, player, isSpecial) => {
 		if (data.pos >= pile.cards.length) {
 			return false;
 		}
+		if (pile.cards[data.pos].specials.length > 2) {
+			return false;
+		}
 		return true;
 	} else {
 		if (data.pos != pile.cards.length || data.side != player.id) {
@@ -320,8 +323,17 @@ const handleCNInit = (game) => {
 		}
 		player.playing = true;
 		player.hand = [];
+		let numberCardCount = 0;
 		for (let i = 0; i < 8; i++) {
-			player.hand.push(player.deck.pop());
+			let j = player.deck.length;
+			do {
+				j--;
+				const card = player.deck[j];
+				if (!"JQKY".includes(card[0])) {
+					numberCardCount++;
+				}
+			} while ((8 - i) + numberCardCount <= 3);
+			player.hand.push(player.deck.splice(j, 1)[0]);
 		}
 		player.send(`{"event" : "start", "hand" : [${player.hand.map((c) => '"' + c + '"')}]}`);
 	});
