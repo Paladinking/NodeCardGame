@@ -502,7 +502,7 @@ const placeCard = (round, caravan, placedCard, activeCaravan, side, sideIndex, a
         addToCaravan(caravan, placedCard, newOnCardIndex);
         toAnimate.push(async () =>
         {
-            return new Promise((resolve) =>
+            await new Promise((resolve) =>
             {
                 side.div.append(placedCard.element);
                 updateCaravan(caravan);
@@ -510,7 +510,7 @@ const placeCard = (round, caravan, placedCard, activeCaravan, side, sideIndex, a
                 {
                     animateToCaravans(placedCard.element);
                 }
-                placedCard.element.animate([{ left: `${pos.left}px`, top: `${pos.top}px`, transform: `rotate(${pos.angle}deg)` }, {transform: `rotate(0deg)`}], { duration: 300, easing: "ease" }).addEventListener('finish', resolve);
+                placedCard.element.animate([{ left: `${pos.left}px`, top: `${pos.top}px`, transform: `rotate(${pos.angle}deg)` }, { transform: `rotate(0deg)` }], { duration: 3000, easing: "ease" }).addEventListener('finish', resolve);
             });
         });
     }
@@ -519,7 +519,7 @@ const placeCard = (round, caravan, placedCard, activeCaravan, side, sideIndex, a
         addToCaravan(caravan, placedCard, newOnCardIndex);
         toAnimate.push(async () =>
         {
-            return new Promise((resolve) =>
+            await new Promise((resolve) =>
             {
                 updateCaravan(caravan);
                 if (!activeCaravanExists)
@@ -863,11 +863,12 @@ const updateCaravan = (caravan) =>
 
         if (card.faceCards)
         {
+            let leftPosFactor = Array.from(document.querySelectorAll('.flipped div')).includes(card.element) ? -1 : 1;
             let leftPos = card.element.offsetWidth / 5;
             card.faceCards.forEach((faceCard) =>
             {
                 faceCard.element.style.top = `calc(1.1rem + ${pos}px)`;
-                const left = caravan.indicator.offsetLeft + caravan.indicator.parentElement.offsetLeft + leftPos;
+                const left = caravan.indicator.offsetLeft + caravan.indicator.parentElement.offsetLeft + (leftPos * leftPosFactor);
                 leftPos += card.element.offsetWidth / 5;
                 faceCard.element.style.left = `${left}px`;
                 faceCard.element.style.zIndex = zIndex;
@@ -1223,7 +1224,7 @@ const getValueOfCard = ({ name, dead }) =>
 const followsPlacementDirection = (caravan, card) =>
 {
     const topCard = caravan[caravan.length - 1];
-    const secondCard = topCard.name[0] !== card.name[0] ? caravan[caravan.length - 2] : { name: topCard.killedBefore };
+    const secondCard = topCard.name[0] !== caravan[caravan.length - 2].name[0] ? caravan[caravan.length - 2] : { name: topCard.killedBefore };
     const queenFactor = (-1) ** topCard.faceCards.reduce((prev, cur) => cur.name[0] === 'Q' ? prev + 1 : 0, 0);
     const placeDirSign = Math.sign((getValueOfCard(topCard) - getValueOfCard(secondCard)) * queenFactor);
     const newDirSign = Math.sign(getValueOfCard(card) - getValueOfCard(topCard));
@@ -1304,7 +1305,7 @@ const getReversePosition = ({ element }) =>
 {
     const top = -element.offsetTop - document.querySelector('#scoreboard').offsetHeight - element.offsetHeight;
     const left = element.offsetLeft;
-    const angleExists = element.style.transform && element.style.transform.includes('rotates')
+    const angleExists = element.style.transform && element.style.transform.includes('rotates');
     const angle = angleExists ? -(element.style.transform.split('rotate(')[1].split('deg)')[0]) : 0;
     return { top: top, left: left, angle: angle };
 };
