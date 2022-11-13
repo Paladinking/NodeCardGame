@@ -630,11 +630,11 @@ body
     box-shadow: -4px 2px 0 0 rgb(0 0 0), -7px 4px 0 0 rgb(255 255 255), -11px 7px 0 0 rgb(0 0 0);
 }
 
-@media screen and (max-height: 750px)
+@media screen and (max-height: 800px)
 {
     :root
     {
-        --CN-card-width: 80px;
+        --CN-card-width: 75px;
     }
 }
 
