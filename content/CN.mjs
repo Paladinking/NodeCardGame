@@ -506,11 +506,13 @@ const placeCard = (round, caravan, placedCard, activeCaravan, side, sideIndex, a
             {
                 side.div.append(placedCard.element);
                 updateCaravan(caravan);
+				let transform = `rotate(${pos.angle}deg)`;
                 if (!activeCaravanExists)
                 {
+					transform+= " scale(1.6)";
                     animateToCaravans(placedCard.element);
                 }
-                placedCard.element.animate([{ left: `${pos.left}px`, top: `${pos.top}px`, transform: `rotate(${pos.angle}deg)` }, { transform: `rotate(0deg)` }], { duration: 3000, easing: "ease" }).addEventListener('finish', resolve);
+                placedCard.element.animate([{ left: `${pos.left}px`, top: `${pos.top}px`, transform: transform }, { transform: `rotate(0deg)` }], { duration: 300, easing: "ease" }).addEventListener('finish', resolve);
             });
         });
     }
