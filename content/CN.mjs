@@ -1228,7 +1228,7 @@ const followsPlacementDirection = (caravan, card) =>
 {
     const topCard = caravan[caravan.length - 1];
     const secondCard = caravan[caravan.length - 2];
-    const queenFactor = (-1) ** topCard.faceCards.reduce((prev, cur) => cur.name[0] === 'Q' ? prev + 1 : 0, 0);
+    const queenFactor = (-1) ** topCard.faceCards.reduce((prev, cur) => prev + (cur.name[0] === 'Q' ? 1 : 0), 0);
     const placeDirSign = Math.sign((getValueOfCard(topCard) - getValueOfCard(secondCard)) * queenFactor);
     const newDirSign = Math.sign(getValueOfCard(card) - getValueOfCard(topCard));
     return placeDirSign === newDirSign || secondCard.name[0] === topCard.name[0];
