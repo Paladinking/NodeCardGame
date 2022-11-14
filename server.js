@@ -152,7 +152,7 @@ server.listen(port, () => {
 
 const socketServer = new ws.WebSocketServer({server : server});
 
-const UNIDENTIFIED = 0, IN_LOBBY = 1, IN_GAME = 2;
+const UNIDENTIFIED = 0, UNNAMED = 1, IN_LOBBY = 2, IN_GAME = 3;
 
 let connectedCount = 0;
 
@@ -180,7 +180,7 @@ socketServer.on("connection", (socket, req) => {
 		}
 		console.log(data);
 		if (socket.player.status == UNIDENTIFIED) {
-			if (!isValidMsg(data, ["gameId", "name"]) || !Object.keys(data).length == 2) {
+			if (!isValidMsg(data, ["gameId"]) || typeof data.action != 'string') {
 				socket.close(1000, "Invalid message");
 				return;
 			}
