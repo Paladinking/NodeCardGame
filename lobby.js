@@ -29,34 +29,44 @@ const games = {
 
 let runTests = false;
 
+const joinLobby  = (data, game, player) => {
+	if (player.status == IN_LOBBY || typeof data.name != 'string') {
+		player.close(1000, "Invalid message");
+		return;
+	}
+	if (data.name.length > 20) {
+		player.close(1000, "TMI");
+		return;
+	}
+	if (game.players.length == game.lobby.maxPlayers) {
+		player.close(1000, "Lobby is full");
+		return;
+	}
+	if (player.status == UNNAMED) {
+		game.lobby.unnamed_players.splice(player.id, 1);
+	}
+	player.id = game.players.length;
+	player.name = data.name;
+	player.status = IN_LOBBY;
+	const toSend = JSON.stringify({event : "join", name : player.name, id : player.id});
+	console.log(toSend);
+	game.players.forEach((player) => {
+		player.send(toSend);
+	});
+	game.lobby.unnamed_players.forEach((player) => {
+		player.send(toSend);
+	});
+	game.players.push(player);
+}
+
 const lobbyHandleMessage = (data, game, player) => {
 	if (data.action == "Leave") {
 		player.close(1000, "Left game");
 	} else if (data.action == "Join") {
-		if (player.status != UNNAMED || typeof data.name != 'string' || data.name.length > 20) {
-			player.close(1000, "Invalid message");
-			return;
-		}
-		if (game.players.length == game.lobby.maxPlayers) {
-			socket.close(1000, "Lobby is full");
-			return;
-		}
-		game.lobby.unnamed_players.splice(player.id, 1);
-		player.id = game.players.length;
-		player.name = data.name;
-		player.status = IN_LOBBY;
-		const toSend = JSON.stringify({event : "join", name : player.name, id : player.id});
-		console.log(toSend);
-		game.players.forEach((player) => {
-			player.send(toSend);
-		});
-		game.lobby.unnamed_players.forEach((player) => {
-			player.send(toSend);
-		});
-		game.players.push(player);
+		joinLobby(data, game, player);
 	} else if (data.action == "Start") {
 		if (player.status != IN_LOBBY) {
-			player.close(("Invalid message");
+			player.close(("Invalid message"));
 			return;
 		}
 		if (game.players.length >= game.lobby.minPlayers) {
@@ -113,9 +123,9 @@ for (const key in games) {
 	games[key].game = lobbyGame(games[key]);
 }
 
-const getLobby (name) => {
+const getLobby = (name) => {
 	for (let gameName in games) {
-		if (gameName == data.gameId) {
+		if (gameName == name) {
 			return games[gameName];
 		}
 	}
@@ -135,8 +145,8 @@ const queryLobby = (data, socket) => {
 	socket.send(JSON.stringify({event : "qeury", players : names}));
 }
 
-const joinLobby = (data, socket) => {
-	if (typeof data.gameId != "string" || data.gameId.length != 2 || Object.keys(data) != 2) {
+const join = (data, socket) => {
+	if (typeof data.gameId != "string" || data.gameId.length != 2 || Object.keys(data).length > 2) {
 		socket.close(1000, "Invalid message");
 		return;
 	}
@@ -146,14 +156,21 @@ const joinLobby = (data, socket) => {
 		socket.close(1000, "Invalid game");
 		return;
 	}
-
-	socket.game = lobby.game;
-	socket.player.id = unnamed_players.length;
-	socket.player.status = UNNAMED;
 	const names = lobby.game.players.map(p => p.name);
-	socket.player.send(JSON.stringify({event : "joined", "players" : names}));
-	lobby.unnamed_players.push(socket.player);
+	socket.game = lobby.game;
+	if (Object.hasOwn(data, 'name')) {
+		joinLobby(data, socket.game, socket.player);
+		if (socket.player.status == IN_LOBBY) {
+			socket.player.send(JSON.stringify({event : "joined", players : names}));
+		}
+	} else {
+		socket.player.id = unnamed_players.length;
+		socket.player.status = UNNAMED;
+		socket.player.send(JSON.stringify({event : "joined", players : names}));
+		lobby.unnamed_players.push(socket.player);
+	}
 }
+
 /*
 const joinLobby = (data, socket) => {
 	if (
@@ -192,6 +209,6 @@ const joinLobby = (data, socket) => {
 	game.players.push(socket.player);
 }*/
 
-lobbyModule.joinLobby = joinLobby;
+lobbyModule.joinLobby = join;
 
 module.exports = lobbyModule;

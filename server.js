@@ -180,7 +180,7 @@ socketServer.on("connection", (socket, req) => {
 		}
 		console.log(data);
 		if (socket.player.status == UNIDENTIFIED) {
-			if (!isValidMsg(data, ["gameId"]) || typeof data.action != 'string') {
+			if (!isValidMsg(data, ["gameId"])) {
 				socket.close(1000, "Invalid message");
 				return;
 			}
