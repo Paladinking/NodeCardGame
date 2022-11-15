@@ -69,6 +69,9 @@ const lobbyHandleMessage = (data, game, player) => {
 			player.close(("Invalid message"));
 			return;
 		}
+		game.lobby.unnamed_players.forEach((player) => {
+			player.send('{"event" : "unnamedStart"}');
+		});
 		if (game.players.length >= game.lobby.minPlayers) {
 			//The previous lobby.game will be turned into the proper game by createGame.
 			game.lobby.game = lobbyGame(game.lobby);
@@ -100,6 +103,9 @@ const lobbyHandleClose = (game, player) => {
 			if (game.players[i].id != i) {
 				game.players[i].id = i;
 			}
+		}
+		for (let i = 0; i < game.lobby.unnamed_players.length; i++) {
+			game.lobby.unnamed_players[i].send(`{"event" : "leave", "id" : ${player.id}}`);
 		}
 	} else {
 		game.lobby.unnamed_players.splice(player.id, 1);
@@ -164,50 +170,12 @@ const join = (data, socket) => {
 			socket.player.send(JSON.stringify({event : "joined", players : names}));
 		}
 	} else {
-		socket.player.id = unnamed_players.length;
+		socket.player.id = lobby.unnamed_players.length;
 		socket.player.status = UNNAMED;
 		socket.player.send(JSON.stringify({event : "joined", players : names}));
 		lobby.unnamed_players.push(socket.player);
 	}
 }
-
-/*
-const joinLobby = (data, socket) => {
-	if (
-		typeof data.gameId != "string" || 
-		typeof data.name != "string" || 
-		data.gameId.length != 2 || 
-		data.name.length > 20
-	) {
-		socket.close(1000, "TMI");
-		return;
-	}
-
-	const lobby = getLobby(data.gameId);
-	if (lobby == undefined) {
-		socket.close(1000, "Invalid game");
-		return;
-	}
-	if (lobby.game.players.length == lobby.maxPlayers) {
-		socket.close(1000, "Lobby is full");
-		return;
-	}
-	const game = lobby.game;
-
-	socket.game = game;
-	socket.player.id = game.players.length;
-	socket.player.name = data.name;
-	socket.player.status = IN_LOBBY;
-
-	const toSend = JSON.stringify({event : "join", name : socket.player.name, id : socket.player.id});
-	console.log(toSend);
-	game.players.forEach((player) => {
-		player.send(toSend);
-	});
-	const names = game.players.map(p => p.name);
-	socket.player.send(JSON.stringify({event : "joined", "players" : names}));
-	game.players.push(socket.player);
-}*/
 
 lobbyModule.joinLobby = join;
 
