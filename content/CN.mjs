@@ -1,3 +1,7 @@
+const ANIMATION_DURATION = parseInt(getComputedStyle(document.querySelector(':root')).getPropertyValue('--base-animation-duration').split('ms')[0]);
+const CARD_RATIO = parseInt(getComputedStyle(document.querySelector(':root')).getPropertyValue('--CN-card-ratio'));
+let cardWidth = parseInt(getComputedStyle(document.querySelector(':root')).getPropertyValue('--CN-card-width').split('px')[0]);
+
 //TODO: konvertera min pseudodokumentation till nåt vettigt
 export const game =
 {
@@ -101,6 +105,7 @@ const setUpGame = (round) =>
     */
     onResize = () => 
     {
+        cardWidth = parseInt(getComputedStyle(document.querySelector(':root')).getPropertyValue('--CN-card-width').split('px')[0]);
         round.players.forEach((player) =>
         {
             updateHand(player.hand);
@@ -467,7 +472,7 @@ const returnCardToHand = (placedCard, activeCaravan, onCard, activeSide, round) 
                     left: `${pos.left}px`,
                     top: `${pos.top}px`,
                     transform: "rotate(0deg)"
-                }, {}], { duration: 300, easing: "ease" });
+                }, {}], { duration: ANIMATION_DURATION, easing: "ease" });
         }
         activeCaravan = undefined;
         onCard = undefined;
@@ -506,13 +511,13 @@ const placeCard = (round, caravan, placedCard, activeCaravan, side, sideIndex, a
             {
                 side.div.append(placedCard.element);
                 updateCaravan(caravan);
-				let transform = `rotate(${pos.angle}deg)`;
+                let transform = `rotate(${pos.angle}deg)`;
                 if (!activeCaravanExists)
                 {
-					transform+= " scale(1.6)";
+                    transform += " scale(1.6)";
                     animateToCaravans(placedCard.element);
                 }
-                placedCard.element.animate([{ left: `${pos.left}px`, top: `${pos.top}px`, transform: transform }, { transform: `rotate(0deg)` }], { duration: 300, easing: "ease" }).addEventListener('finish', resolve);
+                placedCard.element.animate([{ left: `${pos.left}px`, top: `${pos.top}px`, transform: transform }, { transform: `rotate(0deg)` }], { duration: ANIMATION_DURATION, easing: "ease" }).addEventListener('finish', resolve);
             });
         });
     }
@@ -624,7 +629,7 @@ const animateToBottom = (cardElement) =>
     cardElement.style.top = "80%";
     cardElement.style.transform = "scale(1.6)";
     cardElement.style.zIndex = 50;
-    cardElement.style.left = `-${cardElement.offsetWidth / 2}px`;
+    cardElement.style.left = `-${cardWidth / 2}px`;
 };
 
 /*
@@ -667,11 +672,11 @@ const otherPlaceCardAnimate = (caravan, sideId, card, currentTurnPlayer, round) 
                 left: cardToMove.element.style.left,
                 transform: transform,
                 zIndex: 100,
-            }, { zIndex: 100 }], { duration: 600, easing: "ease" });
+            }, { zIndex: 100 }], { duration: 2 * ANIMATION_DURATION, easing: "ease" });
         cardToMove.element.remove();
         round.sides[sideId].div.append(card.element);
         updateCaravan(caravan);
-        setTimeout(resolve, 750);
+        setTimeout(resolve, 2 * ANIMATION_DURATION + 100);
     });
 };
 
@@ -682,7 +687,7 @@ const discardCardAnimate = (hand, i = -1) =>
         const cardIndex = i !== -1 ? i : Math.floor(Math.random() * hand.length);
         const [cardToMove] = hand.splice(cardIndex, 1);
         updateHand(hand);
-        cardToMove.element.animate([{}, { top: "55vh" }], { duration: 600, easing: "ease", fill: "forwards" });
+        cardToMove.element.animate([{}, { top: "55vh" }], { duration: 2 * ANIMATION_DURATION, easing: "ease", fill: "forwards" });
         setTimeout(() =>
         {
             cardToMove.element.remove();
@@ -709,7 +714,7 @@ const newCardAnimate = async (player, newCard) =>
             left: `${newCard.element.offsetLeft + 100}px`,
             transform: 'rotate(0deg)',
             zIndex: 100,
-        }, { zIndex: 100 }], { duration: 600, easing: "ease" });
+        }, { zIndex: 100 }], { duration: 2 * ANIMATION_DURATION, easing: "ease" });
 };
 
 const yourTurnAnimate = (round) =>
@@ -820,7 +825,6 @@ const imageLoad = (image) =>
     Updates the hand graphics by recalculating 
     the position of each card depending on how many 
     cards are in the hand
-    (!) Requires that all cards in the hand have been appended to the document (!)
     (!) Uses JS for positioning (!)
 */
 const HAND_SIZE_FACTOR = 0.25; //just a magic number that happened to work well
@@ -830,10 +834,10 @@ const updateHand = (hand) =>
     for (let i = 0; i < hand.length; i++)
     {
         const cardElement = hand[i].element;
-        const height = cardElement.offsetHeight * HAND_SIZE_FACTOR;
-        const width = cardElement.offsetWidth * hand.length * HAND_SIZE_FACTOR;
+        const height = cardWidth * CARD_RATIO * HAND_SIZE_FACTOR;
+        const width = cardWidth * hand.length * HAND_SIZE_FACTOR;
         const percentage = hand.length === 1 ? 0.5 : i / (hand.length - 1);
-        const left = -width + percentage * width - width / 2 - cardElement.offsetWidth / 2;
+        const left = -width + percentage * width - width / 2 - cardWidth / 2;
         const degrees = hand.length === 2 ? MAX_HAND_ANGLE / 2 : MAX_HAND_ANGLE;
         const rotation = ((percentage * degrees * 2) - degrees);
         cardElement.style.transform = `rotate(${rotation}deg)`;
@@ -848,7 +852,6 @@ const updateHand = (hand) =>
     Updates the caravan graphics by recalculating 
     the position of each card depending on where 
     it is in the caravan
-    (!) Requires that all cards in the hand have been appended to the document (!)
     (!) Uses JS for positioning (!)
 */
 const updateCaravan = (caravan) =>
@@ -866,18 +869,18 @@ const updateCaravan = (caravan) =>
         if (card.faceCards)
         {
             let leftPosFactor = Array.from(document.querySelectorAll('.flipped div')).includes(card.element) ? -1 : 1;
-            let leftPos = card.element.offsetWidth / 5;
+            let leftPos = cardWidth / 5;
             card.faceCards.forEach((faceCard) =>
             {
                 faceCard.element.style.top = `calc(1.1rem + ${pos}px)`;
                 const left = caravan.indicator.offsetLeft + caravan.indicator.parentElement.offsetLeft + (leftPos * leftPosFactor);
-                leftPos += card.element.offsetWidth / 5;
+                leftPos += cardWidth / 5;
                 faceCard.element.style.left = `${left}px`;
                 faceCard.element.style.zIndex = zIndex;
                 zIndex += 1;
             });
         }
-        pos += card.element.offsetHeight / 5;
+        pos += (cardWidth * CARD_RATIO) / 5;
     });
     caravan.indicator.style.top = `${pos}px`;
 };
@@ -1129,11 +1132,11 @@ const startNextTurn = (round) =>
                 const msg = document.querySelector('#turn-msg');
                 if (msg)
                 {
-                    msg.animate([{}, { top: "-4rem" }], { duration: 300, easing: "ease", fill: "forwards" });
+                    msg.animate([{}, { top: "-4rem" }], { duration: ANIMATION_DURATION, easing: "ease", fill: "forwards" });
                     setTimeout(() =>
                     {
                         msg.remove();
-                    }, 300);
+                    }, ANIMATION_DURATION);
                 }
             });
         }
@@ -1225,7 +1228,7 @@ const followsPlacementDirection = (caravan, card) =>
 {
     const topCard = caravan[caravan.length - 1];
     const secondCard = caravan[caravan.length - 2];
-    const queenFactor = (-1) ** topCard.faceCards.reduce((prev, cur) => cur.name[0] === 'Q' ? prev + 1 : 0, 0);
+    const queenFactor = (-1) ** topCard.faceCards.reduce((prev, cur) => prev + (cur.name[0] === 'Q' ? 1 : 0), 0);
     const placeDirSign = Math.sign((getValueOfCard(topCard) - getValueOfCard(secondCard)) * queenFactor);
     const newDirSign = Math.sign(getValueOfCard(card) - getValueOfCard(topCard));
     return placeDirSign === newDirSign || secondCard.name[0] === topCard.name[0];
@@ -1296,14 +1299,16 @@ const updateCaravanScore = (caravan) =>
 };
 
 /*
-    Returns the position of an element as if 
+    Returns the position of a card as if 
     placed on the opposite side of the table
 
     Used for animating across the table
+
+    (!) Only for card elements
 */
 const getReversePosition = ({ element }) =>
 {
-    const top = -element.offsetTop - document.querySelector('#scoreboard').offsetHeight - element.offsetHeight;
+    const top = -element.offsetTop - document.querySelector('#scoreboard').offsetHeight - (cardWidth * CARD_RATIO);
     const left = element.offsetLeft;
     const angleExists = element.style.transform && element.style.transform.includes('rotates');
     const angle = angleExists ? -(element.style.transform.split('rotate(')[1].split('deg)')[0]) : 0;
@@ -1351,13 +1356,13 @@ const killCard = (card, caravan) =>
 {
     caravan.splice(caravan.indexOf(card), 1);
     const keyFrames = [{}, { top: "calc(50vh + 100px)" }];
-    const settings = { duration: 600, easing: "ease", fill: "forwards" };
+    const settings = { duration: 2 * ANIMATION_DURATION, easing: "ease", fill: "forwards" };
 
     card.element.animate(keyFrames, settings);
     setTimeout(() =>
     {
         card.element.remove();
-    }, 700);
+    }, 2 * ANIMATION_DURATION + 100);
     if (card.faceCards)
     {
         card.faceCards.forEach((faceCard) =>
@@ -1366,7 +1371,7 @@ const killCard = (card, caravan) =>
             setTimeout(() =>
             {
                 faceCard.element.remove();
-            }, 700);
+            }, 2 * ANIMATION_DURATION + 100);
         });
     }
 };

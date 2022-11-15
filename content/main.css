@@ -21,6 +21,8 @@
 	--sidebar-color: #ffffff;
 	--text-color: #000000;
     --CN-card-width: 100px;
+    --CN-card-ratio: 1.4;
+    --base-animation-duration: 300ms; 
 }
 
 html,
@@ -76,7 +78,7 @@ body
     position: relative;
     overflow: hidden;
     transition-property: transform, width, height;
-    transition-duration: 2s, 0.3s, 0.3s;
+    transition-duration: 2s, var(--base-animation-duration), var(--base-animation-duration);
     color: black;
     text-decoration: none;
     background-color: white;
@@ -124,7 +126,7 @@ body
 .game-icon-background-wrapper img:nth-child(2)
 {
     transform: rotate3d(1, 2, 1, 186deg);
-    animation-delay: 0.3s;
+    animation-delay: var(--base-animation-duration);
     animation-duration: 3.3s;
 }
 
@@ -205,7 +207,7 @@ body
     align-items: center;
     flex-direction: column;
     overflow: hidden;
-    transition: top 0.3s;
+    transition: top var(--base-animation-duration);
 }
 
 .description-container:hover
@@ -283,25 +285,22 @@ body
     cursor: pointer;
     transition-property: height, width, left, right, top, bottom, transform, opacity;
     opacity: 1;
-    transition-duration: 0.3s;
+    transition-duration: var(--base-animation-duration);
 }
 
 .card-wrapper>img
 {
     position: relative;
     transition-property: height, width, left, right, top, bottom, transform;
-    transition-duration: 0.3s;
+    transition-duration: var(--base-animation-duration);
     top: 0;
 }
 
-/*
-        Note: Card images are 1 x 1.4
-*/
 .CN-responsive,
 .caravan-indicator
 {
     width: var(--CN-card-width);
-    height: calc(1.4 * var(--CN-card-width));
+    height: calc(var(--CN-card-ratio) * var(--CN-card-width));
 }
 
 .caravan-card:hover
@@ -316,7 +315,7 @@ body
     position: relative;
     cursor: pointer;
     box-sizing: border-box;
-    transition-duration: 0.3s;
+    transition-duration: var(--base-animation-duration);
     transition-property: top, width, height;
     top: 0;
 }
@@ -545,7 +544,7 @@ body
     z-index: 184;
     user-select: none;
     border-radius: 0 1.5rem 0 0;
-    animation: discard-button-animation 0.3s;
+    animation: discard-button-animation var(--base-animation-duration);
     box-sizing: border-box;
 }
 
@@ -597,7 +596,7 @@ body
     border-radius: 20px;
     border: solid black 1px;
     padding: 10px;
-    animation: show-up 0.3s;
+    animation: show-up var(--base-animation-duration);
     z-index: 1;
     user-select: none;
 }
@@ -638,10 +637,7 @@ body
     {
         --CN-card-width: 60px
     }
-
-    /*
-        Note: Card images are 1 x 1.4
-    */
+    
     .CN-responsive,
     .caravan-indicator
     {
@@ -709,7 +705,7 @@ body
     align-items: center;
     justify-content: center;
     transition-property: color, font-size;
-    transition-duration: 0.3s;
+    transition-duration: var(--base-animation-duration);
     flex-direction: column;
 }
 
@@ -736,7 +732,7 @@ body
 
 .turn-message
 {
-    animation: from-top 0.3s forwards;
+    animation: from-top var(--base-animation-duration) forwards;
     position: absolute;
     top: 0;
     background-color: var(--minor-button-color);
@@ -918,8 +914,8 @@ body
     height: inherit;
     border-radius: inherit;
     background-color: #7092ff;
-    animation: move-out 0.3s;
-    transition: transform 0.3s;
+    animation: move-out var(--base-animation-duration);
+    transition: transform var(--base-animation-duration);
 }
 
 @keyframes move-out
@@ -970,7 +966,7 @@ body
     position: absolute;
     overflow: hidden;
     right: 3rem;
-    transition: top 0.3s;
+    transition: top var(--base-animation-duration);
     width: 30vw;
     display: flex;
     flex-direction: column;
@@ -1003,7 +999,7 @@ body
     border: 1px solid grey;
     border-radius: 0 0 10px 10px;
     border-top: none;
-    transition: height 0.3s;
+    transition: height var(--base-animation-duration);
 }
 
 .inner-rules
