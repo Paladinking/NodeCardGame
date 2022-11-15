@@ -77,7 +77,7 @@ const wsTest = async (socketData, actions) => {
 					doReject(`Invalid json data to socket ${i}, expected ${JSON.stringify(data.toReceive[data.msgNr])}`, reject);
 					return;
 				}
-				if (!objEq(msg, data.toReceive[data.msgNr])) {
+				if (data.toReceive[data.msgNr] != undefined && !objEq(msg, data.toReceive[data.msgNr])) {
 					doReject(`Wrong message to socket ${i}: ` + JSON.stringify(msg) + " expected: " + JSON.stringify(data.toReceive[data.msgNr]), reject);
 					return;
 				}
@@ -194,6 +194,57 @@ const wsLobbyTest = async () => {
 			{id : 0, close : true}
 		],
 		"Lobby valid"
+	);
+	tests.handleInit = (game) => {
+		game.handleInit(game);
+	};
+	completedTests += await runWsTest(
+		[
+			{
+				toReceive : [
+					{event : "joined", players : []},
+					{event : "join", name : "Beta", id : 0},
+					{event : "leave", id : 0},
+					{event : "join", name : "Ceta", id : 1},
+					undefined
+				],
+				closeStep : 9
+			},
+			{
+				toReceive : [
+					{event : "joined", players : []},
+					{event : "join", name : "Alpha", id : 1}
+				],
+				closeStep : 4,
+				closeReason : "Left game"
+			},
+			{
+				toReceive : [
+					{event : "joined", players : ["Beta", "Alpha"]},
+					{event : "leave", id : 0},
+					undefined
+				],
+				closeStep : 9
+			},
+			{
+				toReceive : [
+					{event : "joined", players : ["Alpha", "Ceta"]},
+					{event : "unnamedStart"}
+				],
+				closeStep : 9
+			}
+		],
+		[
+			{id : 0, toSend : {gameId : "T8"}},
+			{id : 1, toSend : {gameId : "T8", name : "Beta"}},
+			{id : 0, toSend : {action : "Join", name : "Alpha"}},
+			{id : 2, toSend : {gameId : "T8"}},
+			{id : 1, toSend : {action : "Leave"}},
+			{id : 2, toSend : {action : "Join", name : "Ceta"}},
+			{id : 3, toSend : {gameId : "T8"}},
+			{id : 0, toSend : {action : "Start"}}
+		],
+		"Unnamed lobby test"
 	);
 	completedTests += await runWsTest(
 		[
@@ -316,7 +367,7 @@ const testingDeck = [
 const wsTestT8 = async () => {
 	tests.handleInit = (game) => {
 		game.deck = testingDeck.slice();
-		game.handleInit(game)
+		game.handleInit(game);
 	}
 	let completedTests = 0;
 	completedTests += await runWsTest(
