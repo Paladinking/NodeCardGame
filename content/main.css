@@ -427,12 +427,13 @@ body
 {
     padding-top: 1rem;
     padding-bottom: 1rem;
+	background-color: var(--start-button-color);
 }
 
 .join-button:hover
 {
     cursor: pointer;
-    background-color: var(--minor-button-color-hover);
+    background-color: var(--start-button-color-hover);
 }
 
 .darkmode-button {

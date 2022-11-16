@@ -31,19 +31,20 @@ const setUpChat = (wsckt) =>
     return chat;
 };
 
-const init = (name) =>
+const init = (name = undefined) =>
 {
     const players = [];
     const ul = document.querySelector('#playlist');
-    ul.innerHTML = "";
     const playersSpan = document.querySelector('#players');
+	
+	let joined = false;
 
     const createPlayer = (name, newPlayer = true) =>
     {
         const li = document.createElement('li');
         li.classList.add('player-box');
         li.innerText = name;
-        ul.append(li);
+		ul.append(li);
         const player = { name: name };
         players.push(player);
         if (newPlayer)
@@ -53,6 +54,23 @@ const init = (name) =>
         }
         return player;
     };
+	
+	const enableStart = () => {
+		joined = true;
+		document.querySelector('#start-button').setAttribute('available', "true");
+        document.querySelector('#start-button').addEventListener('click', () =>
+        {
+            if (players.length >= game.minPlayers)
+            {
+                let response = { action: "Start" };
+                wsckt.send(JSON.stringify(response));
+            }
+            else
+            {
+                document.querySelector('#start-button').animate([{ left: "0px" }, { left: "7px" }, { left: "0px" }, { left: "-7px" }, { left: "0px" }], 150);
+            }
+        });
+	};
 
     const cover = document.createElement('div');
     cover.classList.add('error-wrap');
@@ -65,7 +83,6 @@ const init = (name) =>
         }
     }, 200);
 
-
     let wsckt = new WebSocket("ws://" + window.location.href.split('//')[1].split('?')[0]);
     wsckt.addEventListener('open', () =>
     {
@@ -73,7 +90,6 @@ const init = (name) =>
         cover.remove();
         noLeaveWarning = false;
         gameState = LOBBY;
-        wsckt.send(JSON.stringify({ "gameId": gameId, "name": name }));
         wsckt.addEventListener('message', (e) =>
         {
             console.log(e.data);
@@ -89,7 +105,32 @@ const init = (name) =>
                             {
                                 createPlayer(player, false);
                             }
-                            createPlayer(name).isPlayer = true;
+							if (name) {
+								console.log("Created player");
+								createPlayer(name).isPlayer = true;
+								enableStart();
+							} else {
+								document.querySelector('#join-button').addEventListener('click', () =>
+								{
+									const input_name = document.querySelector('#join-input').value;
+									if (input_name && input_name.length < 21)
+									{
+										window.addEventListener('beforeunload', (e) =>
+										{
+											if (!noLeaveWarning)
+											{
+												e.preventDefault();
+												return e.returnValue = "Are you sure you want to exit?";
+											}
+										});
+										document.querySelector("#join-input").parentElement.remove();
+										document.querySelector("#join-button").remove();
+										wsckt.send(JSON.stringify({"action" : "Join", "name" : input_name}));
+										createPlayer(input_name, true).isPlayer = true;
+										enableStart();
+									}
+								});
+							}
                             break;
                         }
                     case 'join':
@@ -99,7 +140,7 @@ const init = (name) =>
                         }
                     case 'leave':
                         {
-                            ul.querySelectorAll('li')[msg.id].remove();
+                            ul.querySelectorAll('li')[msg.id + (joined ? 0 : 2)].remove();
                             players.splice(msg.id, 1);
                             playersSpan.innerText = players.length;
                             break;
@@ -111,6 +152,7 @@ const init = (name) =>
                         }
                     case 'start':
                         {
+							console.log(players.map(p => p.name));
                             game.initGame(wsckt, msg, players, startBackgroundCards, async () => 
                             {
                                 const rawFetch = await fetch(`/${gameId}`).catch(() => { });
@@ -159,19 +201,12 @@ const init = (name) =>
                     }
             };
         });
-        document.querySelector('#start-button').setAttribute('available', "true");
-        document.querySelector('#start-button').addEventListener('click', () =>
-        {
-            if (players.length >= game.minPlayers)
-            {
-                let response = { action: "Start" };
-                wsckt.send(JSON.stringify(response));
-            }
-            else
-            {
-                document.querySelector('#start-button').animate([{ left: "0px" }, { left: "7px" }, { left: "0px" }, { left: "-7px" }, { left: "0px" }], 150);
-            }
-        });
+		if (name) {
+			ul.innerHTML = "";
+			wsckt.send(JSON.stringify({ "gameId": gameId, "name": name }));
+		} else {
+			wsckt.send(JSON.stringify({ "gameId": gameId}));
+		}
     });
     wsckt.addEventListener('error', (e) =>
     {
@@ -262,23 +297,6 @@ document.querySelector('.darkmode-button').addEventListener('click', () => {
 });
 
 
-document.querySelector('#join-button').addEventListener('click', () =>
-{
-    const name = document.querySelector('#join-input').value;
-    if (name && name.length < 21)
-    {
-        window.addEventListener('beforeunload', (e) =>
-        {
-            if (!noLeaveWarning)
-            {
-                e.preventDefault();
-                return e.returnValue = "Are you sure you want to exit?";
-            }
-        });
-        init(name);
-    }
-});
-
 let rulesOpen = false;
 const rulesWrapper = document.querySelector('#rules');
 const rules = rulesWrapper.firstElementChild;
@@ -300,6 +318,7 @@ document.querySelector('#rules').addEventListener('click', (e) =>
 });
 
 startBackgroundCards(IN_GAME);
+init();
 
 const statusDump = () =>
 {

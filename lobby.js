@@ -49,7 +49,6 @@ const joinLobby  = (data, game, player) => {
 	player.name = data.name;
 	player.status = IN_LOBBY;
 	const toSend = JSON.stringify({event : "join", name : player.name, id : player.id});
-	console.log(toSend);
 	game.players.forEach((player) => {
 		player.send(toSend);
 	});
@@ -69,6 +68,7 @@ const lobbyHandleMessage = (data, game, player) => {
 			player.close(("Invalid message"));
 			return;
 		}
+		console.log(game.players.map(p => p.name));
 		game.lobby.unnamed_players.forEach((player) => {
 			player.send('{"event" : "unnamedStart"}');
 		});
@@ -99,6 +99,7 @@ const lobbyHandleClose = (game, player) => {
 	if (player.status == IN_LOBBY) {
 		game.players.splice(player.id, 1);
 		for (let i = 0; i < game.players.length; i++) {
+			console.log(player.id, " left");
 			game.players[i].send(`{"event" : "leave", "id" : ${player.id}}`);
 			if (game.players[i].id != i) {
 				game.players[i].id = i;

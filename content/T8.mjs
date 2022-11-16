@@ -352,6 +352,7 @@ const nextTurn = (round) => //does not start the next round for the relevant pla
 {
     const prevTurn = round.currentTurn;
     const currentTurn = (round.currentTurn + 1) % round.players.length;
+	console.log(prevTurn, currentTurn);
     toAnimate.push(async () => 
     {
         if (round.players[prevTurn])
@@ -768,7 +769,7 @@ const initPlayers = async (round) =>
 {
     const sidebar = document.querySelector('#sidebar');
     const playerIndex = round.players.findIndex((player) => player.isPlayer);
-    const playerBasedOrder = [round.players[playerIndex]];
+    /*const playerBasedOrder = [round.players[playerIndex]];
     for (let i = playerIndex + 1; i < round.players.length; i++)
     {
         playerBasedOrder.push(round.players[i]);
@@ -776,9 +777,9 @@ const initPlayers = async (round) =>
     for (let i = 0; i < playerIndex; i++)
     {
         playerBasedOrder.push(round.players[i]);
-    }
+    }*/
 
-    playerBasedOrder.forEach((player, i) =>
+    round.players.forEach((player, i) =>
     {
         player.cards = 7;
         if (!player.isPlayer)
