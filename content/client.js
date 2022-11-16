@@ -33,6 +33,7 @@ const setUpChat = (wsckt) =>
 
 const init = (name = undefined) =>
 {
+	console.log(name);
     const players = [];
     const ul = document.querySelector('#playlist');
     const playersSpan = document.querySelector('#players');
@@ -110,6 +111,7 @@ const init = (name = undefined) =>
 								createPlayer(name).isPlayer = true;
 								enableStart();
 							} else {
+								playersSpan.innerText = players.length;
 								document.querySelector('#join-button').addEventListener('click', () =>
 								{
 									const input_name = document.querySelector('#join-input').value;
@@ -152,7 +154,6 @@ const init = (name = undefined) =>
                         }
                     case 'start':
                         {
-							console.log(players.map(p => p.name));
                             game.initGame(wsckt, msg, players, startBackgroundCards, async () => 
                             {
                                 const rawFetch = await fetch(`/${gameId}`).catch(() => { });
@@ -160,7 +161,7 @@ const init = (name = undefined) =>
                                 {
                                     const parsed = new DOMParser().parseFromString(await rawFetch.text(), 'text/html');
                                     document.querySelector('#content').innerHTML = parsed.querySelector('#content').innerHTML;
-                                    init(name);
+									init(name);
                                     gameState = undefined;
                                     startBackgroundCards(IN_GAME);
                                 }
@@ -172,6 +173,15 @@ const init = (name = undefined) =>
                             gameState = IN_GAME;
                             break;
                         }
+					case 'unnamedStart': 
+						{
+							players.length = 0;
+							playersSpan.innerText = players.length;
+							ul.querySelectorAll('li').forEach((li, i) => {
+								if (i >= 2) li.remove();
+							});
+							break;
+						}
                 }
             }
             else if (gameState === IN_GAME)

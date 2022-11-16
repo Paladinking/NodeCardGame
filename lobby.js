@@ -9,27 +9,28 @@ const lobbyModule = {
 	handleInit : (game) => game.handleInit(game)
 };
 
-const createGame = (module, name, min, max) => {
+const createLobby = (module, name, min, max) => {
 	return {
 		gameName : name,
 		minPlayers : min,
 		maxPlayers : max,
 		id : 0,
-		unnamed_players : [],
+		unnamed_sockets : [],
 		handleInit : module.handleInit,
 		handleMessage : module.handleMessage,
 		handleClose : module.handleClose
 	}
 }
 
-const games = {
-	"T8" : createGame(T8, "T8", 2, 5),
-	"CN" : createGame(CN, "CN", 2, 2)
+const lobbies = {
+	"T8" : createLobby(T8, "T8", 2, 5),
+	"CN" : createLobby(CN, "CN", 2, 2)
 };
 
 let runTests = false;
 
 const joinLobby  = (data, game, player) => {
+	console.log(game.lobby.unnamed_sockets.map(s => s.player));
 	if (player.status == IN_LOBBY || typeof data.name != 'string') {
 		player.close(1000, "Invalid message");
 		return;
@@ -43,7 +44,10 @@ const joinLobby  = (data, game, player) => {
 		return;
 	}
 	if (player.status == UNNAMED) {
-		game.lobby.unnamed_players.splice(player.id, 1);
+		game.lobby.unnamed_sockets.splice(player.id, 1);
+		for (let i = 0; i < game.lobby.unnamed_sockets.length; i++) {
+			game.lobby.unnamed_sockets[i].player.id = i;
+		}
 	}
 	player.id = game.players.length;
 	player.name = data.name;
@@ -52,8 +56,8 @@ const joinLobby  = (data, game, player) => {
 	game.players.forEach((player) => {
 		player.send(toSend);
 	});
-	game.lobby.unnamed_players.forEach((player) => {
-		player.send(toSend);
+	game.lobby.unnamed_sockets.forEach((socket) => {
+		socket.player.send(toSend);
 	});
 	game.players.push(player);
 }
@@ -68,13 +72,14 @@ const lobbyHandleMessage = (data, game, player) => {
 			player.close(("Invalid message"));
 			return;
 		}
-		console.log(game.players.map(p => p.name));
-		game.lobby.unnamed_players.forEach((player) => {
-			player.send('{"event" : "unnamedStart"}');
-		});
 		if (game.players.length >= game.lobby.minPlayers) {
 			//The previous lobby.game will be turned into the proper game by createGame.
 			game.lobby.game = lobbyGame(game.lobby);
+			game.lobby.unnamed_sockets.forEach((socket) => {
+				socket.player.send('{"event" : "unnamedStart"}');
+				socket.game = game.lobby.game;
+			});
+			
 			game.lobby.id += 1;
 			//The player is no longer in a lobby.
 
@@ -85,6 +90,7 @@ const lobbyHandleMessage = (data, game, player) => {
 			game.players.forEach((player) => {
 				player.status = IN_GAME;
 			});
+
 			delete game.lobby;
 			
 			// testModule.handleInit or game.handleInit, depending.
@@ -105,13 +111,13 @@ const lobbyHandleClose = (game, player) => {
 				game.players[i].id = i;
 			}
 		}
-		for (let i = 0; i < game.lobby.unnamed_players.length; i++) {
-			game.lobby.unnamed_players[i].send(`{"event" : "leave", "id" : ${player.id}}`);
+		for (let i = 0; i < game.lobby.unnamed_sockets.length; i++) {
+			game.lobby.unnamed_sockets[i].player.send(`{"event" : "leave", "id" : ${player.id}}`);
 		}
 	} else {
-		game.lobby.unnamed_players.splice(player.id, 1);
-		for (let i = 0; i < game.lobby.unnamed_players.length; i++) {
-			game.lobby.unnamed_players[i].id = i;
+		game.lobby.unnamed_sockets.splice(player.id, 1);
+		for (let i = 0; i < game.lobby.unnamed_sockets.length; i++) {
+			game.lobby.unnamed_sockets[i].player.id = i;
 		}
 	}
 }
@@ -126,14 +132,14 @@ const lobbyGame = (lobby) => {
 	}
 }
 
-for (const key in games) {
-	games[key].game = lobbyGame(games[key]);
+for (const key in lobbies) {
+	lobbies[key].game = lobbyGame(lobbies[key]);
 }
 
 const getLobby = (name) => {
-	for (let gameName in games) {
+	for (let gameName in lobbies) {
 		if (gameName == name) {
-			return games[gameName];
+			return lobbies[gameName];
 		}
 	}
 	return undefined;
@@ -171,10 +177,10 @@ const join = (data, socket) => {
 			socket.player.send(JSON.stringify({event : "joined", players : names}));
 		}
 	} else {
-		socket.player.id = lobby.unnamed_players.length;
+		socket.player.id = lobby.unnamed_sockets.length;
 		socket.player.status = UNNAMED;
 		socket.player.send(JSON.stringify({event : "joined", players : names}));
-		lobby.unnamed_players.push(socket.player);
+		lobby.unnamed_sockets.push(socket);
 	}
 }
 

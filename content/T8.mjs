@@ -348,14 +348,14 @@ const toVictory = (round) =>
 
 };
 
-const nextTurn = (round) => //does not start the next round for the relevant player
+const nextTurn = (round, player_left = false) => //does not start the next round for the relevant player
 {
     const prevTurn = round.currentTurn;
-    const currentTurn = (round.currentTurn + 1) % round.players.length;
+    const currentTurn = (player_left ? round.currentTurn : round.currentTurn + 1) % round.players.length;
 	console.log(prevTurn, currentTurn);
     toAnimate.push(async () => 
     {
-        if (round.players[prevTurn])
+        if (!player_left)
         {
             if (round.players[prevTurn].isPlayer)
             {
@@ -740,7 +740,7 @@ const handleMessage = async (msg, round) =>
                 }
                 else if (round.currentTurn === msg.id)
                 {
-                    nextTurn(round);
+                    nextTurn(round, true);
                     if (round.players[round.currentTurn].isPlayer)
                     {
                         makeTurn(round);
