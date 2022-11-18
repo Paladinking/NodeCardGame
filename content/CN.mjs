@@ -1,6 +1,6 @@
-const ANIMATION_DURATION = parseInt(getComputedStyle(document.querySelector(':root')).getPropertyValue('--base-animation-duration').split('ms')[0]);
+const ANIMATION_DURATION = parseInt(getComputedStyle(document.querySelector(':root')).getPropertyValue('--base-animation-duration-unitless'));
 const CARD_RATIO = parseInt(getComputedStyle(document.querySelector(':root')).getPropertyValue('--CN-card-ratio'));
-let cardWidth = parseInt(getComputedStyle(document.querySelector(':root')).getPropertyValue('--CN-card-width').split('px')[0]);
+let cardWidth = parseInt(getComputedStyle(document.querySelector(':root')).getPropertyValue('--CN-card-width-unitless'));
 
 //TODO: konvertera min pseudodokumentation till nåt vettigt
 export const game =
@@ -105,7 +105,7 @@ const setUpGame = (round) =>
     */
     onResize = () => 
     {
-        cardWidth = parseInt(getComputedStyle(document.querySelector(':root')).getPropertyValue('--CN-card-width').split('px')[0]);
+        cardWidth = parseInt(getComputedStyle(document.querySelector(':root')).getPropertyValue('--CN-card-width-unitless'));
         round.players.forEach((player) =>
         {
             updateHand(player.hand);

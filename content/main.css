@@ -3,26 +3,28 @@
     padding: 0;
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-	color: var(--text-color);
+    color: var(--text-color);
 }
 
 :root
 {
     --minor-button-color: #c6e4f8;
     --minor-button-color-hover: #acd4f8;
-	--start-button-color: #92acff;
-	--start-button-color-hover: #7092ff;
-	--confirm-button-color: #80ee80;
-	--confirm-button-color-hover: #6fce6f;
-	--discard-button-color: #ff4949;
-	--discard-button-color-hover: #d34343;
-	--rules-button-color-hover: #e0e0e0;
-	--page-color: #eaf8ff;
-	--sidebar-color: #ffffff;
-	--text-color: #000000;
-    --CN-card-width: 100px;
+    --start-button-color: #92acff;
+    --start-button-color-hover: #7092ff;
+    --confirm-button-color: #80ee80;
+    --confirm-button-color-hover: #6fce6f;
+    --discard-button-color: #ff4949;
+    --discard-button-color-hover: #d34343;
+    --rules-button-color-hover: #e0e0e0;
+    --page-color: #eaf8ff;
+    --sidebar-color: #ffffff;
+    --text-color: #000000;
+    --CN-card-width-unitless: 100;
+    --CN-card-width: calc(var(--CN-card-width-unitless) * 1px);
     --CN-card-ratio: 1.4;
-    --base-animation-duration: 300ms; 
+    --base-animation-duration-unitless: 300;
+    --base-animation-duration: calc(var(--base-animation-duration-unitless) * 1ms);
 }
 
 html,
@@ -427,7 +429,7 @@ body
 {
     padding-top: 1rem;
     padding-bottom: 1rem;
-	background-color: var(--start-button-color);
+    background-color: var(--start-button-color);
 }
 
 .join-button:hover
@@ -436,18 +438,19 @@ body
     background-color: var(--start-button-color-hover);
 }
 
-.darkmode-button {
-	position: absolute;
-	top: 1rem;
-	right: 2rem;
-	height: 3rem;
-	width: 3rem;
-	background-color: var(--minor-button-color);
+.darkmode-button
+{
+    position: absolute;
+    top: 1rem;
+    right: 2rem;
+    height: 3rem;
+    width: 3rem;
+    background-color: var(--minor-button-color);
 }
 
-.darkmode-button:hover 
+.darkmode-button:hover
 {
-	background-color: var(--minor-button-color-hover);
+    background-color: var(--minor-button-color-hover);
 }
 
 .playlist .new
@@ -627,7 +630,7 @@ body
 {
     :root
     {
-        --CN-card-width: 72px;
+        --CN-card-width-unitless: 72;
     }
 }
 
@@ -636,9 +639,9 @@ body
 {
     :root
     {
-        --CN-card-width: 60px
+        --CN-card-width-unitless: 60;
     }
-    
+
     .CN-responsive,
     .caravan-indicator
     {

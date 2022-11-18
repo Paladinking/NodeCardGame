@@ -352,7 +352,7 @@ const nextTurn = (round, player_left = false) => //does not start the next round
 {
     const prevTurn = round.currentTurn;
     const currentTurn = (player_left ? round.currentTurn : round.currentTurn + 1) % round.players.length;
-	console.log(prevTurn, currentTurn);
+    console.log(prevTurn, currentTurn);
     toAnimate.push(async () => 
     {
         if (!player_left)
@@ -769,7 +769,7 @@ const initPlayers = async (round) =>
 {
     const sidebar = document.querySelector('#sidebar');
     const playerIndex = round.players.findIndex((player) => player.isPlayer);
-    /*const playerBasedOrder = [round.players[playerIndex]];
+    const playerBasedOrder = [round.players[playerIndex]];
     for (let i = playerIndex + 1; i < round.players.length; i++)
     {
         playerBasedOrder.push(round.players[i]);
@@ -777,9 +777,9 @@ const initPlayers = async (round) =>
     for (let i = 0; i < playerIndex; i++)
     {
         playerBasedOrder.push(round.players[i]);
-    }*/
+    }
 
-    round.players.forEach((player, i) =>
+    round.playerBasedOrder.forEach((player, i) =>
     {
         player.cards = 7;
         if (!player.isPlayer)
@@ -788,10 +788,6 @@ const initPlayers = async (round) =>
             playerDiv.classList.add('player-div');
             playerDiv.innerHTML = `<h2></h2> <h3>${player.cards}</h3> ${player.isPlayer ? `` : `<div class = "other-hand-wrapper"></div>`}`;
             playerDiv.firstElementChild.innerText = player.name;
-            if (playerIndex < i)
-            {
-
-            }
             sidebar.append(playerDiv);
             player.hand = createHand(new Array(player.cards).fill("Card_back"), false);
             playerDiv.hand = playerDiv.lastElementChild;
@@ -878,7 +874,7 @@ const addSortCardsListeners = (round) =>
                 let hasMoved = false;
                 const onMouseMove = (e) =>
                 {
-                    if(!round.hand.movedCard)
+                    if (!round.hand.movedCard)
                     {
                         round.hand.movedCard = card;
                         updateHand(round.hand);

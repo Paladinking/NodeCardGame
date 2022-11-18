@@ -114,8 +114,8 @@ const init = (name = undefined) =>
 								playersSpan.innerText = players.length;
 								document.querySelector('#join-button').addEventListener('click', () =>
 								{
-									const input_name = document.querySelector('#join-input').value;
-									if (input_name && input_name.length < 21)
+									const inputName = document.querySelector('#join-input').value;
+									if (inputName && inputName.length < 21)
 									{
 										window.addEventListener('beforeunload', (e) =>
 										{
@@ -127,8 +127,9 @@ const init = (name = undefined) =>
 										});
 										document.querySelector("#join-input").parentElement.remove();
 										document.querySelector("#join-button").remove();
-										wsckt.send(JSON.stringify({"action" : "Join", "name" : input_name}));
-										createPlayer(input_name, true).isPlayer = true;
+										wsckt.send(JSON.stringify({"action" : "Join", "name" : inputName}));
+										createPlayer(inputName, true).isPlayer = true;
+                                        name = inputName;
 										enableStart();
 									}
 								});
@@ -225,6 +226,8 @@ const init = (name = undefined) =>
     });
 
 };
+
+
 
 const startBackgroundCards = (stopOnGameState = LOBBY) =>
 {
