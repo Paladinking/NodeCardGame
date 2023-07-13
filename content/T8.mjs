@@ -779,7 +779,7 @@ const initPlayers = async (round) =>
         playerBasedOrder.push(round.players[i]);
     }
 
-    round.playerBasedOrder.forEach((player, i) =>
+    playerBasedOrder.forEach((player, i) =>
     {
         player.cards = 7;
         if (!player.isPlayer)
